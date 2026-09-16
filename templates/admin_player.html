@@ -4,29 +4,127 @@
 		<h1 class="h2">{{ player.multiplayer_name }}</h1>
 	</div>
 
-	<!--Ban button-->
-
-	{% if is_banned %}
-		<a href="/admin/players/{{ player.username }}/unban" class="btn btn-success">Unban</a>
-	{% else %}
-		<a href="/admin/players/{{ player.username }}/ban" class="btn btn-danger">Ban</a>
-	{% endif %}
-
-	<a href="/admin/players/{{ player.username }}/game" class="btn btn-primary">View save</a>
+	<div class="mb-3">
+		{% if is_banned %}
+			<a href="/admin/players/{{ player.username }}/unban" class="btn btn-success">Unban</a>
+		{% else %}
+			<a href="/admin/players/{{ player.username }}/ban" class="btn btn-danger">Ban</a>
+		{% endif %}
+		<a href="/admin/players/{{ player.username }}/game" class="btn btn-primary">View save</a>
+	</div>
 
 	<hr>
 
-	<p>ID: {{ player.username }}</p>
-	<p>Device Name: {{ DeviceName }}</p>
-	<p>Rank: {{ player.leader_level }}</p>
-	<p>Last Online: {{ player.last_online }}</p>
-	<p>Help Count: {{ player.helpcount }}</p>
-	<p>Annonyous Help Count: {{ player.anonymoushelpcount }}</p>
-	<p>Ally Box Space: {{ player.allyboxspace }}</p>
-	<p>Helper: {{ player.helper_creature }}</p>
+	<div class="row">
+		<div class="col-md-6">
+			<h5>Player Info</h5>
+			<p><strong>ID:</strong> {{ player.username }}</p>
+			<p><strong>Device Name:</strong> {{ DeviceName }}</p>
+			<p><strong>Rank:</strong> {{ player.leader_level }}</p>
+			<p><strong>Last Online:</strong> {{ player.last_online }}</p>
+			<p><strong>Help Count:</strong> {{ player.helpcount }}</p>
+			<p><strong>Anonymous Help Count:</strong> {{ player.anonymoushelpcount }}</p>
+			<p><strong>Ally Box Space:</strong> {{ player.allyboxspace }}</p>
+			<p><strong>Helper:</strong> {{ player.helper_creature }}</p>
+		</div>
+	</div>
 
-	<h3>Save:</h3>
-	<div class="table-responsive small">
+	<hr>
+
+	<h5>Heroes / Leaders ({{ Leaders|length }})
+		<form action="/admin/players/{{ player.username }}/add_all_leaders" method="POST" style="display:inline;">
+			<button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Add all 83 leaders to this player?')">Add All Leaders</button>
+		</form>
+		<form action="/admin/players/{{ player.username }}/add_all_skins" method="POST" style="display:inline;">
+			<button type="submit" class="btn btn-sm btn-info" onclick="return confirm('Add all skins for owned leaders?')">Add All Skins</button>
+		</form>
+	</h5>
+	<form action="/admin/players/{{ player.username }}/add_leader" method="POST" class="row g-3 mb-3">
+		<div class="col-md-8">
+			<label class="form-label">Leader ID</label>
+			<input type="text" class="form-control" name="leader_id" placeholder="e.g. Leader_Finn" required>
+		</div>
+		<div class="col-md-4 d-flex align-items-end">
+			<button type="submit" class="btn btn-success w-100">Add Leader</button>
+		</div>
+	</form>
+	<div class="table-responsive small mb-3">
+		<table class="table table-striped table-sm">
+		<thead>
+			<tr>
+				<th scope="col">#</th>
+				<th scope="col">Leader ID</th>
+				<th scope="col">Skin</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for item in Leaders %}
+			<tr>
+				<td>{{ loop.index0 }}</td>
+				<td>{{ item.ID }}</td>
+				<td>{{ item.Skin }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+		</table>
+	</div>
+	</div>
+
+	<hr>
+
+	<h5>Edit Resources</h5>
+	<form action="/admin/players/{{ player.username }}/edit" method="POST" class="row g-3 mb-4">
+		<div class="col-md-3">
+			<label class="form-label">Coins</label>
+			<input type="number" class="form-control" name="SoftCurrency" value="{{ SoftCurrency }}">
+		</div>
+		<div class="col-md-3">
+			<label class="form-label">Gems</label>
+			<input type="number" class="form-control" name="HardCurrency" value="{{ HardCurrency }}">
+		</div>
+		<div class="col-md-3">
+			<label class="form-label">Wishbones</label>
+			<input type="number" class="form-control" name="PvpCurrency" value="{{ PvpCurrency }}">
+		</div>
+		<div class="col-md-3">
+			<label class="form-label">Evolution Shards</label>
+			<input type="number" class="form-control" name="EvolutionShards" value="{{ EvolutionShards }}">
+		</div>
+		<div class="col-md-3">
+			<label class="form-label">Inventory Space</label>
+			<input type="number" class="form-control" name="InventorySpace" value="{{ InventorySpace }}">
+		</div>
+		<div class="col-md-3">
+			<label class="form-label">Rank (Level)</label>
+			<input type="number" class="form-control" name="leader_level" value="{{ player.leader_level }}">
+		</div>
+		<div class="col-md-3">
+			<label class="form-label">Player Level</label>
+			<input type="number" class="form-control" name="level" value="{{ player.level }}">
+		</div>
+		<div class="col-md-3">
+			<label class="form-label">Rank XP</label>
+			<input type="number" class="form-control" name="RankXP" value="{{ RankXP }}">
+		</div>
+		<div class="col-md-3">
+			<label class="form-label">Multiplayer Rank</label>
+			<input type="number" class="form-control" name="MultiplayerLevel" value="{{ MultiplayerLevel }}">
+		</div>
+		<div class="col-12">
+			<div class="form-check mt-2">
+				<input class="form-check-input" type="checkbox" name="Zxcvbnm" id="pvpBanCheck" {% if PVPBanned %}checked{% endif %}>
+				<label class="form-check-label" for="pvpBanCheck">PVP Banned</label>
+			</div>
+		</div>
+		<div class="col-12">
+			<button type="submit" class="btn btn-warning">Save Resources</button>
+		</div>
+	</form>
+
+	<hr>
+
+	<h5>Save Data</h5>
+	<div class="table-responsive small mb-4">
 		<table class="table table-striped table-sm">
 		<thead>
 			<tr>
@@ -67,7 +165,126 @@
 		</table>
 	</div>
 
-	<h3>Battle History:</h3>
+	<hr>
+
+	<h5>Add Creature</h5>
+	<form action="/admin/players/{{ player.username }}/add_creature" method="POST" class="row g-3 mb-4">
+		<div class="col-md-4">
+			<label class="form-label">Creature ID</label>
+			<input type="text" class="form-control" name="creature_id" placeholder="e.g. CR_skeleton" required>
+		</div>
+		<div class="col-md-3">
+			<label class="form-label">XP</label>
+			<input type="number" class="form-control" name="creature_xp" value="0">
+		</div>
+		<div class="col-md-3">
+			<label class="form-label">Star Rating</label>
+			<select class="form-select" name="creature_stars">
+				<option value="1">1 Star</option>
+				<option value="2">2 Stars</option>
+				<option value="3">3 Stars</option>
+				<option value="4">4 Stars</option>
+				<option value="5">5 Stars</option>
+			</select>
+		</div>
+		<div class="col-md-2 d-flex align-items-end">
+			<button type="submit" class="btn btn-success w-100">Add</button>
+		</div>
+	</form>
+
+	<hr>
+
+	<h5>Creatures ({{ Inventory|length }})
+		<form action="/admin/players/{{ player.username }}/add_all_creatures" method="POST" style="display:inline;">
+			<button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Add all 631 creatures to this player?')">Add All Creatures</button>
+		</form>
+		<form action="/admin/players/{{ player.username }}/max_all_creatures" method="POST" style="display:inline;">
+			<button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Max all creatures to 5-star level 50?')">Max All Creatures</button>
+		</form>
+	</h5>
+
+	<form action="/admin/players/{{ player.username }}/add_max_creature" method="POST" class="row g-3 mb-3">
+		<div class="col-md-8">
+			<label class="form-label">Add Max Creature (5★ XP 70325)</label>
+			<input type="text" class="form-control" name="creature_id" placeholder="Creature ID (e.g. CornBall_Base)" required>
+		</div>
+		<div class="col-md-4 d-flex align-items-end">
+			<button type="submit" class="btn btn-success w-100">Add Max Creature</button>
+		</div>
+	</form>
+	<div class="table-responsive small">
+		<table class="table table-striped table-sm">
+		<thead>
+			<tr>
+				<th scope="col">#</th>
+				<th scope="col">Creature</th>
+				<th scope="col">XP</th>
+				<th scope="col">Star Rating</th>
+				<th scope="col">Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for item in Inventory %}
+			<tr>
+				<td>{{ loop.index0 }}</td>
+				<td>{{ item.ID }}</td>
+				<td>{{ item.Xp }}</td>
+				<td>{{ item.StarRating }}</td>
+				<td>
+					<form action="/admin/players/{{ player.username }}/delete_creature/{{ loop.index0 }}" method="POST" style="display:inline;">
+						<button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this creature?')">Delete</button>
+					</form>
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+		</table>
+	</div>
+
+	<hr>
+
+	<h5>Action Cards ({{ CardCollection|length }})
+		<form action="/admin/players/{{ player.username }}/add_all_cards" method="POST" style="display:inline;">
+			<button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Add all 695 action cards to this player?')">Add All Cards</button>
+		</form>
+	</h5>
+	<form action="/admin/players/{{ player.username }}/add_card" method="POST" class="row g-3 mb-3">
+		<div class="col-md-8">
+			<label class="form-label">Card ID</label>
+			<input type="text" class="form-control" name="card_id" placeholder="e.g. CORN_0001" required>
+		</div>
+		<div class="col-md-4 d-flex align-items-end">
+			<button type="submit" class="btn btn-success w-100">Add Card</button>
+		</div>
+	</form>
+	<div class="table-responsive small">
+		<table class="table table-striped table-sm">
+		<thead>
+			<tr>
+				<th scope="col">#</th>
+				<th scope="col">Card ID</th>
+				<th scope="col">Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for item in CardCollection %}
+			<tr>
+				<td>{{ loop.index0 }}</td>
+				<td>{{ item.ID }}</td>
+				<td>
+					<form action="/admin/players/{{ player.username }}/delete_card/{{ loop.index0 }}" method="POST" style="display:inline;">
+						<button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this card?')">Delete</button>
+					</form>
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+		</table>
+	</div>
+
+	<hr>
+
+	<h5>Battle History</h5>
 	<div class="table-responsive small">
 		<table class="table table-striped table-sm">
 		<thead>
@@ -87,29 +304,6 @@
 				<td><a href="/admin/players/{{ item.opponentId }}">{{ item.opponentId }}</a></td>
 				<td>{{ item.season }}</td>
 				<td>{{ item.youWon }}</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-		</table>
-	</div>
-
-	<h3>Creatures:</h3>
-	<div class="table-responsive small">
-		<table class="table table-striped table-sm">
-		<thead>
-			<tr>
-				<th scope="col">Creature</th>
-				<th scope="col">XP</th>
-				<th scope="col">Star Rating</th>
-				
-			</tr>
-		</thead>
-		<tbody>
-			{% for item in Inventory %}
-			<tr>
-				<td>{{ item.ID }}</td>
-				<td>{{ item.Xp }}</td>
-				<td>{{ item.StarRating }}</td>
 			</tr>
 			{% endfor %}
 		</tbody>

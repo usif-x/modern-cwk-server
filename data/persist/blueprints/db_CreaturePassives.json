@@ -1,245 +1,4203 @@
 [
-	{"ID":"AncientScholar_Awaken","Description":"!!PASSIVE_AncientScholar_Awaken_DESC","ScriptName":"CardBlockToCornSwampOnDeploy","FeedsPerLevel":"150","MaxLevel":"3","MinVal1":"1","MaxVal1":"3"},
-	{"ID":"AncientScholar_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"AngelOfSand_Awaken","Description":"!!PASSIVE_AngelOfSand_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"AngelOfSand_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"ArcherDan_Awaken","Description":"!!PASSIVE_ArcherDan_Awaken_DESC","ScriptName":"GrantPinPointToCornSandTeamOnDeploy","FeedsPerLevel":"300","MaxLevel":"2","MinVal1":"1","MaxVal1":"2"},
-	{"ID":"ArcherDan_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"BaldingMan_Awaken","Description":"!!PASSIVE_BaldingMan_Awaken_DESC","ScriptName":"GrantAtkSpikeOnLandSwamp","FeedsPerLevel":"20","MaxLevel":"26","MinVal1":"50","MaxVal1":"75"},
-	{"ID":"BaldingMan_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"BaldmansThrone_Awaken","Description":"!!PASSIVE_BaldmansThrone_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"BaldmansThrone_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"BeachMum_Awaken","Description":"!!PASSIVE_BeachMum_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"BeachMum_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"BespectacledOgre_Awaken","Description":"!!PASSIVE_BespectacledOgre_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"BespectacledOgre_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"BogBanSheAngel_Awaken","Description":"!!PASSIVE_BogBanSheAngel_Awaken_DESC","ScriptName":"PlagueAndCrippleToDeployedEnemies","FeedsPerLevel":"20","MaxLevel":"6","MinVal1":"5","MaxVal1":"10","MinVal2":"1","MaxVal2":"1"},
-	{"ID":"BogBanSheAngel_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"BogFrogBomb_Awaken","Description":"!!PASSIVE_BogFrogBomb_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"BogFrogBomb_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"CactusBall_Awaken","Description":"!!PASSIVE_CactusBall_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"CactusBall_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"CactusThug_Awaken","Description":"!!PASSIVE_CactusThug_Awaken_DESC","ScriptName":"GrantAreaThornsOnDeploy","FeedsPerLevel":"75","MaxLevel":"5","MinVal1":"1","MaxVal1":"5"},
-	{"ID":"CactusThug_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"CaptainTaco_Awaken","Description":"!!PASSIVE_CaptainTaco_Awaken_DESC","ScriptName":"AreaPinpointOnDeploy","FeedsPerLevel":"4","MaxLevel":"26","MinVal1":"1","MaxVal1":"1"},
-	{"ID":"CaptainTaco_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"ChestBurster_Awaken","Description":"!!PASSIVE_ChestBurster_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"ChestBurster_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"CoolDog_Awaken","Description":"!!PASSIVE_CoolDog_Awaken_DESC","ScriptName":"GrantEnergyOnDeploy","FeedsPerLevel":"250","MaxLevel":"3","MinVal1":"1","MaxVal1":"2"},
-	{"ID":"CoolDog_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"Cornataur_Awaken","Description":"!!PASSIVE_Cornataur_Awaken_DESC","ScriptName":"GrantAtkSpikeForTargetWithBoostDefOnAttack","FeedsPerLevel":"4","MaxLevel":"26","MinVal1":"50","MaxVal1":"50"},
-	{"ID":"Cornataur_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"CornBall_Awaken","Description":"!!PASSIVE_CornBall_Awaken_DESC","ScriptName":"GrantAdrenalineToCornNiceCreaturesOnDestroyed","FeedsPerLevel":"250","MaxLevel":"3","MinVal1":"1","MaxVal1":"3"},
-	{"ID":"CornBall_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"CornDog_Awaken","Description":"!!PASSIVE_CornDog_Awaken_DESC","ScriptName":"GrantAttackSpikeOnDeploy","FeedsPerLevel":"20","MaxLevel":"26","MinVal1":"50","MaxVal1":"75"},
-	{"ID":"CornDog_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"CornEyeBat_Awaken","Description":"!!PASSIVE_CornEyeBat_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"CornEyeBat_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"CornLord_Awaken","Description":"!!PASSIVE_CornLord_Awaken_DESC","ScriptName":"GrantLandCornToRandomTeamOnDied","FeedsPerLevel":"50","MaxLevel":"3","MinVal1":"1","MaxVal1":"3"},
-	{"ID":"CornLord_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"CornRonin_Awaken","Description":"!!PASSIVE_CornRonin_Awaken_DESC","ScriptName":"GrantPinpointAdrenalineAtkSpikeOnDeploy","FeedsPerLevel":"12","MaxLevel":"26","MinVal1":"1","MaxVal1":"1","MinVal2":"50","MaxVal2":"50"},
-	{"ID":"CornRonin_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"CornWall_Awaken","Description":"!!PASSIVE_CornWall_Awaken_DESC","ScriptName":"GrantBoostDefnseToCornSwampCreaturesOnDeploy","FeedsPerLevel":"20","MaxLevel":"26","MinVal1":"1","MaxVal1":"1"},
-	{"ID":"CornWall_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"CottonEyeBat_Awaken","Description":"!!PASSIVE_CottonEyeBat_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"CottonEyeBat_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"CottonSaurusRex_Awaken","Description":"!!PASSIVE_CottonSaurusRex_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"CottonSaurusRex_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"Cow_Awaken","Description":"!!PASSIVE_Cow_Awaken_DESC","ScriptName":"AdjacentHealAndRemovePlagueEachTurn","FeedsPerLevel":"60","MaxLevel":"6","MinVal1":"5","MaxVal1":"10"},
-	{"ID":"Cow_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"DiamondDan_Awaken","Description":"!!PASSIVE_DiamondDan_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"DiamondDan_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"DrDeath_Awaken","Description":"!!PASSIVE_DrDeath_Awaken_DESC","ScriptName":"HealLowHealthCreaturesEachTurn","FeedsPerLevel":"33","MaxLevel":"10","MinVal1":"16","MaxVal1":"25","MinVal2":"15","MaxVal2":"15"},
-	{"ID":"DrDeath_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"DrStuffenstein_Awaken","Description":"!!PASSIVE_DrStuffenstein_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"DrStuffenstein_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"Earl_Awaken","Description":"!!PASSIVE_Earl_Awaken_DESC","ScriptName":"GrantAtkSpikeIfLowHP","FeedsPerLevel":"10","MaxLevel":"31","MinVal1":"10","MaxVal1":"40","MinVal2":"75","MaxVal2":"125"},
-	{"ID":"Earl_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"ElfChief_Awaken","Description":"!!PASSIVE_ElfChief_Awaken_DESC","ScriptName":"GrantShieldToCornPlainsTeamOnDeploy","FeedsPerLevel":"100","MaxLevel":"2","MinVal1":"1","MaxVal1":"2"},
-	{"ID":"ElfChief_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"ElfMarauder_Awaken","Description":"!!PASSIVE_ElfMarauder_Awaken_DESC","ScriptName":"EnergySiphonToEnemyNiceCreaturesOnDeploy","FeedsPerLevel":"4","MaxLevel":"26","MinVal1":"1","MaxVal1":"1"},
-	{"ID":"ElfMarauder_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"EmbarrassingBard_Awaken","Description":"!!PASSIVE_EmbarrassingBard_Awaken_DESC","ScriptName":"AdjacentShieldOnDeploy","FeedsPerLevel":"20","MaxLevel":"26","MinVal1":"1","MaxVal1":"1"},
-	{"ID":"EmbarrassingBard_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"ExtraordinarySpider_Awaken","Description":"!!PASSIVE_ExtraordinarySpider_Awaken_DESC","ScriptName":"PlagueOnCriticalHit","FeedsPerLevel":"33","MaxLevel":"10","MinVal1":"3","MaxVal1":"12"},
-	{"ID":"ExtraordinarySpider_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"EyeGuy_Awaken","Description":"!!PASSIVE_EyeGuy_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"EyeGuy_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"FarmerTom_Awaken","Description":"!!PASSIVE_FarmerTom_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"FarmerTom_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"FieldReaper_Awaken","Description":"!!PASSIVE_FieldReaper_Awaken_DESC","ScriptName":"InstantKillOnAttackHPThreshold","FeedsPerLevel":"4","MaxLevel":"26","MinVal1":"80","MaxVal1":"80"},
-	{"ID":"FieldReaper_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"Fluffantry_Awaken","Description":"!!PASSIVE_Fluffantry_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"Fluffantry_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"Flufflapillar_Awaken","Description":"!!PASSIVE_Flufflapillar_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"Flufflapillar_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"Fummy_Awaken","Description":"!!PASSIVE_Fummy_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"Fummy_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"GreenMermaid_Awaken","Description":"!!PASSIVE_GreenMermaid_Awaken_DESC","ScriptName":"InflictPlaugeOnNiceSandEnemyCreaturesOnDeploy","FeedsPerLevel":"100","MaxLevel":"6","MinVal1":"2","MaxVal1":"7"},
-	{"ID":"GreenMermaid_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"HeartAngel_Awaken","Description":"!!PASSIVE_HeartAngel_Awaken_DESC","ScriptName":"HealEveryoneOnDestroyed","FeedsPerLevel":"50","MaxLevel":"11","MinVal1":"5","MaxVal1":"15"},
-	{"ID":"HeartAngel_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"Herculeye_Awaken","Description":"!!PASSIVE_Herculeye_Awaken_DESC","ScriptName":"AtkSpikeToSandAndSwampOnDeploy","FeedsPerLevel":"50","MaxLevel":"11","MinVal1":"15","MaxVal1":"25"},
-	{"ID":"Herculeye_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"HuskerGiant_Awaken","Description":"!!PASSIVE_HuskerGiant_Awaken_DESC","ScriptName":"GrantBoostDefAtkSpikeOnDeploy","FeedsPerLevel":"20","MaxLevel":"16","MinVal1":"1","MaxVal1":"3","MinVal2":"25","MaxVal2":"70"},
-	{"ID":"HuskerGiant_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"HuskerKnight_Awaken","Description":"!!PASSIVE_HuskerKnight_Awaken_DESC","ScriptName":"GrantAdrenalineToCornBlueCreaturesOnDeploy","FeedsPerLevel":"150","MaxLevel":"3","MinVal1":"1","MaxVal1":"3"},
-	{"ID":"HuskerKnight_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"KingFluff_Awaken","Description":"!!PASSIVE_KingFluff_Awaken_DESC","ScriptName":"HealFrdCreaturesGrantAtkSpikeOnFloopCard","FeedsPerLevel":"4","MaxLevel":"26","MinVal1":"10","MaxVal1":"15","MinVal2":"25","MaxVal2":"50"},
-	{"ID":"KingFluff_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"KnightOfObesity_Awaken","Description":"!!PASSIVE_KnightOfObesity_Awaken_DESC","ScriptName":"GrantBoostDefHeroicOnDeploy","FeedsPerLevel":"12","MaxLevel":"26","MinVal1":"1","MaxVal1":"2"},
-	{"ID":"KnightOfObesity_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"LadyScarab_Awaken","Description":"!!PASSIVE_LadyScarab_Awaken_DESC","ScriptName":"GrantVampiricToSandBlueCreaturesOnDeploy","FeedsPerLevel":"12","MaxLevel":"26","MinVal1":"50","MaxVal1":"75"},
-	{"ID":"LadyScarab_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"LegionOfEarlings_Awaken","Description":"!!PASSIVE_LegionOfEarlings_Awaken_DESC","ScriptName":"AreaAtkSpikeOnOppDeploy","FeedsPerLevel":"12","MaxLevel":"26","MinVal1":"1","MaxVal1":"2"},
-	{"ID":"LegionOfEarlings_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"LostGolem_Awaken","Description":"!!PASSIVE_LostGolem_Awaken_DESC","ScriptName":"DefAtkHealEachTurnWhenAlone","FeedsPerLevel":"10","MaxLevel":"11","MinVal1":"1","MaxVal1":"2","MinVal2":"10","MaxVal2":"20","MinVal3":"10","MaxVal3":"20"},
-	{"ID":"LostGolem_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"MaiseWalker_Awaken","Description":"!!PASSIVE_MaiseWalker_Awaken_DESC","ScriptName":"GrantAtkSpikeOnLandCorn","FeedsPerLevel":"6","MaxLevel":"51","MinVal1":"150","MaxVal1":"300"},
-	{"ID":"MaiseWalker_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"ManowarElf_Awaken","Description":"!!PASSIVE_ManowarElf_Awaken_DESC","ScriptName":"GrantAtkSpikeToCornSandCreaturesOnDeploy","FeedsPerLevel":"20","MaxLevel":"26","MinVal1":"50","MaxVal1":"50"},
-	{"ID":"ManowarElf_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"ManWitch_Awaken","Description":"!!PASSIVE_ManWitch_Awaken_DESC","ScriptName":"TransmogrifyOppLowestHPOnDeploy","FeedsPerLevel":"4","MaxLevel":"26","MinVal1":"1","MaxVal1":"2"},
-	{"ID":"ManWitch_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"MotherFluffBucket_Awaken","Description":"!!PASSIVE_MotherFluffBucket_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"MotherFluffBucket_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"MsMummy_Awaken","Description":"!!PASSIVE_MsMummy_Awaken_DESC","ScriptName":"DefToSandAndPlainsOnDeath","FeedsPerLevel":"500","MaxLevel":"2","MinVal1":"1","MaxVal1":"3"},
-	{"ID":"MsMummy_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"Ninja_Awaken","Description":"!!PASSIVE_Ninja_Awaken_DESC","ScriptName":"PinpointAtkSpikeAboveHealthEachTurn","FeedsPerLevel":"25","MaxLevel":"21","MinVal1":"100","MaxVal1":"100","MinVal2":"20","MaxVal2":"40"},
-	{"ID":"Ninja_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"Phyllis_Awaken","Description":"!!PASSIVE_Phyllis_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"Phyllis_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"Pig_Awaken","Description":"!!PASSIVE_Pig_Awaken_DESC","ScriptName":"RemoveLandCornGrantAdreanlineOnAttack","FeedsPerLevel":"167","MaxLevel":"4","MinVal1":"1","MaxVal1":"4"},
-	{"ID":"Pig_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"PirateBear_Awaken","Description":"!!PASSIVE_PirateBear_Awaken_DESC","ScriptName":"StealAtkSpikeAndHealOnAttack","FeedsPerLevel":"10","MaxLevel":"11","MinVal1":"20","MaxVal1":"40","MinVal2":"10","MaxVal2":"20"},
-	{"ID":"PirateBear_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"PunkCat_Awaken","Description":"!!PASSIVE_PunkCat_Awaken_DESC","ScriptName":"AdjCreaturesDrawCardsWhenDeployed","FeedsPerLevel":"4","MaxLevel":"26","MinVal1":"1","MaxVal1":"1"},
-	{"ID":"PunkCat_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"RainbowBarfer_Awaken","Description":"!!PASSIVE_RainbowBarfer_Awaken_DESC","ScriptName":"EnemyCrippleOnLandSwamp","FeedsPerLevel":"33","MaxLevel":"4","MinVal1":"2","MaxVal1":"5"},
-	{"ID":"RainbowBarfer_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"SackOfPain_Awaken","Description":"!!PASSIVE_SackOfPain_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"SackOfPain_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"SandasaurusRex_Awaken","Description":"!!PASSIVE_SandasaurusRex_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"SandasaurusRex_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"SandEyeBat_Awaken","Description":"!!PASSIVE_SandEyeBat_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"SandEyeBat_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"SandJackal_Awaken","Description":"!!PASSIVE_SandJackal_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"SandJackal_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"SandKnight_Awaken","Description":"!!PASSIVE_SandKnight_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"SandKnight_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"SandShark_Awaken","Description":"!!PASSIVE_SandShark_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"SandShark_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"Sandwitch_Awaken","Description":"!!PASSIVE_Sandwitch_Awaken_DESC","ScriptName":"GrantBoostDefnseToSandNiceCreaturesOnDeploy","FeedsPerLevel":"150","MaxLevel":"3","MinVal1":"1","MaxVal1":"3"},
-	{"ID":"Sandwitch_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"Shepard_Awaken","Description":"!!PASSIVE_Shepard_Awaken_DESC","ScriptName":"RemoveNegEffToRandomTeamOnTurnStart","FeedsPerLevel":"300","MaxLevel":"2","MinVal1":"1","MaxVal1":"2"},
-	{"ID":"Shepard_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"SnakeMint_Awaken","Description":"!!PASSIVE_SnakeMint_Awaken_DESC","ScriptName":"HealOnCritical","FeedsPerLevel":"50","MaxLevel":"11","MinVal1":"10","MaxVal1":"20"},
-	{"ID":"SnakeMint_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"SnuggleTree_Awaken","Description":"!!PASSIVE_SnuggleTree_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"SnuggleTree_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"SoftEyeling_Awaken","Description":"!!PASSIVE_SoftEyeling_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"SoftEyeling_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"StruzanJinn_Awaken","Description":"!!PASSIVE_StruzanJinn_Awaken_DESC","ScriptName":"GrantShieldHeroicOnDeploy","FeedsPerLevel":"12","MaxLevel":"26","MinVal1":"1","MaxVal1":"1","MinVal2":"1","MaxVal2":"1"},
-	{"ID":"StruzanJinn_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"SunKing_Awaken","Description":"!!PASSIVE_SunKing_Awaken_DESC","ScriptName":"GrantAtkSpikeAdrenalineToCornSandCreaturesOnFloopCardDraw","FeedsPerLevel":"20","MaxLevel":"26","MinVal1":"50","MaxVal1":"50","MinVal2":"1","MaxVal2":"1"},
-	{"ID":"SunKing_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"TheDrooler_Awaken","Description":"!!PASSIVE_TheDrooler_Awaken_DESC","ScriptName":"PlagueOnAttack","FeedsPerLevel":"300","MaxLevel":"2","MinVal1":"1","MaxVal1":"2"},
-	{"ID":"TheDrooler_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"WallOfSand_Awaken","Description":"!!PASSIVE_WallOfSand_Awaken_DESC","ScriptName":"GrantBoostDefOnDeploy","FeedsPerLevel":"167","MaxLevel":"4","MinVal1":"1","MaxVal1":"4"},
-	{"ID":"WallOfSand_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"WizardElf_Awaken","Description":"!!PASSIVE_WizardElf_Awaken_DESC","ScriptName":"DrawCardsWhenDeployed","FeedsPerLevel":"20","MaxLevel":"26","MinVal1":"1","MaxVal1":"1"},
-	{"ID":"WizardElf_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"WizardOfPoo_Awaken","Description":"!!PASSIVE_WizardOfPoo_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"WizardOfPoo_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"MrFixIt_Awaken","Description":"!!PASSIVE_MrFixIt_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"MrFixIt_Base","DisplayName":"FLOOP","FeedsPerLevel":"0"},
-	{"ID":"PeteMoss_Awaken","Description":"!!PASSIVE_PeteMoss_Awaken_DESC","ScriptName":"PlagueOnAttacked","FeedsPerLevel":"75","MaxLevel":"5","MinVal1":"1","MaxVal1":"5"},
-	{"ID":"PeteMoss_Base","FeedsPerLevel":"0"},
-	{"ID":"PoppaCorn_Awaken","Description":"!!PASSIVE_PoppaCorn_Awaken_DESC","ScriptName":"RemovePoisonBlindAndHealTeamOnDeployed","FeedsPerLevel":"12","MaxLevel":"26","MinVal1":"20","MaxVal1":"20"},
-	{"ID":"PoppaCorn_Base","FeedsPerLevel":"0"},
-	{"ID":"PreTeenWolf_Awaken","Description":"!!PASSIVE_PreTeenWolf_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"PreTeenWolf_Base","FeedsPerLevel":"0"},
-	{"ID":"ShamanWoad_Awaken","Description":"!!PASSIVE_ShamanWoad_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"ShamanWoad_Base","FeedsPerLevel":"0"},
-	{"ID":"ShieldMaizen_Awaken","Description":"!!PASSIVE_ShieldMaizen_Awaken_DESC","ScriptName":"GrantHeroicOnDeploy","FeedsPerLevel":"167","MaxLevel":"4","MinVal1":"2","MaxVal1":"5"},
-	{"ID":"ShieldMaizen_Base","FeedsPerLevel":"0"},
-	{"ID":"Stalker_Awaken","Description":"!!PASSIVE_Stalker_Awaken_DESC","ScriptName":"GrantAtkSpikeIfTargetIsLowestHP","FeedsPerLevel":"4","MaxLevel":"26","MinVal1":"25","MaxVal1":"50"},
-	{"ID":"Stalker_Base","FeedsPerLevel":"0"},
-	{"ID":"SwampyTire_Awaken","Description":"!!PASSIVE_SwampyTire_Awaken_DESC","ScriptName":"AdrenalineThornsOnLandSwamp","FeedsPerLevel":"167","MaxLevel":"4","MinVal1":"2","MaxVal1":"5"},
-	{"ID":"SwampyTire_Base","FeedsPerLevel":"0"},
-	{"ID":"Tomezooka_Awaken","Description":"!!PASSIVE_Tomezooka_Awaken_DESC","ScriptName":"AtkSpikeForEachCardOnStartTurn","FeedsPerLevel":"75","MaxLevel":"5","MinVal1":"3","MaxVal1":"7"},
-	{"ID":"Tomezooka_Base","FeedsPerLevel":"0"},
-	{"ID":"ArmourOfBooks_Awaken","Description":"!!PASSIVE_ArmourOfBooks_Awaken_DESC","ScriptName":"AreaDefenseEachTurnWhenCardsInHand","FeedsPerLevel":"60","MaxLevel":"6","MinVal1":"8","MaxVal1":"3","MinVal2":"1","MaxVal2":"1"},
-	{"ID":"ArmourOfBooks_Base","FeedsPerLevel":"0"},
-	{"ID":"FireBaller_Awaken","Description":"!!PASSIVE_FireBaller_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"FireBaller_Base","FeedsPerLevel":"0"},
-	{"ID":"EnlightenedBaldMan_Awaken","Description":"!!PASSIVE_EnlightenedBaldMan_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"EnlightenedBaldMan_Base","FeedsPerLevel":"0"},
-	{"ID":"DonkeyKhan_Awaken","Description":"!!PASSIVE_DonkeyKhan_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"DonkeyKhan_Base","FeedsPerLevel":"0"},
-	{"ID":"HuskerTanker_Awaken","Description":"!!PASSIVE_HuskerTanker_Awaken_DESC","ScriptName":"AtkSpikeIfNotAttack","FeedsPerLevel":"12","MaxLevel":"26","MinVal1":"25","MaxVal1":"50"},
-	{"ID":"HuskerTanker_Base","FeedsPerLevel":"0"},
-	{"ID":"Batclops_Awaken","Description":"!!PASSIVE_Batclops_Awaken_DESC","ScriptName":"GrantEnergyOnCritical","FeedsPerLevel":"50","MaxLevel":"3","MinVal1":"1","MaxVal1":"3"},
-	{"ID":"Batclops_Base","FeedsPerLevel":"0"},
-	{"ID":"FunGuy_Awaken","Description":"!!PASSIVE_FunGuy_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"FunGuy_Base","FeedsPerLevel":"0"},
-	{"ID":"Sandman_Awaken","Description":"!!PASSIVE_Sandman_Awaken_DESC","ScriptName":"GrantLandSandHealOnDie","FeedsPerLevel":"10","MaxLevel":"11","MinVal1":"10","MaxVal1":"20"},
-	{"ID":"Sandman_Base","FeedsPerLevel":"0"},
-	{"ID":"PyramidTheKid_Awaken","Description":"!!PASSIVE_PyramidTheKid_Awaken_DESC","ScriptName":"AreaSandlandSiphonOnFloopDraw","FeedsPerLevel":"300","MaxLevel":"2","MinVal1":"1","MaxVal1":"2"},
-	{"ID":"PyramidTheKid_Base","FeedsPerLevel":"0"},
-	{"ID":"Nefertiti_Awaken","Description":"!!PASSIVE_Nefertiti_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"Nefertiti_Base","FeedsPerLevel":"0"},
-	{"ID":"FlySwatter_Awaken","Description":"!!PASSIVE_FlySwatter_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"FlySwatter_Base","FeedsPerLevel":"0"},
-	{"ID":"DustBunny_Awaken","Description":"!!PASSIVE_DustBunny_Awaken_DESC","ScriptName":"InflictBlindOnDestroyed","FeedsPerLevel":"250","MaxLevel":"3","MinVal1":"1","MaxVal1":"3"},
-	{"ID":"DustBunny_Base","FeedsPerLevel":"0"},
-	{"ID":"CutiePie_Awaken","Description":"!!PASSIVE_CutiePie_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"CutiePie_Base","FeedsPerLevel":"0"},
-	{"ID":"CornWorm_Awaken","Description":"!!PASSIVE_CornWorm_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"CornWorm_Base","FeedsPerLevel":"0"},
-	{"ID":"Feedman_Awaken","Description":"!!PASSIVE_Feedman_Awaken_DESC","ScriptName":"AreaAttackSpikeOnDamaged","FeedsPerLevel":"4","MaxLevel":"26","MinVal1":"50","MaxVal1":"50"},
-	{"ID":"Feedman_Base","FeedsPerLevel":"0"},
-	{"ID":"GrainaryWeevil_Awaken","Description":"!!PASSIVE_GrainaryWeevil_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"GrainaryWeevil_Base","FeedsPerLevel":"0"},
-	{"ID":"Ra_Awaken","Description":"!!PASSIVE_Ra_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"Ra_Base","FeedsPerLevel":"0"},
-	{"ID":"TheCooper_Awaken","Description":"!!PASSIVE_TheCooper_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"TheCooper_Base","FeedsPerLevel":"0"},
-	{"ID":"CottonCutie_Awaken","Description":"!!PASSIVE_CottonCutie_Awaken_DESC","FeedsPerLevel":"20","MaxLevel":"26"},
-	{"ID":"CottonCutie_Base","FeedsPerLevel":"0"},
-	{"ID":"DollyLlama_Awaken","Description":"!!PASSIVE_DollyLlama_Awaken_DESC","FeedsPerLevel":"12","MaxLevel":"26"},
-	{"ID":"DollyLlama_Base","FeedsPerLevel":"0"},
-	{"ID":"SoftRock_Awaken","Description":"!!PASSIVE_SoftRock_Awaken_DESC","ScriptName":"GrantWeakenStrOnAttacked","FeedsPerLevel":"150","MaxLevel":"3","MinVal1":"1","MaxVal1":"3"},
-	{"ID":"SoftRock_Base","FeedsPerLevel":"0"},
-	{"ID":"PileOfKittens_Awaken","Description":"!!PASSIVE_PileOfKittens_Awaken_DESC","ScriptName":"TransmorphOnAttackIfNoOtherTransmorph","FeedsPerLevel":"4","MaxLevel":"26","MinVal1":"1","MaxVal1":"2"},
-	{"ID":"PileOfKittens_Base","FeedsPerLevel":"0"},
-	{"ID":"KnifeKite_Awaken","Description":"!!PASSIVE_KnifeKite_Awaken_DESC","ScriptName":"GrantCounterAtkOnDeploy","FeedsPerLevel":"125","MaxLevel":"5","MinVal1":"1","MaxVal1":"5"},
-	{"ID":"KnifeKite_Base","FeedsPerLevel":"0"},
-	{"ID":"TheBarrel_Awaken","Description":"!!PASSIVE_TheBarrel_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"TheBarrel_Base","FeedsPerLevel":"0"},
-	{"ID":"Pickler_Awaken","Description":"!!PASSIVE_Pickler_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"Pickler_Base","FeedsPerLevel":"0"},
-	{"ID":"SteakChop_Awaken","Description":"!!PASSIVE_SteakChop_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"SteakChop_Base","FeedsPerLevel":"0"},
-	{"ID":"Pieclops_Awaken","Description":"!!PASSIVE_Pieclops_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"Pieclops_Base","FeedsPerLevel":"0"},
-	{"ID":"WallOfChocolate_Awaken","Description":"!!PASSIVE_WallOfChocolate_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"WallOfChocolate_Base","FeedsPerLevel":"0"},
-	{"ID":"SgtSandwich_Awaken","Description":"!!PASSIVE_SgtSandwich_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"SgtSandwich_Base","FeedsPerLevel":"0"},
-	{"ID":"DeputyHotDog_Awaken","Description":"!!PASSIVE_DeputyHotDog_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"DeputyHotDog_Base","FeedsPerLevel":"0"},
-	{"ID":"LieutenantLemonade_Awaken","Description":"!!PASSIVE_LieutenantLemonade_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"LieutenantLemonade_Base","FeedsPerLevel":"0"},
-	{"ID":"ColonelChicken_Awaken","Description":"!!PASSIVE_ColonelChicken_Awaken_DESC","FeedsPerLevel":"4","MaxLevel":"26"},
-	{"ID":"ColonelChicken_Base","FeedsPerLevel":"0"},
-	{"ID":"Sandor_Awaken","Description":"When a Sand creature is deployed, grant it Heroic for <val1> turns and grant this creature Revenge.","ScriptName":"BraveryAndRevengeWhenDeploying","FeedsPerLevel":"33","MaxLevel":"4","MinVal1":"1","MaxVal1":"3"},
-	{"ID":"Sandor_Base","FeedsPerLevel":"0"},
-	{"ID":"PlainJane_Awaken","Description":"!!PASSIVE_PlainJane_Awaken_DESC","ScriptName":"GrantShieldOnDeploy","FeedsPerLevel":"50","MaxLevel":"3","MinVal1":"1","MaxVal1":"3"},
-	{"ID":"PlainJane_Base","FeedsPerLevel":"0"},
-	{"ID":"HuskerDragon_Awaken","Description":"If this creature takes more than <val1>% damage to health in one attack, grant Shield x<val2>.","ScriptName":"ShieldOnHeavyHit","FeedsPerLevel":"5","MaxLevel":"21","MinVal1":"30","MaxVal1":"10","MinVal2":"1","MaxVal2":"1"},
-	{"ID":"HuskerDragon_Base"},
-	{"ID":"SPC_HuskerDragon_White","Description":"Grant <val1> Shield  to <valID> at the beginning of each turn.","ScriptName":"ShieldOnTargetEachTurn","MinVal1":"1","MaxVal1":"1","ValID":"HuskerDragon_Awaken"},
-	{"ID":"SPC_HuskerDragon_Mix","Description":"Grant Team Haste for <val1> turn at the beginning of the turn.","ScriptName":"TeamHasteEachTurn","MinVal1":"1","MaxVal1":"1"},
-	{"ID":"SPC_HuskerDragon_Yellow","Description":"Grant Team <val1>% Attack Up at the beginning of the turn.","ScriptName":"TeamAttackUpEachTurn","MinVal1":"25","MaxVal1":"25"}
+    {
+        "ID": "AncientScholar_Awaken",
+        "Description": "!!AWAKENED_ANCIENTSCHOLAR_DESC",
+        "ScriptName": "CardBlockToCornSwampOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "AncientScholar_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "AngelOfSand_Awaken",
+        "Description": "!!AWAKENED_ANGELOFSAND_DESC",
+        "ScriptName": "AdjacentVampiricOnDied",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "150",
+        "MaxVal1": "150"
+    },
+    {
+        "ID": "AngelOfSand_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ArcherDan_Awaken",
+        "Description": "!!AWAKENED_ARCHERDAN_DESC",
+        "ScriptName": "GrantTeamBullsEyeRemoveEnemyLandscapesDamageOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "10",
+        "MaxVal2": "10"
+    },
+    {
+        "ID": "ArcherDan_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "BaldingMan_Awaken",
+        "Description": "When this creature attacks an enemy creature without Curse, inflict Curse and grant Area 50% Life Leech.",
+        "ScriptName": "PoisonAndAreaVampiricOnAttackNonPoisoned",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5",
+        "MinVal2": "50",
+        "MaxVal2": "50"
+    },
+    {
+        "ID": "BaldingMan_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "BaldmansThrone_Awaken",
+        "Description": "!!AWAKENED_BALDMANSTHRONE_DESC",
+        "ScriptName": "DrawAndGainEnergyOnEnemyDiedFromPlague",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "BaldmansThrone_Base",
+        "Description": "When your Hero draws a Floop Card, grant 1x Gift Card and Resurrection Armor for 1 turn to all friendly creatures.",
+        "ScriptName": "GrantAutoReviveDealerOnHeroDrawCard",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "BeachMum_Awaken",
+        "Description": "!!AWAKENED_BEACHMUM_DESC",
+        "ScriptName": "BurnEveryoneOnKill",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "35",
+        "MaxVal1": "35"
+    },
+    {
+        "ID": "BeachMum_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "BespectacledOgre_Awaken",
+        "Description": "!!AWAKENED_BESPECTACLEDOGRE_DESC",
+        "ScriptName": "MagicDownAndBlindOnCriticalHit",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "BespectacledOgre_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "BogBanSheAngel_Awaken",
+        "Description": "!!AWAKENED_BOGBANSHEANGEL_DESC",
+        "ScriptName": "PlagueAndCrippleToDeployedEnemies",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "10",
+        "MaxVal1": "10",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "BogBanSheAngel_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "BogFrogBomb_Awaken",
+        "Description": "!!AWAKENED_BOGFROGBOMB_DESC",
+        "ScriptName": "BurnEveryoneOnfriendlyKill",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "7",
+        "MaxVal1": "7"
+    },
+    {
+        "ID": "BogFrogBomb_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CactusBall_Awaken",
+        "Description": "!!AWAKENED_CACTUSBALL_DESC",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1"
+    },
+    {
+        "ID": "CactusBall_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CactusThug_Awaken",
+        "Description": "!!AWAKENED_CACTUSTHUG_DESC",
+        "ScriptName": "GrantAreaThornsOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4"
+    },
+    {
+        "ID": "CactusThug_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CaptainTaco_Awaken",
+        "Description": "!!AWAKENED_CAPTAINTACO_DESC",
+        "ScriptName": "AreaPinpointOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "CaptainTaco_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ChestBurster_Awaken",
+        "Description": "!!AWAKENED_CHESTBURSTER_DESC",
+        "ScriptName": "InflictCripplePlagueOnAdjAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "ChestBurster_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CoolDog_Awaken",
+        "Description": "!!AWAKENED_COOLDOG_DESC",
+        "ScriptName": "GrantEnergyOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "CoolDog_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Cornataur_Awaken",
+        "Description": "!!AWAKENED_CORNATAUR_DESC",
+        "ScriptName": "GrantTeamVoidArmorOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4"
+    },
+    {
+        "ID": "Cornataur_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CornBall_Awaken",
+        "Description": "!!AWAKENED_CORNBALL_DESC",
+        "ScriptName": "GrantAreaFortifyDefHasteOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "CornBall_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CornDog_Awaken",
+        "Description": "!!AWAKENED_CORNDOG_DESC",
+        "ScriptName": "GrantFortitudeAndDefenseOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4"
+    },
+    {
+        "ID": "CornDog_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CornEyeBat_Awaken",
+        "Description": "!!AWAKENED_CORNEYEBAT_DESC",
+        "ScriptName": "GrantAtkSpikeForTargetWithBoostDefOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "75",
+        "MaxVal1": "75"
+    },
+    {
+        "ID": "CornEyeBat_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CornLord_Awaken",
+        "Description": "!!AWAKENED_CORNLORD_DESC",
+        "ScriptName": "GrantLandCornAtkSpikeOnDie",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "75",
+        "MaxVal1": "75"
+    },
+    {
+        "ID": "CornLord_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CornRonin_Awaken",
+        "Description": "!!AWAKENED_CORNRONIN_DESC",
+        "ScriptName": "AtkSpikeForEachCardOnStartTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "7",
+        "MaxVal1": "7"
+    },
+    {
+        "ID": "CornRonin_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CornWall_Awaken",
+        "Description": "!!AWAKENED_CORNWALL_DESC",
+        "ScriptName": "AreaImmunityFortifyDEFOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "CornWall_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CottonEyeBat_Awaken",
+        "Description": "!!AWAKENED_COTTONEYEBAT_DESC",
+        "ScriptName": "HealOnCritical",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "20",
+        "MaxVal1": "20"
+    },
+    {
+        "ID": "CottonEyeBat_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CottonSaurusRex_Awaken",
+        "Description": "!!AWAKENED_COTTONSAURUSREX_DESC",
+        "ScriptName": "RegenAndHealWhenThorns",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "CottonSaurusRex_Base",
+        "Description": "At The Start each turn, Grant Area Regen for 1 turns.",
+        "ScriptName": "AreaRegenToAtTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "Cow_Awaken",
+        "Description": "!!AWAKENED_COW_DESC",
+        "ScriptName": "AreaReducePlagueOnOppEndTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "10",
+        "MaxVal1": "10"
+    },
+    {
+        "ID": "Cow_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "DiamondDan_Awaken",
+        "Description": "!!AWAKENED_DIAMONDDAN_DESC",
+        "ScriptName": "TeamBrillianceEachTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "DiamondDan_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "DrDeath_Awaken",
+        "Description": "!!AWAKENED_DRDEATH_DESC",
+        "ScriptName": "VampiricToAllOnPlagueOrPoison",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "15",
+        "MaxVal1": "15"
+    },
+    {
+        "ID": "DrDeath_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "DrStuffenstein_Awaken",
+        "Description": "!!AWAKENED_DRSTUFFENSTEIN_DESC",
+        "ScriptName": "AreaHealOnEnemyCardDraw",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "6",
+        "MaxVal1": "6"
+    },
+    {
+        "ID": "DrStuffenstein_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Earl_Awaken",
+        "Description": "!!AWAKENED_EARL_DESC",
+        "ScriptName": "GrantAtkSpikeIfLowHP",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "55",
+        "MaxVal1": "55",
+        "MinVal2": "125",
+        "MaxVal2": "125"
+    },
+    {
+        "ID": "Earl_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ElfChief_Awaken",
+        "Description": "!!AWAKENED_ELFCHIEF_DESC",
+        "ScriptName": "GrantShieldToCornPlainsTeamOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "ElfChief_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ElfMarauder_Awaken",
+        "Description": "!!AWAKENED_ELFMARAUDER_DESC",
+        "ScriptName": "BurstINTOnCritical",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "20",
+        "MaxVal1": "20"
+    },
+    {
+        "ID": "ElfMarauder_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "EmbarrassingBard_Awaken",
+        "Description": "!!AWAKENED_EMBARRASSINGBARD_DESC",
+        "ScriptName": "AdjacentShieldOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "EmbarrassingBard_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ExtraordinarySpider_Awaken",
+        "Description": "!!AWAKENED_EXTRAORDINARYSPIDER_DESC",
+        "ScriptName": "AreaLandSwampVampiricOnFirstAtk",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "150",
+        "MaxVal1": "150"
+    },
+    {
+        "ID": "ExtraordinarySpider_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "EyeGuy_Awaken",
+        "Description": "!!AWAKENED_EYEGUY_DESC",
+        "ScriptName": "AreaParasisticArmorHealIfFewerCardsOnTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "0",
+        "MaxVal2": "0"
+    },
+    {
+        "ID": "EyeGuy_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "FarmerTom_Awaken",
+        "Description": "!!AWAKENED_FARMERTOM_DESC",
+        "ScriptName": "HealEveryoneOnDebuff",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "15",
+        "MaxVal1": "15"
+    },
+    {
+        "ID": "FarmerTom_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "FieldReaper_Awaken",
+        "Description": "!!AWAKENED_FIELDREAPER_DESC",
+        "ScriptName": "InstantKillOnAttackHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "65",
+        "MaxVal1": "65"
+    },
+    {
+        "ID": "FieldReaper_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Fluffantry_Awaken",
+        "Description": "!!AWAKENED_FLUFFANTRY_DESC",
+        "ScriptName": "HealLowHealthCreaturesEachTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "99",
+        "MaxVal1": "99",
+        "MinVal2": "9",
+        "MaxVal2": "9"
+    },
+    {
+        "ID": "Fluffantry_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Flufflapillar_Awaken",
+        "Description": "!!AWAKENED_FLUFFLAPILLAR_DESC",
+        "ScriptName": "FortifyDefAndHealWhenRegen",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "15",
+        "MaxVal2": "15"
+    },
+    {
+        "ID": "Flufflapillar_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Fummy_Awaken",
+        "Description": "!!AWAKENED_FUMMY_DESC",
+        "ScriptName": "PoisonAllOnDeath",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "Fummy_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "GreenMermaid_Awaken",
+        "Description": "!!AWAKENED_GREENMERMAID_DESC",
+        "ScriptName": "InflictPlaugeOnNiceSandEnemyCreaturesOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "7",
+        "MaxVal1": "7"
+    },
+    {
+        "ID": "GreenMermaid_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "HeartAngel_Awaken",
+        "Description": "!!AWAKENED_HEARTANGEL_DESC",
+        "ScriptName": "HealEveryoneOnDestroyed",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "20",
+        "MaxVal1": "20"
+    },
+    {
+        "ID": "HeartAngel_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Herculeye_Awaken",
+        "Description": "!!AWAKENED_HERCULEYE_DESC",
+        "ScriptName": "AtkSpikeToSandAndSwampOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "75",
+        "MaxVal1": "75"
+    },
+    {
+        "ID": "Herculeye_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "HuskerGiant_Awaken",
+        "Description": "!!AWAKENED_HUSKERGIANT_DESC",
+        "ScriptName": "GrantBoostDefAtkSpikeOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "70",
+        "MaxVal2": "70"
+    },
+    {
+        "ID": "HuskerGiant_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "HuskerKnight_Awaken",
+        "Description": "!!AWAKENED_HUSKERKNIGHT_DESC",
+        "ScriptName": "GrantAdrenalineToCornBlueCreaturesOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "HuskerKnight_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "KingFluff_Awaken",
+        "Description": "!!AWAKENED_KINGFLUFF_DESC",
+        "ScriptName": "HealFrdCreaturesGrantAtkSpikeOnFloopCard",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "15",
+        "MaxVal1": "15",
+        "MinVal2": "75",
+        "MaxVal2": "75"
+    },
+    {
+        "ID": "KingFluff_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "KnightOfObesity_Awaken",
+        "Description": "!!AWAKENED_KNIGHTOFOBESITY_DESC",
+        "ScriptName": "TeamSpikesOnEnemyKill",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "30",
+        "MaxVal1": "30",
+        "MinVal2": "30",
+        "MaxVal2": "30"
+    },
+    {
+        "ID": "KnightOfObesity_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "LadyScarab_Awaken",
+        "Description": "If a friendly creature is attacked, grant this creature 40% Attack Up, x1 Counterattack and Heroic for 3 turn (once per turn)",
+        "ScriptName": "CounterAndBraveryAndAttackSpikeOnOtherFriendlyAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "3",
+        "MaxVal2": "3",
+        "MinVal3": "40",
+        "MaxVal3": "40"
+    },
+    {
+        "ID": "LadyScarab_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "LegionOfEarlings_Awaken",
+        "Description": "!!AWAKENED_LEGIONOFEARLINGS_DESC",
+        "ScriptName": "AreaAtkSpikeOnOppDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "50",
+        "MaxVal1": "50"
+    },
+    {
+        "ID": "LegionOfEarlings_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "LostGolem_Awaken",
+        "Description": "!!AWAKENED_LOSTGOLEM_DESC",
+        "ScriptName": "DefAtkHealEachTurnWhenAlone",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "20",
+        "MaxVal2": "20",
+        "MinVal3": "20",
+        "MaxVal3": "20"
+    },
+    {
+        "ID": "LostGolem_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "MaiseWalker_Awaken",
+        "Description": "!!AWAKENED_MAISEWALKER_DESC",
+        "ScriptName": "BraveryAndBoostDefAndBoostResAndRegenOnHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "30",
+        "MaxVal1": "30",
+        "MinVal2": "2",
+        "MaxVal2": "2",
+        "MinVal3": "2",
+        "MaxVal3": "2",
+        "MinVal4": "2",
+        "MaxVal4": "2"
+    },
+    {
+        "ID": "MaiseWalker_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ManowarElf_Awaken",
+        "Description": "At the start of the turn remove friendly team Magic Down, Attack Down, Slow and and Blind, also remove enemy team Energy Sap, Plant-Energy, Vanish Armor and Invisible Armor",
+        "ScriptName": "RemoveBlindWeakenSTRWeakenINTAndHealTeamOnStartTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "0",
+        "MaxVal1": "0"
+    },
+    {
+        "ID": "ManowarElf_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ManWitch_Awaken",
+        "Description": "!!AWAKENED_MANWITCH_DESC",
+        "ScriptName": "TransmogrifyOppLowestHPOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "ManWitch_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "MotherFluffBucket_Awaken",
+        "Description": "!!AWAKENED_MOTHERFLUFFBUCKET_DESC",
+        "ScriptName": "HealLowHealthCreaturesEachTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "40",
+        "MaxVal1": "40",
+        "MinVal2": "20",
+        "MaxVal2": "20"
+    },
+    {
+        "ID": "MotherFluffBucket_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "MsMummy_Awaken",
+        "Description": "!!AWAKENED_MSMUMMY_DESC",
+        "ScriptName": "DefToSandAndPlainsOnDeath",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "MsMummy_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Ninja_Awaken",
+        "Description": "!!AWAKENED_NINJA_DESC",
+        "ScriptName": "PinpointAtkSpikeAboveHealthEachTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "80",
+        "MaxVal1": "80",
+        "MinVal2": "40",
+        "MaxVal2": "40"
+    },
+    {
+        "ID": "Ninja_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Phyllis_Awaken",
+        "Description": "!!AWAKENED_PHYLLIS_DESC",
+        "ScriptName": "APOnEnemyDied",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "Phyllis_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Pig_Awaken",
+        "Description": "!!AWAKENED_PIG_DESC",
+        "ScriptName": "ShieldAllOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "10",
+        "MaxVal1": "10",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "Pig_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "PirateBear_Awaken",
+        "Description": "!!AWAKENED_PIRATEBEAR_DESC",
+        "ScriptName": "RemoveBuffOnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "30",
+        "MaxVal1": "30"
+    },
+    {
+        "ID": "PirateBear_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "PunkCat_Awaken",
+        "Description": "!!AWAKENED_PUNKCAT_DESC",
+        "ScriptName": "DrawCardAndMagicCounterUnderHPOnTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "40",
+        "MaxVal1": "40",
+        "MinVal2": "1",
+        "MaxVal2": "1",
+        "MinVal3": "1",
+        "MaxVal3": "1"
+    },
+    {
+        "ID": "PunkCat_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "RainbowBarfer_Awaken",
+        "Description": "!!AWAKENED_RAINBOWBARFER_DESC",
+        "ScriptName": "AreaParasiticArmorAboveHPOnTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "65",
+        "MaxVal2": "65"
+    },
+    {
+        "ID": "RainbowBarfer_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SackOfPain_Awaken",
+        "Description": "!!AWAKENED_SACKOFPAIN_DESC",
+        "ScriptName": "RemoveDebuffsAdjAndSelfOnCardThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1"
+    },
+    {
+        "ID": "SackOfPain_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SandasaurusRex_Awaken",
+        "Description": "!!AWAKENED_SANDASAURUSREX_DESC",
+        "ScriptName": "DrawAndMagicSpikeNiceSandToFullHPAtTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "0",
+        "MaxVal2": "0"
+    },
+    {
+        "ID": "SandasaurusRex_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SandEyeBat_Awaken",
+        "Description": "!!AWAKENED_SANDEYEBAT_DESC",
+        "ScriptName": "ThornsToDeployed",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "SandEyeBat_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SandJackal_Awaken",
+        "Description": "!!AWAKENED_SANDJACKAL_DESC",
+        "ScriptName": "BurnOnCritical",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "7",
+        "MaxVal1": "7"
+    },
+    {
+        "ID": "SandJackal_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SandKnight_Awaken",
+        "Description": "!!AWAKENED_SANDKNIGHT_DESC",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1"
+    },
+    {
+        "ID": "SandKnight_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SandShark_Awaken",
+        "Description": "!!AWAKENED_SANDSHARK_DESC",
+        "ScriptName": "EraseBraveryAndInflictCardBlockToHighHPOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "SandShark_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Sandwitch_Awaken",
+        "Description": "!!AWAKENED_SANDWITCH_DESC",
+        "ScriptName": "GrantBoostDefnseToSandNiceCreaturesOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5"
+    },
+    {
+        "ID": "Sandwitch_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Shepard_Awaken",
+        "Description": "If you play 2 cards in one turn, Remove 2 Debuff to all friendly creatures.",
+        "ScriptName": "RemoveDebuffOnTeamOnCardThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "Shepard_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SnakeMint_Awaken",
+        "Description": "!!AWAKENED_SNAKEMINT_DESC",
+        "ScriptName": "RemoveDebuffStatusIfLowHP",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "100",
+        "MaxVal1": "100",
+        "MinVal2": "100",
+        "MaxVal2": "100"
+    },
+    {
+        "ID": "SnakeMint_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SnuggleTree_Awaken",
+        "Description": "!!AWAKENED_SNUGGLETREE_DESC",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1"
+    },
+    {
+        "ID": "SnuggleTree_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SoftEyeling_Awaken",
+        "Description": "When a Nicelands Landscape is played on this creature, Grant it 75% Attack Up and 1x Bulls-Eye",
+        "ScriptName": "GrantAtkSpikePPIfOnLandNice",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "75",
+        "MaxVal1": "75",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "SoftEyeling_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "StruzanJinn_Awaken",
+        "Description": "!!AWAKENED_STRUZANJINN_DESC",
+        "ScriptName": "GrantShieldHeroicOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "0",
+        "MaxVal1": "0",
+        "MinVal2": "5",
+        "MaxVal2": "5"
+    },
+    {
+        "ID": "StruzanJinn_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SunKing_Base",
+        "Description": "!!AWAKENED_SUNKING_DESC",
+        "ScriptName": "GrantAtkSpikeAdrenalineToCornSandCreaturesOnFloopCardDraw",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "75",
+        "MaxVal1": "75",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "SunKing_Awaken",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "TheDrooler_Awaken",
+        "Description": "!!AWAKENED_THEDROOLER_DESC",
+        "ScriptName": "GrantWeakenStrOnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "TheDrooler_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "WallOfSand_Awaken",
+        "Description": "!!AWAKENED_WALLOFSAND_DESC",
+        "ScriptName": "GrantBoostDefOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "10",
+        "MaxVal1": "10"
+    },
+    {
+        "ID": "WallOfSand_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "WizardElf_Awaken",
+        "Description": "!!AWAKENED_WIZARDELF_DESC",
+        "ScriptName": "DrawCardsWhenDeployed",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "WizardElf_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "WizardOfPoo_Awaken",
+        "Description": "!!AWAKENED_WIZARDOFPOO_DESC",
+        "ScriptName": "WeakenINTOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "100",
+        "MaxVal1": "100",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "WizardOfPoo_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "MrFixIt_Awaken",
+        "Description": "!!AWAKENED_MRFIXIT_DESC",
+        "ScriptName": "PlagueAllOnDeath",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "25",
+        "MaxVal1": "25"
+    },
+    {
+        "ID": "MrFixIt_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "PeteMoss_Awaken",
+        "Description": "!!AWAKENED_PETEMOSS_DESC",
+        "ScriptName": "PlagueOnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "7",
+        "MaxVal1": "7"
+    },
+    {
+        "ID": "PeteMoss_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "PoppaCorn_Awaken_01",
+        "Description": "When this creature deployed, Grant Fortitude for 5 turns",
+        "ScriptName": "GrantFortitudeOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5"
+    },
+    {
+        "ID": "PoppaCorn_Awaken",
+        "Description": "!!AWAKENED_POPPACORN_DESC",
+        "ScriptName": "EnhanceSTRlandCornHasteAttackUpCornFriendlyOnHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "40",
+        "MaxVal1": "40",
+        "MinVal2": "3",
+        "MaxVal2": "3",
+        "MinVal3": "75",
+        "MaxVal3": "75",
+        "MinVal4": "3",
+        "MaxVal4": "3"
+    },
+    {
+        "ID": "PoppaCorn_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "PreTeenWolf_Awaken",
+        "Description": "!!AWAKENED_PRETEENWOLF_DESC",
+        "ScriptName": "APSiphonOnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "100",
+        "MaxVal1": "100",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "ShamanWoad_Awaken",
+        "Description": "!!AWAKENED_SHAMANWOAD_DESC",
+        "ScriptName": "RemoveBuffsOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "100",
+        "MaxVal1": "100",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "ShamanWoad_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ShieldMaizen_Awaken",
+        "Description": "!!AWAKENED_SHIELDMAIZEN_DESC",
+        "ScriptName": "GrantBoostDefHeroicOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5",
+        "MinVal2": "5",
+        "MaxVal2": "5"
+    },
+    {
+        "ID": "ShieldMaizen_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Stalker_Awaken",
+        "Description": "!!AWAKENED_STALKER_DESC",
+        "ScriptName": "GrantAtkSpikeShieldIfTargetIsLowestHP",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "50",
+        "MaxVal1": "50",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "Stalker_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SwampyTire_Awaken",
+        "Description": "!!AWAKENED_SWAMPYTIRE_DESC",
+        "ScriptName": "VampiricAndEnhanceSTRThornsOnLandSwamp",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "120",
+        "MaxVal1": "120",
+        "MinVal2": "5",
+        "MaxVal2": "5",
+        "MinVal3": "5",
+        "MaxVal3": "5"
+    },
+    {
+        "ID": "SwampyTire_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Tomezooka_Awaken",
+        "Description": "!!AWAKENED_TOMEZOOKA_DESC",
+        "ScriptName": "BurstINTOnZeroAP",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "22",
+        "MaxVal1": "22"
+    },
+    {
+        "ID": "Tomezooka_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ArmourOfBooks_Awaken",
+        "Description": "!!AWAKENED_ARMOUROFBOOKS_DESC",
+        "ScriptName": "AreaDefenseEachTurnWhenCardsInHand",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "ArmourOfBooks_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "FireBaller_Awaken",
+        "Description": "When enemy gets Energy Sap, Grant 2x Magic Counterattack and 7% Magic Boost on this creature.",
+        "ScriptName": "GrantMagicCounterAndMgcBoostWhenEnemyAPSiphon",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "7",
+        "MaxVal2": "7"
+    },
+    {
+        "ID": "FireBaller_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "EnlightenedBaldMan_Awaken",
+        "Description": "When any of your creature dies inflict Curse for 2 turns and 1x Blind Enemy Team",
+        "ScriptName": "PoisonBlindOnAllyDied",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "EnlightenedBaldMan_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "DonkeyKhan_Awaken",
+        "Description": "!!AWAKENED_DONKEYKHAN_DESC",
+        "ScriptName": "GrantAreaCounterAtkOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "DonkeyKhan_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "HuskerTanker_Awaken",
+        "Description": "!!AWAKENED_HUSKERTANKER_DESC",
+        "ScriptName": "AtkSpikeIfNotAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "50",
+        "MaxVal1": "50"
+    },
+    {
+        "ID": "HuskerTanker_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Batclops_Awaken",
+        "Description": "When this creature, critical hit, Grant 2 Energy.",
+        "ScriptName": "GrantEnergyOnCriticalNotOiled",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "Batclops_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "FunGuy_Awaken",
+        "Description": "!!AWAKENED_FUNGUY_DESC",
+        "ScriptName": "GainEnergyOnTurnStartIfEnemyPlagueOrPoisonThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "20",
+        "MaxVal2": "20"
+    },
+    {
+        "ID": "FunGuy_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Sandman_Awaken",
+        "Description": "!!AWAKENED_SANDMAN_DESC",
+        "ScriptName": "AreaFortifyDEfAdrenalineVampiricOnManyEnemyDragAttacks",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "2",
+        "MaxVal2": "2",
+        "MinVal3": "100",
+        "MaxVal3": "100"
+    },
+    {
+        "ID": "Sandman_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "PyramidTheKid_Awaken",
+        "Description": "!!AWAKENED_PYRAMIDTHEKID_DESC",
+        "ScriptName": "BraveryAndHealForHighestHPOnTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "10",
+        "MaxVal2": "10"
+    },
+    {
+        "ID": "PyramidTheKid_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Nefertiti_Awaken",
+        "Description": "!!AWAKENED_NEFERTITI_DESC",
+        "ScriptName": "RemoveLandDrawCardOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "Nefertiti_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "FlySwatter_Awaken",
+        "Description": "!!AWAKENED_FLYSWATTERALT_DESC",
+        "ScriptName": "EnergyForEachOpponentCardOnStartTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "FlySwatter_Base",
+        "Description": "!!AWAKENED_FLYSWATTER_DESC",
+        "ScriptName": "AdjCreaturesDrawCardsWhenDeployed",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "DustBunny_Awaken",
+        "Description": "!!AWAKENED_DUSTBUNNY_DESC",
+        "ScriptName": "InflictBlindOnDestroyed",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5"
+    },
+    {
+        "ID": "DustBunny_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CutiePie_Awaken",
+        "Description": "!!AWAKENED_CUTIEPIE_DESC",
+        "ScriptName": "HealEveryoneOnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "7",
+        "MaxVal1": "7"
+    },
+    {
+        "ID": "CutiePie_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CornWorm_Awaken",
+        "Description": "If a play 3 card in this turns, Inflict 1x Block Card on enemy team.",
+        "ScriptName": "CardBlockOnCardThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "CornWorm_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Feedman_Awaken",
+        "Description": "!!AWAKENED_FEEDMAN_DESC",
+        "ScriptName": "AreaAttackSpikeOnDamaged",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "50",
+        "MaxVal1": "50"
+    },
+    {
+        "ID": "Feedman_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "GrainaryWeevil_Awaken",
+        "Description": "!!AWAKENED_GRAINARYWEEVIL_DESC",
+        "ScriptName": "RemoveLandscapeAdrenalineOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "GrainaryWeevil_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Ra_Awaken",
+        "Description": "!!AWAKENED_RA_DESC",
+        "ScriptName": "EraseBraveryForAreaAttackSpikeOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "35",
+        "MaxVal1": "35"
+    },
+    {
+        "ID": "Ra_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "TheCooper_Awaken",
+        "Description": "!!AWAKENED_THECOOPER_DESC",
+        "ScriptName": "GrantAreaThornsOnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "TheCooper_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CottonCutie_Awaken_01",
+        "Description": "When this creature died, Grant Hastle for 3 turns on Friendly Team",
+        "ScriptName": "GrantAdrenalineOnDie",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "CottonCutie_Awaken",
+        "Description": "!!AWAKENED_COTTONCUTIE_DESC",
+        "ScriptName": "HealLowestOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "6",
+        "MaxVal1": "6"
+    },
+    {
+        "ID": "CottonCutie_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "DollyLlama_Awaken",
+        "Description": "!!AWAKENED_DOLLYLLAMA_DESC",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1"
+    },
+    {
+        "ID": "DollyLlama_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SoftRock_Awaken",
+        "Description": "!!AWAKENED_SOFTROCK_DESC",
+        "ScriptName": "RemoveNegEffAndGrantImmunityAndDefOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "15",
+        "MaxVal1": "15",
+        "MinVal2": "1",
+        "MaxVal2": "1",
+        "MinVal3": "1",
+        "MaxVal3": "1"
+    },
+    {
+        "ID": "SoftRock_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "PileOfKittens_Awaken",
+        "Description": "!!AWAKENED_PILEOFKITTENS_DESC",
+        "ScriptName": "TransmorphOnAttackIfNoOtherTransmorph",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "PileOfKittens_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "KnifeKite_Awaken",
+        "Description": "!!AWAKENED_KNIFEKITE_DESC",
+        "ScriptName": "GrantCounterAtkOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5"
+    },
+    {
+        "ID": "KnifeKite_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "TheBarrel_Awaken",
+        "Description": "!!AWAKENED_THEBARREL_DESC",
+        "ScriptName": "RemovePoisonBlindAndHealTeamOnDeployed",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "25",
+        "MaxVal1": "25"
+    },
+    {
+        "ID": "TheBarrel_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Pickler_Awaken",
+        "Description": "If this creature's HP drops below 45%, Inflict Curse and Magic Down for 3 turns and 2x Blind on all enemy creatures.",
+        "ScriptName": "GrantPoisonWeakenIntBlindToOppTeamIfHPLow",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "45",
+        "MaxVal1": "45",
+        "MinVal2": "3",
+        "MaxVal2": "3",
+        "MinVal3": "2",
+        "MaxVal3": "2"
+    },
+    {
+        "ID": "Pickler_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SteakChop_Awaken",
+        "Description": "!!AWAKENED_STEAKCHOP_DESC",
+        "ScriptName": "PlagueOnCriticalHit",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5"
+    },
+    {
+        "ID": "SteakChop_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Pieclops_Awaken",
+        "Description": "!!AWAKENED_PIECLOPS_DESC",
+        "ScriptName": "GrantThornBraveryIfOppHasMoreCards",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "Pieclops_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "WallOfChocolate_Awaken",
+        "Description": "!!AWAKENED_WALLOFCHOCOLATE_DESC",
+        "ScriptName": "RegenFortifyDEFEachTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "0",
+        "MaxVal1": "0",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "WallOfChocolate_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SgtSandwich_Awaken",
+        "Description": "!!AWAKENED_SGTSANDWICH_DESC",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1"
+    },
+    {
+        "ID": "SgtSandwich_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "DeputyHotDog_Awaken",
+        "Description": "!!AWAKENED_DEPUTYHOTDOG_DESC",
+        "ScriptName": "DealerOnAttackChance",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "10",
+        "MaxVal1": "10",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "DeputyHotDog_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "LieutenantLemonade_Awaken",
+        "Description": "!!AWAKENED_LIEUTENANTLEMONADE_DESC",
+        "ScriptName": "ShieldAndCleanseAndRegenOnHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "30",
+        "MaxVal1": "30",
+        "MinVal2": "2",
+        "MaxVal2": "2",
+        "MinVal3": "5",
+        "MaxVal3": "5",
+        "MinVal4": "4",
+        "MaxVal4": "4"
+    },
+    {
+        "ID": "LieutenantLemonade_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ColonelChicken_Awaken",
+        "Description": "When Thorns is played on a enemy creature, Inflict Curse, Attack Down and Magic Down for 3 turns.",
+        "ScriptName": "InflictMagicDownAttackDownPoisonWhenEnemyThorns",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "3",
+        "MaxVal2": "3",
+        "MinVal3": "3",
+        "MaxVal3": "3"
+    },
+    {
+        "ID": "ColonelChicken_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Sandor_Awaken",
+        "Description": "!!AWAKENED_SANDOR_DESC",
+        "ScriptName": "BLOCKBraveryAndRevengeWhenDeploying",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5"
+    },
+    {
+        "ID": "Sandor_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "PlainJane_Awaken",
+        "Description": "!!AWAKENED_PLAINJANE_DESC",
+        "ScriptName": "GrantShieldOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "PlainJane_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "HuskerDragon_Awaken",
+        "Description": "!!AWAKENED_HUSKERDRAGON_DESC",
+        "ScriptName": "ShieldOnHeavyHit",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "7",
+        "MaxVal1": "7",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "PlainsWalker_Special",
+        "Description": "!!AWAKENED_MAISEWALKER_DESC",
+        "ScriptName": "BraveryAndBoostDefAndBoostResAndRegenOnHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "30",
+        "MaxVal1": "30",
+        "MinVal2": "2",
+        "MaxVal2": "2",
+        "MinVal3": "2",
+        "MaxVal3": "2",
+        "MinVal4": "2",
+        "MaxVal4": "2"
+    },
+    {
+        "ID": "HuskerDragon_Base"
+    },
+    {
+        "ID": "SPC_HuskerDragon_White",
+        "Description": "!!AWAKENED_SPCHUSKERDRAGONWHITE_DESC",
+        "ScriptName": "ShieldOnTargetEachTurn",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "ValID": "HuskerDragon_Awaken"
+    },
+    {
+        "ID": "SPC_HuskerDragon_Mix",
+        "Description": "!!AWAKENED_SPCHUSKERDRAGONMIX_DESC",
+        "ScriptName": "TeamHasteEachTurn",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "SPC_HuskerDragon_Yellow",
+        "Description": "!!AWAKENED_SPCHUSKERDRAGONYELLOW_DESC",
+        "ScriptName": "TeamAttackUpEachTurn",
+        "MinVal1": "25",
+        "MaxVal1": "25"
+    },
+    {
+        "ID": "SPCWhite",
+        "Description": "!!AWAKENED_SPCWHITE_DESC",
+        "ScriptName": "ShieldAtLowHPOnStartTurn",
+        "MinVal1": "50",
+        "MaxVal1": "50",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "SPCMix",
+        "Description": "!!AWAKENED_SPCMIX_DESC",
+        "ScriptName": "AdjacentAdrenalineOnAttack",
+        "MinVal1": "100",
+        "MaxVal1": "100",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "SPCYellow",
+        "Description": "!!AWAKENED_SPCYELLOW_DESC",
+        "ScriptName": "TeamAttackUpEachTurn",
+        "MinVal1": "25",
+        "MaxVal1": "25"
+    },
+    {
+        "ID": "BanSheQueen_Awaken",
+        "Description": "!!AWAKENED_BANSHEQUEEN_DESC",
+        "ScriptName": "CurseAndCardBlockToDeployedEnemies",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "BanSheQueen_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "AngelOfVanilla_Awaken",
+        "Description": "!!AWAKENED_ANGELOFVANILLA_DESC",
+        "ScriptName": "TeamRemoveDebuffEachTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "AngelOfVanilla_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CornasaurusRex_Awaken",
+        "Description": "!!AWAKENED_CORNASAURUSREX_DESC",
+        "ScriptName": "AreaImmunityAboveHPOnTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "80",
+        "MaxVal2": "80"
+    },
+    {
+        "ID": "CornasaurusRex_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "BlackCat_Awaken",
+        "Description": "!!AWAKENED_BLACKCAT_DESC",
+        "ScriptName": "BlockCardAndBlindToDeployedEnemies",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "YellowMermaid_Awaken",
+        "Description": "!!AWAKENED_YELLOWMERMAID_DESC",
+        "ScriptName": "BurnAndCrippleToDeployedEnemies",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "30",
+        "MaxVal1": "30",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "Seahorse_Awaken",
+        "Description": "!!AWAKENED_SEAHORSE_DESC",
+        "ScriptName": "GrantDealerHealIfOppHasMoreCards",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "20",
+        "MaxVal1": "20",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "GrayEyeBat_Awaken",
+        "Description": "!!AWAKENED_GRAYEYEBAT_01_DESC",
+        "ScriptName": "PlagueCardBlockOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "20",
+        "MaxVal1": "20",
+        "MinVal2": "20",
+        "MaxVal2": "20",
+        "MinVal3": "1",
+        "MaxVal3": "1"
+    },
+    {
+        "ID": "WinterCow_Awaken",
+        "Description": "!!AWAKENED_WINTERCOW_DESC",
+        "ScriptName": "AreaRemoveBlindBurnAndHealEachTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "10",
+        "MaxVal1": "10"
+    },
+    {
+        "ID": "PurpleCow_Awaken",
+        "Description": "!!AWAKENED_PURPLECOW_DESC",
+        "ScriptName": "CrippleAndAreaAttackSpikeOnAttackNonCrippled",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "50",
+        "MaxVal2": "50"
+    },
+    {
+        "ID": "PurpleCow_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "HeadphoneJerk_Awaken",
+        "Description": "!!AWAKENED_HEADPHONEJERK_DESC",
+        "ScriptName": "ParalyzeCrippleOnOppHeroCard",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "HeadphoneJerk_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "AppleTree_Awaken",
+        "Description": "!!AWAKENED_APPLETREE_DESC",
+        "ScriptName": "AreaPinpointAndDealerOnNumCardsPlayed",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4",
+        "MinVal2": "0",
+        "MaxVal2": "0",
+        "MinVal3": "1",
+        "MaxVal3": "1"
+    },
+    {
+        "ID": "AppleTree_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "MadameSeota_Awaken",
+        "Description": "!!AWAKENED_MADAMESEOTA_DESC",
+        "ScriptName": "EraseBraveryInflictPlaugeOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "10",
+        "MaxVal1": "10",
+        "MinVal2": "10",
+        "MaxVal2": "10"
+    },
+    {
+        "ID": "MadameSeota_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "BanShePriness_Awaken",
+        "Description": "!!AWAKENED_BANSHEPRINESS_DESC",
+        "ScriptName": "WeakenINTWeakenSTROnManyEnemyDragAttacks",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "BanShePriness_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "EvilTree_Awaken",
+        "Description": "!!AWAKENED_EVILTREE_DESC",
+        "ScriptName": "EnemyCurseAndTeamLifeleechOnLandSwamp",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "120",
+        "MaxVal2": "120"
+    },
+    {
+        "ID": "EvilTree_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "AngelOfDark_Awaken",
+        "Description": "!!AWAKENED_ANGELOFDARK_DESC",
+        "ScriptName": "CardBlockOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "100",
+        "MaxVal1": "100",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "AngelOfDark_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "AngelEye_Awaken",
+        "Description": "!!AWAKENED_ANGELEYE_DESC",
+        "ScriptName": "DealerToLowHPOnTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "65",
+        "MaxVal1": "65",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "AngelEye_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Poultergeist_Awaken",
+        "Description": "!!AWAKENED_POULTERGEIST_DESC",
+        "ScriptName": "EnergyOnCardThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "6",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "Poultergeist_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Quadurai_Awaken",
+        "Description": "!!AWAKENED_QUADURAI_DESC",
+        "ScriptName": "MagicCounterOnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "100",
+        "MaxVal1": "100",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "TheGhost_Awaken",
+        "Description": "!!AWAKENED_THEGHOST_DESC",
+        "ScriptName": "DrawCardOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "100",
+        "MaxVal1": "100",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "TheGhost_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "WhiteNinja_Awaken",
+        "Description": "!!AWAKENED_WHITENINJA_DESC",
+        "ScriptName": "DealerRegenOnCardThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "1",
+        "MaxVal2": "1",
+        "MinVal3": "2",
+        "MaxVal3": "2"
+    },
+    {
+        "ID": "WhiteNinja_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "DragonFoot_Awaken",
+        "Description": "!!AWAKENED_DRAGONFOOT_DESC",
+        "ScriptName": "MagicSpikeDefenseUpOnfriendlyMagicAttackCard",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "15",
+        "MaxVal2": "15"
+    },
+    {
+        "ID": "DragonFoot_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "GhostEye_Awaken",
+        "Description": "!!AWAKENED_GHOSTEYE_DESC",
+        "ScriptName": "AreaGrantMagicCounterVoidArmorFloopCardDraw",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "GhostEye_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "BrainGooey_Awaken",
+        "Description": "!!AWAKENED_BRAINGOOEY_DESC",
+        "ScriptName": "WeakenSTRorBlindOnFriendlyAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "BrainGooey_Base",
+        "Description": "!!AWAKENED_BRAINGOOEYALT_DESC",
+        "ScriptName": "WeakenSTRorBlindOnfriendlyAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "SandFoot_Awaken",
+        "Description": "!!AWAKENED_SANDFOOT_DESC",
+        "ScriptName": "BoostthorndefToLowHPOnTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "50",
+        "MaxVal1": "50",
+        "MinVal2": "2",
+        "MaxVal2": "2",
+        "MinVal3": "3",
+        "MaxVal3": "2"
+    },
+    {
+        "ID": "SandFoot_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "PatchyThePumpkin_Awaken",
+        "Description": "!!AWAKENED_PATCHYTHEPUMPKIN_DESC",
+        "ScriptName": "StealThornsAtkSpikeAndHealOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "35",
+        "MaxVal1": "35",
+        "MinVal2": "20",
+        "MaxVal2": "20"
+    },
+    {
+        "ID": "PatchyThePumpkin_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "HotEyeBat_Awaken",
+        "Description": "!!AWAKENED_HOTEYEBAT_DESC",
+        "ScriptName": "BurnedAndBurstSTROnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "20",
+        "MaxVal1": "20",
+        "MinVal2": "35",
+        "MaxVal2": "35"
+    },
+    {
+        "ID": "HotEyeBat_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "BurnedCutie_Awaken",
+        "Description": "!!AWAKENED_BURNEDCUTIE_DESC",
+        "ScriptName": "FirstBurnEnemyDragAttacks",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "7",
+        "MaxVal1": "7"
+    },
+    {
+        "ID": "BurnedFfantry_Awaken",
+        "Description": "When Play 4 card, Grant Madness Armor for 2 turns on Magmalands, Sandlands and Cornfields Creatures. (If trigger passive, cannot trigger again since 3 turns)",
+        "ScriptName": "MadnessOnCardThresholdCooldown",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "ethanallfire_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "FatGoat_Awaken",
+        "Description": "!!AWAKENED_FATGOAT_DESC",
+        "ScriptName": "NiceDealerToDeployed",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "FatGoat_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "MouthBall_Awaken",
+        "Description": "!!AWAKENED_MOUTHBALL_DESC",
+        "ScriptName": "VampiricOnDamaged",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "100",
+        "MaxVal1": "100",
+        "MinVal2": "35",
+        "MaxVal2": "35"
+    },
+    {
+        "ID": "MouthBall_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "GrapeSlimey_Awaken",
+        "Description": "!!AWAKENED_GRAPESLIMEY_DESC",
+        "ScriptName": "ShieldDealerOnStartTurnAndHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1",
+        "MinVal3": "50",
+        "MaxVal3": "50"
+    },
+    {
+        "ID": "GrapeSlimey_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "PeaSoupBarfer_Awaken",
+        "Description": "!!AWAKENED_PEASOUPBARFER_DESC",
+        "ScriptName": "UselessSwampFrdCreaturesAdrenalineOnFloopCard",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "PeaSoupBarfer_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "GreenCow_Awaken",
+        "Description": "!!AWAKENED_GREENCOW_DESC",
+        "ScriptName": "VampiricHealOnPlagueOrPoison",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "25",
+        "MaxVal1": "25",
+        "MinVal2": "7",
+        "MaxVal2": "7"
+    },
+    {
+        "ID": "GreenCow_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "MusicMallard_Awaken",
+        "Description": "!!AWAKENED_MUSICMALLARD_DESC",
+        "ScriptName": "GrantTransmogrifyOnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "MusicMallard_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "GreenPartyOgre_Awaken",
+        "Description": "!!AWAKENED_GREENPARTYOGRE_DESC",
+        "ScriptName": "DealerDefenseUpWhenThorns",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "0",
+        "MaxVal1": "0",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "GreenPartyOgre_Base",
+        "Description": "!!AWAKENED_PURPLEPARTYOGRE_DESC",
+        "ScriptName": "VampiricWhenBravery",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "100",
+        "MaxVal1": "100"
+    },
+    {
+        "ID": "CameraDude_Awaken",
+        "Description": "!!AWAKENED_CAMERADUDE_01_DESC",
+        "ScriptName": "InflictParalyzeConfuseEnemyTeamOnFloopCardDraw",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "4",
+        "MaxVal2": "4"
+    },
+    {
+        "ID": "CameraDude_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "UglyTree_Awaken",
+        "Description": "!!AWAKENED_UGLYTREE_DESC",
+        "ScriptName": "BurstSTRfortifyResOnOtherFriendlyAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "35",
+        "MaxVal1": "35",
+        "MinVal2": "2",
+        "MaxVal2": "2",
+        "MinVal3": "2",
+        "MaxVal3": "2"
+    },
+    {
+        "ID": "UglyTree_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SandHorn_Awaken",
+        "Description": "!!AWAKENED_SANDHORN_DESC",
+        "ScriptName": "ThornsEachturn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "SandHorn_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "HateBird_Awaken",
+        "Description": "!!AWAKENED_HATEBIRD_DESC",
+        "ScriptName": "RemoveDebuffGrantBurstSTRstrengthCounterIfOppHasMoreCards",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "35",
+        "MaxVal1": "35",
+        "MinVal2": "1",
+        "MaxVal2": "1",
+        "MinVal3": "10",
+        "MaxVal3": "10"
+    },
+    {
+        "ID": "HateBird_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "NiceBird_Awaken",
+        "Description": "!!AWAKENED_NICEBIRD_DESC",
+        "ScriptName": "GrantHealHasteDefIfOppHasMoreCards",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1",
+        "MinVal3": "10",
+        "MaxVal3": "10"
+    },
+    {
+        "ID": "NiceBird_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "FuriousRooster_Awaken",
+        "Description": "!!AWAKENED_FURIOUSROOSTER_DESC",
+        "ScriptName": "AreaAttackSpikeAndHealBraveryOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "25",
+        "MaxVal1": "25",
+        "MinVal2": "10",
+        "MaxVal2": "10",
+        "MinVal3": "1",
+        "MaxVal3": "1"
+    },
+    {
+        "ID": "FuriousRooster_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "FuriousHen_Awaken",
+        "Description": "When the opponent plays a Floop Card, grant all friendly creatures Haste for 1 turns and 1x Gift Card.",
+        "ScriptName": "DealerAdrenalineHealAllOnEnemyHeroCard",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1",
+        "MinVal3": "3",
+        "MaxVal3": "3"
+    },
+    {
+        "ID": "FuriousHen_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "FuriousChick_Awaken",
+        "Description": "When a creature gets Regen, Remove 2 debuff on target creature.",
+        "ScriptName": "Remove2DebuffsWhenFriendlyRegen",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "FuriousChick_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "BadRose_Awaken",
+        "Description": "!!AWAKENED_BADROSE_DESC",
+        "ScriptName": "IFOppAttack3timesHealDrawandFortifyDef",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "20",
+        "MaxVal2": "20",
+        "MinVal3": "2",
+        "MaxVal3": "2"
+    },
+    {
+        "ID": "BadRose_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "AlbinoEyeBat_Awaken",
+        "Description": "!!AWAKENED_ALBINOEYEBAT_DESC",
+        "ScriptName": "MagicCounterBurstINTIfNotAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "0",
+        "MaxVal2": "0"
+    },
+    {
+        "ID": "AlbinoEyeBat_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "PorcelainGuardian_Awaken",
+        "Description": "!!AWAKENED_PORCELAINGUARDIAN_DESC",
+        "ScriptName": "SlowOnCardThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "PorcelainGuardian_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ApplePieclops_Awaken",
+        "Description": "When a floop card draw, Grant 1x Joker Armor and Defense Up for 2 turns on Sandlands, Nicelands and Rainbow Creatures",
+        "ScriptName": "GrantJokerArmorFortifyDEFNiceSandRainbowOnFloopCardDraw",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "ApplePieclops_Base",
+        "DisplayName": "FLOOP",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "TeethLeaf_Awaken",
+        "Description": "!!AWAKENED_TEETHLEAF_DESC",
+        "ScriptName": "PlagueAndCrippleToDeployedEnemies",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "0",
+        "MaxVal1": "0",
+        "MinVal2": "5",
+        "MaxVal2": "5"
+    },
+    {
+        "ID": "TeethLeaf_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Bull_Awaken",
+        "Description": "!!AWAKENED_BULL_DESC",
+        "ScriptName": "GrantAreaCounterattackEnhanceSTROnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "Bull_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "GreenSnakey_Awaken",
+        "Description": "When Useless Swamp is played on Whenever friendly creature, Grant 75% Life Leech, Immunity Armor for 2 turns and 1x Counterattack",
+        "ScriptName": "GrantVampiricImmunityStrengthCounterOnLandSwamp",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "75",
+        "MaxVal1": "75",
+        "MinVal2": "2",
+        "MaxVal2": "2",
+        "MinVal3": "1",
+        "MaxVal3": "1"
+    },
+    {
+        "ID": "GreenSnakey_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "VampCorn_Awaken",
+        "Description": "!!AWAKENED_VAMPCORN_DESC",
+        "ScriptName": "VampiricBurstStrMaybeEnhanceSTROnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "35",
+        "MaxVal1": "35",
+        "MinVal2": "0",
+        "MaxVal2": "0",
+        "MinVal3": "1",
+        "MaxVal3": "1"
+    },
+    {
+        "ID": "VampCorn_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "VampGhost_Awaken",
+        "Description": "!!AWAKENED_VAMPGHOST_DESC",
+        "ScriptName": "MagicCounterBurstINTAboveHealthEachTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "80",
+        "MaxVal1": "80",
+        "MinVal2": "1",
+        "MaxVal2": "1",
+        "MinVal3": "0",
+        "MaxVal3": "0"
+    },
+    {
+        "ID": "VampGhost_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "VampBaldMan_Awaken",
+        "Description": "!!AWAKENED_VAMPBALDMAN_DESC",
+        "ScriptName": "BraveryOnVampiric",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "VampBaldMan_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "VampMarshmallow_Awaken",
+        "Description": "!!AWAKENED_VAMPMARSHMALLOW_DESC",
+        "ScriptName": "AdjacentImmunityVampiricOnHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "65",
+        "MaxVal1": "65",
+        "MinVal2": "2",
+        "MaxVal2": "2",
+        "MinVal3": "65",
+        "MaxVal3": "65"
+    },
+    {
+        "ID": "VampMarshmallow_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "VampCactus_Awaken",
+        "Description": "!!AWAKENED_VAMPCACTUS_DESC",
+        "ScriptName": "ThornsAndVampiricAndFortifyResAllOnEnemyHeroCard",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "50",
+        "MaxVal2": "50",
+        "MinVal3": "2",
+        "MaxVal3": "2"
+    },
+    {
+        "ID": "VampCactus_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CornSnow_Awaken",
+        "Description": "!!AWAKENED_CORNSNOW_DESC",
+        "ScriptName": "ImmunityDerangedHealOnEnemyDied",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "0",
+        "MaxVal2": "0",
+        "MinVal3": "25",
+        "MaxVal3": "25"
+    },
+    {
+        "ID": "CornSnow_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SnowPlains_Awaken",
+        "Description": "When a friendly Creature Does a Magic attack, Grant this creature Immunity Armor and Wisdom Armor for 2 turns",
+        "ScriptName": "GrantImmunityWisdomArmorOnFriendlyMagicAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "SnowPlains_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SwampSnow_Awaken",
+        "Description": "!!AWAKENED_SWAMPSNOW_DESC",
+        "ScriptName": "APPoisonOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "25",
+        "MaxVal1": "25",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "SwampSnow_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CottonSnow_Awaken",
+        "Description": "!!AWAKENED_COTTONSNOW_DESC",
+        "ScriptName": "RemoveNegHealAllOnDied",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "10",
+        "MaxVal1": "10",
+        "MinVal2": "25",
+        "MaxVal2": "25"
+    },
+    {
+        "ID": "CottonSnow_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SandSnow_Awaken",
+        "Description": "!!AWAKENED_SANDSNOW_DESC",
+        "ScriptName": "AreaFlamingOnFloopDraw",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "SandSnow_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "MutantZombieRex_Awaken",
+        "Description": "!!AWAKENED_MUTANTZOMBIEREX_DESC",
+        "ScriptName": "AdjacentReviveOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4"
+    },
+    {
+        "ID": "MutantZombieRex_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "BogBum_Awaken",
+        "Description": "!!AWAKENED_BOGBUM_DESC",
+        "ScriptName": "GrantLandSwampBraveryIfOppHasMoreCards",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "BogBum_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "GreenMerman_Awaken",
+        "Description": "!!AWAKENED_GREENMERMAN_DESC",
+        "ScriptName": "PlagueEveryoneOnKill",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "10",
+        "MaxVal1": "10"
+    },
+    {
+        "ID": "GreenMerman_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "Sludger_Awaken",
+        "Description": "!!AWAKENED_SLUDGER_DESC",
+        "ScriptName": "BurstSTROnCardThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "50",
+        "MaxVal2": "50"
+    },
+    {
+        "ID": "Sludger_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "OilWall_Awaken",
+        "Description": "!!AWAKENED_OILWALL_DESC",
+        "ScriptName": "OiledOnAllyDied",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "SkeletalHand_Awaken",
+        "Description": "!!AWAKENED_SKELETALHAND_DESC",
+        "ScriptName": "BurnedCrippleOnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "100",
+        "MaxVal1": "100",
+        "MinVal2": "5",
+        "MaxVal2": "5",
+        "MinVal3": "1",
+        "MaxVal3": "1"
+    },
+    {
+        "ID": "YellowGnome_Awaken",
+        "Description": "!!AWAKENED_YELLOWGNOME_DESC",
+        "ScriptName": "OiledEveryoneOnKill",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "YellowGnome_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "HologramBaldMan_Awaken",
+        "Description": "!!AWAKENED_HOLOGRAMBALDMAN_DESC",
+        "ScriptName": "AreaParisiticArmorOnNumCardsPlayed",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "HologramBaldMan_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "RecordThug_Awaken",
+        "Description": "!!AWAKENED_RECORDTHUG_DESC",
+        "ScriptName": "ParalyzeOnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "60",
+        "MaxVal1": "60",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "RecordThug_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "CornGolem_Awaken",
+        "Description": "!!AWAKENED_CORNGOLEM_DESC",
+        "ScriptName": "GrantDealerAndHealOnEnhanceSTR",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "7",
+        "MaxVal2": "7"
+    },
+    {
+        "ID": "CornGolem_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "MaiseJane_Awaken",
+        "Description": "!!AWAKENED_MAISEJANE_DESC",
+        "ScriptName": "EraseBraveryInflictAPLeakOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "MaiseJane_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "FreezyJ_Awaken",
+        "Description": "!!AWAKENED_FREEZYJ_DESC",
+        "ScriptName": "FrozenOnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "25",
+        "MaxVal1": "25",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "FreezyJ_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "DetectiveBobby_Awaken",
+        "Description": "!!AWAKENED_DETECTIVEBOBBY_DESC",
+        "ScriptName": "ParalyzeOppLowestHPOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4"
+    },
+    {
+        "ID": "DetectiveBobby_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "DetectiveSally_Awaken",
+        "Description": "!!AWAKENED_DETECTIVESALLY_DESC",
+        "ScriptName": "FrozenCrippleAllOnDeath",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "DetectiveSally_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "IceDevil_Awaken",
+        "Description": "!!AWAKENED_ICEDEVIL_DESC",
+        "ScriptName": "ChillLowestEnemyOn3Cards",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "WhiteCat_Awaken",
+        "Description": "When you play 3 cards in a single turn, remove 4 buff from the enemy creature with the highest HP (if it has buffs)",
+        "ScriptName": "RemoveBuffHighestEnemyOn3Cards",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "4",
+        "MaxVal2": "4"
+    },
+    {
+        "ID": "IceDevil_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "IceBaby_Awaken",
+        "Description": "!!AWAKENED_ICEBABY_DESC",
+        "ScriptName": "GrantLandIcyOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "IceBaby_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "DullCoolDog_Awaken",
+        "Description": "!!AWAKENED_DULLCOOLDOG_DESC",
+        "ScriptName": "GrantShieldAPFlowerOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "IcePaladin_Awaken",
+        "Description": "!!AWAKENED_ICEPALADIN_DESC",
+        "ScriptName": "TeamFrostbiteOnAllyDeath",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "IcePaladin_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "SnowyMcSnow_Awaken",
+        "Description": "!!AWAKENED_SNOWYMCSNOW_DESC",
+        "ScriptName": "EraseBraveryInflictDealDamageOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "10",
+        "MaxVal1": "10"
+    },
+    {
+        "ID": "SnowyMcSnow_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ChadBear_Awaken",
+        "Description": "!!AWAKENED_CHADBEAR_DESC",
+        "ScriptName": "FrostbiteToDeployedEnemies",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "Paladim_Awaken",
+        "Description": "!!AWAKENED_PALADIM_DESC",
+        "ScriptName": "HealShieldWhenLandIcy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "15",
+        "MaxVal1": "15",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "SnowDog_Awaken",
+        "Description": "!!AWAKENED_SNOWDOG_DESC",
+        "ScriptName": "GrantEnhanceSTROnLandIcy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "StoneGolem_Awaken",
+        "Description": "!!AWAKENED_STONEGOLEM_DESC",
+        "ScriptName": "BraveryFrostArmorOnManyEnemyDragAttacks",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "Shark_Awaken",
+        "Description": "!!AWAKENED_SHARK_DESC",
+        "ScriptName": "NervBlockOnManyEnemyDragAttacks",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "AngelOfSnow_Awaken",
+        "Description": "When you deploy this creature grant your team Immunity armor for 2 turns, When your Hero draws a Floop Card, remove all debuff from all friendly creatures.",
+        "ScriptName": "RemoveDebuffOnFloopCardDrawAndImmunityOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "99",
+        "MaxVal1": "99",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "SnowBull_Awaken",
+        "Description": "!!AWAKENED_SNOWBULL_DESC",
+        "ScriptName": "CrippleFrostbiteOnManyEnemyDragAttacks",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "SnowEyeBat_Awaken",
+        "Description": "!!AWAKENED_SNOWEYEBAT_DESC",
+        "ScriptName": "FrozenlOnAttackHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "40",
+        "MaxVal1": "40",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "SnowSaurusRex_Awaken",
+        "Description": "When a friendly creature gets Chilled, Grant Defense up for 2 turns and 20% Gift Heal.",
+        "ScriptName": "FortifyDefAndHealerWhenFrozen",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "20",
+        "MaxVal2": "20"
+    },
+    {
+        "ID": "SnowSludger_Awaken",
+        "Description": "!!AWAKENED_SNOWSLUDGER_DESC",
+        "ScriptName": "TeamEnemyOiledOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "IcyWall_Awaken",
+        "Description": "!!AWAKENED_ICYWALL_DESC",
+        "ScriptName": "GrantFortifyRESBurstSTRTIcylandsCornfieldsTeamOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "35",
+        "MaxVal2": "35"
+    },
+    {
+        "ID": "Fatapillar_Awaken",
+        "Description": "!!AWAKENED_FATAPILLAR_DESC",
+        "ScriptName": "GrantFortifyRESBurstSTRTIcylandsCornfieldsTeamOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "35",
+        "MaxVal2": "35"
+    },
+    {
+        "ID": "PajamaNinja_Awaken",
+        "Description": "!!AWAKENED_PAJAMANINJA_DESC",
+        "ScriptName": "PPAndAdrenalineWhenDealer",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "SnowBall_Awaken",
+        "Description": "!!AWAKENED_SNOWBALL_DESC",
+        "ScriptName": "GrantFortifyRESandFortifyDEFOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5",
+        "MinVal2": "5",
+        "MaxVal2": "5"
+    },
+    {
+        "ID": "MagmaSaurusRex_Awaken",
+        "Description": "!!AWAKENED_MAGMASAURUSREX_DESC",
+        "ScriptName": "GrantLandMagmaFortifyRESBraveryIfOppHasMoreCards",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "DevilEye_Awaken",
+        "Description": "!!AWAKENED_DEVILEYE_DESC",
+        "ScriptName": "BurnOnDied",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "35",
+        "MaxVal1": "35"
+    },
+    {
+        "ID": "MagmaDog_Awaken",
+        "Description": "!!AWAKENED_MAGMADOG_DESC",
+        "ScriptName": "BurnedOnCriticalHit",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "20",
+        "MaxVal1": "20"
+    },
+    {
+        "ID": "MagmaWall_Awaken",
+        "Description": "!!AWAKENED_MAGMAWALL_DESC",
+        "ScriptName": "InflictBurnedCardBlockonEnemyTeamOnFloopCardDraw",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "25",
+        "MaxVal1": "25",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "BlackFisherFish_Awaken",
+        "Description": "!!AWAKENED_BLACKFISHERFISH_DESC",
+        "ScriptName": "MagmaLandsFrdCreaturesEnhanceSTROnFloopCard",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "ObsidianRonin_Awaken",
+        "Description": "When you play 5 cards, inflict Berserk and Blind on the enemy creature with the highest HP. If this passive is triggered, it goes on cooldown for 3 turns.",
+        "ScriptName": "BerserkBlindHighestEnemyOn6Cards",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5"
+    },
+    {
+        "ID": "ObsidianSeahorse_Awaken",
+        "Description": "!!AWAKENED_OBSIDIANSEAHORSE_DESC",
+        "ScriptName": "BurnBlindEveryoneOnKill",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "15",
+        "MaxVal1": "15",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "ethanallfire_Awaken",
+        "Description": "!!AWAKENED_ETHANALLFIRE_DESC",
+        "ScriptName": "RemoveLandsBurnedWeakenSTROnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "15",
+        "MaxVal1": "15",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "RobotScarab_Awaken",
+        "Description": "!!AWAKENED_ROBOTSCARAB_DESC",
+        "ScriptName": "TeamBurstSTROnKill",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "15",
+        "MaxVal1": "15",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "FlameingoWarrior_Awaken",
+        "Description": "!!AWAKENED_FLAMEINGOWARRIOR_DESC",
+        "ScriptName": "BurnedSlowOnManyEnemyDragAttacks",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "15",
+        "MaxVal1": "15",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "HotHead_Awaken",
+        "Description": "!!AWAKENED_HOTHEAD_DESC",
+        "ScriptName": "InsaneArmorOnLandMagma",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "BlackPaladin_Awaken",
+        "Description": "!!AWAKENED_BLACKPALADIN_DESC",
+        "ScriptName": "TeamBurstSTROnDied",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "75",
+        "MaxVal1": "75"
+    },
+    {
+        "ID": "RedHorn_Awaken",
+        "Description": "!!AWAKENED_REDHORN_DESC",
+        "ScriptName": "BonebreakerAllOnDeath",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "SandSnake_Awaken",
+        "Description": "!!AWAKENED_SANDSNAKE_DESC",
+        "ScriptName": "LandSandOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "0",
+        "MaxVal2": "0"
+    },
+    {
+        "ID": "SandSnake_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "BlueberryPieclops_Awaken",
+        "Description": "!!AWAKENED_BLUEBERRYPIECLOPS_DESC",
+        "ScriptName": "AreaStealthOnHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "50",
+        "MaxVal1": "50",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "BlueberryPieclops_Base",
+        "FeedsPerLevel": "0"
+    },
+    {
+        "ID": "ColdSoldier_Special",
+        "Description": "!!SPECIAL_COLDSOLDIER_DESC",
+        "ScriptName": "FrostArmorOnHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "30",
+        "MaxVal1": "30",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "Avalancheetah_Special",
+        "Description": "When this creature HP 40% below, Grant Multi Immunity Armor and Resistance Boost for 2 turns and Inflict Chill and 30% Deal Damage on enemy team",
+        "ScriptName": "GrantDirectDamageFrozenToOppTeamAndBuffSelfIfHPLow",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "40",
+        "MaxVal1": "40",
+        "MinVal2": "30",
+        "MaxVal2": "30",
+        "MinVal3": "1",
+        "MaxVal3": "1",
+        "MinVal4": "2",
+        "MaxVal4": "2"
+    },
+    {
+        "ID": "GhostTeenWolf_Special",
+        "Description": "!!SPECIAL_GHOSTTEENWOLF_DESC",
+        "ScriptName": "APSiphonOnAttacked",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "100",
+        "MaxVal1": "100",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "GhostJane_Special",
+        "Description": "!!SPECIAL_GHOSTJANE_DESC",
+        "ScriptName": "GrantShieldOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4"
+    },
+    {
+        "ID": "WallOfVanilla_Special",
+        "Description": "!!SPECIAL_WALLOFVANILLA_DESC",
+        "ScriptName": "TeamRemoveBlindBerserkBurnEachTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "7",
+        "MaxVal1": "7"
+    },
+    {
+        "ID": "AnchoviePizzaDude_Special",
+        "Description": "When this creature attacks an enemy creature with Thorns, remove Thorns and grant 1x Energy Sap to this creature.",
+        "ScriptName": "StealThornsAPSiphonAndDealerOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "0",
+        "MaxVal2": "0"
+    },
+    {
+        "ID": "GhostRex_Special",
+        "Description": "!!SPECIAL_GHOSTREX_DESC",
+        "ScriptName": "AreaMagicSpikeAboveHealthEachTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "80",
+        "MaxVal1": "80",
+        "MinVal2": "12",
+        "MaxVal2": "12"
+    },
+    {
+        "ID": "DogBoy_Special",
+        "Description": "At the start of each turn, if the opponent has more cards in their hand, grant Area 30% Attack Up and Wisdom Armor for 1 turn.",
+        "ScriptName": "AreaRadiantArmorAttackSpikeIfFewerCardsOnTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "30",
+        "MaxVal2": "30"
+    },
+    {
+        "ID": "PizzaDude_Special",
+        "Description": "!!SPECIAL_PIZZADUDE_DESC",
+        "ScriptName": "APSiphonOnCardThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "GoblinAssassin_Special",
+        "Description": "!!SPECIAL_GOBLINASSASSIN_DESC",
+        "ScriptName": "GrantVanishToCornRainbowTeamOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "BluePartyOgre_Special",
+        "Description": "At the start of each turn, if the opponent has more cards in their hand, gain 7% Magic Boost and gain 1 Energy.",
+        "ScriptName": "GainEnergyMagicBoostIfOppHasMoreCards",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "7",
+        "MaxVal2": "7"
+    },
+    {
+        "ID": "GhostPig_Special",
+        "Description": "!!SPECIAL_GHOSTPIG_DESC",
+        "ScriptName": "PowerSiphonOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "Grim_Special",
+        "Description": "!!SPECIAL_GRIM_DESC",
+        "ScriptName": "PoisonOnCardThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "FlyGem_Special",
+        "Description": "!!SPECIAL_FLYGEM_DESC",
+        "ScriptName": "AdjacentBrilliantArmorDealerAboveHPOnTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "80",
+        "MaxVal1": "80",
+        "MinVal2": "0",
+        "MaxVal2": "0",
+        "MinVal3": "1",
+        "MaxVal3": "1"
+    },
+    {
+        "ID": "KingBaby_Special",
+        "Description": "!!SPECIAL_KINGBABY_DESC",
+        "ScriptName": "RemoveLandsDealDamageOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "40",
+        "MaxVal1": "40"
+    },
+    {
+        "ID": "Unicyclops_Special",
+        "Description": "If you play 3 cards in one turn grant Regen x2 turns to friendly team.",
+        "ScriptName": "RegenOnCardThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "SharkKid_Special",
+        "Description": "When Thorns is played on a friendly creature, Heal it for 2% HP and Grant 15% Gift Heal.",
+        "ScriptName": "HealerAndHealWhenThorns",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "15",
+        "MaxVal1": "15",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "ChampionNapalmer_Special",
+        "Description": "!!SPECIAL_CHAMPIONNAPALMER_DESC",
+        "ScriptName": "AreaRegenFortifyRESOnTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "GhostBespectacledOgre_Special",
+        "Description": "!!SPECIAL_GHOSTBESPECTACLEDOGRE_DESC",
+        "ScriptName": "MagicDownAndBlindOnCriticalHit",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "MutantEyeGuy_Special",
+        "Description": "!!SPECIAL_MUTANTEYEGUY_DESC",
+        "ScriptName": "AdjacentFlamingArmorAboveHPOnTurnStart",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "75",
+        "MaxVal2": "75"
+    },
+    {
+        "ID": "KingWorm_Special",
+        "Description": "!!SPECIAL_KINGWORM_DESC",
+        "ScriptName": "RemoveDebuffEveryoneOnKill",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "15",
+        "MaxVal1": "15"
+    },
+    {
+        "ID": "RainbowEyeBat_Special",
+        "Description": "!!SPECIAL_RAINDBOWEYEBAT_DESC",
+        "ScriptName": "StealthOnHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "50",
+        "MaxVal1": "50",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "GhostDeputyHotDog_Special",
+        "Description": "!!SPECIAL_GHOSTDEPUTYHOTDOG_DESC",
+        "ScriptName": "DealerMagicSpikeOnMagicAttackCardIfNeither",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "7",
+        "MaxVal2": "7"
+    },
+    {
+        "ID": "ElderBruteWoad_Special",
+        "Description": "!!SPECIAL_ELDERBRUTEWOAD_DESC",
+        "ScriptName": "ParalyzeOnAttackWhenNoParalyze",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "MushroomPizzaDude_Special",
+        "Description": "!!SPECIAL_MUSHROOMPIZZADUDE_DESC",
+        "ScriptName": "APPoisonOnCardThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "IceBull_Special",
+        "Description": "!!SPECIAL_ICEBULL_DESC",
+        "ScriptName": "FrozenOppLowestHPOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "GhostBull_Special",
+        "Description": "When this Creature deployed, Grant Dullness Armor for 3 turns and 1x Shield.",
+        "ScriptName": "GrantDullnessShieldOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "EmeraldDan_Special",
+        "Description": "!!SPECIAL_EMERALDDAN_DESC",
+        "ScriptName": "AreaStealthImmunityWhenTakeMagicDamage",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "MagneticDude_Special",
+        "Description": "!!SPECIAL_MAGNETICDUDE_DESC",
+        "ScriptName": "DepleteAPOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "BluePlainsDrifter_Special",
+        "Description": "!!SPECIAL_BLUEPLAINSDRIFTER_DESC",
+        "ScriptName": "AreaStealthOnAdjacentMagicAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "GhostWizardElf_Special",
+        "Description": "When this creature is Deployed, draw 1 card and grant 1x Shield.",
+        "ScriptName": "DrawCardsShieldWhenDeployed",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "BananaSlimey_Special",
+        "Description": " When haste is played on a Enemy creature grant Block card and Attack down for 2 turns",
+        "ScriptName": "CardBlockAndWeakenSTRWhenAdrenalinePlayedOnEnemy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "JalapenoPizzaDude_Special",
+        "Description": "!!SPECIAL_JALAPENOPIZZADUDE_DESC",
+        "ScriptName": "APLeakOnCritical",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "Sandicore_Special",
+        "Description": "!!SPECIAL_SANDICORE_DESC",
+        "ScriptName": "BraveryFortifyRESOnOppFloop",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "InfiniteFigure_Special",
+        "Description": "When this Creature falls below 35% HP, Grant Resurrection armor and Regen for 3 turns.",
+        "ScriptName": "GrantAutoReviveRegenToOppTeamAndBuffSelfIfHPLow",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "35",
+        "MaxVal1": "35",
+        "MinVal2": "3",
+        "MaxVal2": "3",
+        "MinVal3": "3",
+        "MaxVal3": "3"
+    },
+    {
+        "ID": "DrGhostBear_Special",
+        "Description": "Every time the Enemy Draw a Card, Area Gift Heal 8% HP.",
+        "ScriptName": "AreaHealerOnEnemyCardDraw",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "8",
+        "MaxVal1": "8"
+    },
+    {
+        "ID": "Sackgeist_Special",
+        "Description": "!!SPECIAL_SACKGEIST_01_DESC",
+        "ScriptName": "RemoveNagStatusAreaCreatureOnCardPlayed",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "SewerStuart_Special",
+        "Description": "When a this creature play Useless Swamp, Team Regen and Haste for 2 turns.",
+        "ScriptName": "TeamRegenAdrenalineOnLandSwamp",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "CaveOfSolitude_Building",
+        "Description": "At Heal the start of the turn heal 10% HP for team and When this building Deployed Grant Wisdom Armor for 5 turns.",
+        "ScriptName": "HealLowHealthCreaturesEachTurnAndWisdomArmorOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "99",
+        "MaxVal1": "99",
+        "MinVal2": "10",
+        "MaxVal2": "10"
+    },
+    {
+        "ID": "PuffyCastle_Building",
+        "Description": "When a creature gains more than 4 negative effects grant muli immunity armor for 1 turn",
+        "ScriptName": "MultiImmunityArmorOnMoreThan4Debuffs",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "GhostlyCastle_Building",
+        "Description": "At start of turns, Grant Toxic Armor for 1 turns.",
+        "ScriptName": "TeamParisiticEachTurnAndDeployAPVebaOnLowestHPCreature",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "0",
+        "MaxVal2": "0"
+    },
+    {
+        "ID": "SunPyramid_Building",
+        "Description": "!!BUILDING_SUNPYRAMID_DESC",
+        "ScriptName": "BraveryAndMadnessOnHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "20",
+        "MaxVal1": "20",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "PalaceOfBone_Building",
+        "Description": "!!BUILDING_PALACEOFBONE_DESC",
+        "ScriptName": "GrantTeamAutoReviveOnDeployAndInflictPoisonEnemyTeam",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "Tomb_Building",
+        "Description": "When this building is deployed, Grant 10% Magic Boost to deployed Blue Plains, Useless Swamp, and Nicelands creatures. If you play 5 cards in one turn, grant Multi Immunity Armor to all friendly creatures for 1 turn.",
+        "ScriptName": "InvisiblePlainsSwampNicelandsCreaturesOnDeployedAndMultiImmunityOnPlay6Card",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "10",
+        "MaxVal1": "10",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "BlueCastle_Building",
+        "Description": "!!BUILDING_BLUECASTLE_DESC",
+        "ScriptName": "TeamDerangedEachTurnAndGrantShieldOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "SpiritTower_Building",
+        "Description": "!!BUILDING_SPIRITTOWER_DESC",
+        "ScriptName": "AdjacentMultiImmunityOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "RedParthenon_Building",
+        "Description": "When Deployed, this building grants Defense Up and Resistance Boost to all allies for 4 turns. At the start of each turn, it also grants a 4% Attack Up to the team.",
+        "ScriptName": "TeamDefenseAndResistanceOnDeploy_BurstSTROnStartTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4",
+        "MinVal2": "4",
+        "MaxVal2": "4"
+    },
+    {
+        "ID": "HotVolcano_Building",
+        "Description": "When this building deployed, Grant Napalming Armor for 4 turns and Heroic for 2 turns",
+        "ScriptName": "GrantNapalmingBraveryOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "SandPyramid_Building",
+        "Description": "!!BUILDING_SANDPYRAMID_DESC",
+        "ScriptName": "TeamFortifyDEFEachTurnAndFlamingAdjacentCreaturesHPBelowThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "50",
+        "MaxVal1": "50",
+        "MinVal2": "3",
+        "MaxVal2": "3",
+        "MinVal3": "1",
+        "MaxVal3": "1"
+    },
+    {
+        "ID": "StoneHenge_Building",
+        "Description": "When this building is deployed, Grant Gift Card to Cornfields, Sandlands, and Icylands creatures as they are deployed. If you play 3 cards in one turn, grant Swap Strength for 1 turns to all friendly creatures",
+        "ScriptName": "GrantDealerCornSandIcylandCreaturesOnDeployAndSwapStrengthOnCardThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "CyanParthenon_Building",
+        "Description": "When this building deployed, Grant Frost Armor for 6 turns and Heroic for 3 turns",
+        "ScriptName": "GrantChilledBraveryOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "6",
+        "MaxVal1": "6",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "AutoPlucker_Building",
+        "Description": "When this building deployed, Grant Clumsily Armor for 3 turns and Heroic for 3 turns and Whenever friendly creature If gets Attack Down, Grant Haste for 2 turns on target creature.",
+        "ScriptName": "GrantClumsilyBraveryOnDeployAndAdrenalineOnFriendlyWeakenSTR",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "3",
+        "MaxVal2": "3",
+        "MinVal3": "2",
+        "MaxVal3": "2"
+    },
+    {
+        "ID": "GhostWindmill_Building",
+        "Description": "When this building deployed, Grant Toxic Armor, Heroic for 5 turns and When a 3 play card this turns, Inflict Attack Down and Magic Down for 2 turns on enemy team.",
+        "ScriptName": "DeployParasiticBraveryAndThresholdWeaken",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "2",
+        "MaxVal2": "2",
+        "MinVal3": "5",
+        "MaxVal3": "5"
+    },
+    {
+        "ID": "ZebraSaurusRex_Obsidian",
+        "Description": "When you play 4 cards, inflict Bonebreaker and Block Card on the enemy creature with the highest HP and Deployed Grant Heroic, Immunity Armor for 2 turns, Wisdom Armor and Thorns for 3 turns. (If trigger passive, cannot trigger again since 3 turns)",
+        "ScriptName": "BonebreakerCardBlockOnPlayCardAndImmunityThornsOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "4",
+        "MaxVal1": "4",
+        "MinVal2": "2",
+        "MaxVal2": "2",
+        "MinVal3": "2",
+        "MaxVal3": "2",
+        "MinVal4": "3",
+        "MaxVal4": "3"
+    },
+    {
+        "ID": "WellDressedWolf_Awaken",
+        "Description": "Silence at the end of your turn and if you put a card on this creature, Heal 30% HP for this creature",
+        "ScriptName": "Heal30PctAndMindlessEndTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "30",
+        "MaxVal1": "30",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "StalkEyesnek_Obsidian",
+        "Description": "When this creature attack to target creature has Attack up or Fortitude, Inflict Attack Down for 3 turns and Grant Attack Up %30 on this creature.",
+        "ScriptName": "EraseEnhanceSTRorBurstSTRInflictWeakenSTRandGrantBurstSTROnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "30",
+        "MaxVal2": "30"
+    },
+    {
+        "ID": "UnicycleWizard_Obsidian",
+        "Description": "Whenever this creature gains Regen, Plant-Energy, Thorns, Bulls-Eye, or Defense Up, spread that effect to adjacent creatures for up to 2 turns. Then, Silence this creature for 1 turn.",
+        "ScriptName": "SpreadPositiveBuffToAdjacent",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "BotanicGolem_Awaken",
+        "Description": "When this creature is deployed, it does not activate immediately. Every after 2 turns, Grant Blue Plains and Plant-Energy for 1 turns on this creature and removes Energy Sap, Plant-Energy, and Blue Plains from all enemy creatures.",
+        "ScriptName": "GrantLandPlainsandAPFlowerOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "WallOfStrawberry_Awaken",
+        "Description": "At the start during per 3 turn, Remove Immunity Armor, Resurrection Armor and Shield on all enemy creatures and This creature gets 25% heal.",
+        "ScriptName": "RemoveEnemyImmunityAutoReviveShieldEvery3Turns",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "25",
+        "MaxVal1": "25"
+    },
+    {
+        "ID": "AmetistDan_Awaken",
+        "Description": "When this creature deployed, Grant Void Armor and Wisdom Armor for 5 turns.",
+        "ScriptName": "GrantBrilliantVoidOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "5",
+        "MaxVal1": "5",
+        "MinVal2": "5",
+        "MaxVal2": "5"
+    },
+    {
+        "ID": "ZombiePieclops_Awaken",
+        "Description": "When this creature deployed, Erase Shield, Thorns and Vanish Armor on Enemy team and inflict Curse for 3 turns on enemy team.",
+        "ScriptName": "EraseShieldThornsStealthAndInflictPoisonToHighHPOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "BucketDollMonster_Awaken",
+        "Description": "When an enemy creature attacks more than 4 times in a single turn, Inflict Paralyze for 1 turns and 1x Block Card on the enemy creature.",
+        "ScriptName": "ParalyzeCardBlockOnManyEnemyDragAttacks",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "UnicycleKnight_Awaken",
+        "Description": "When a draw floop card, Grant Multi Immunity Armor for 2 turns on Blue Plains, Sandlands and Spookylands creatures.",
+        "ScriptName": "GrantMultiImmunityArmorSandPlainsSpookyOnFloopCardDraw",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "WallOfHoney_Obsidian",
+        "Description": "Whenever a friendly creature is deployed, Haste for 2 turns. At the end of the enemy turn If applied Berserk on friendly creatures, removes Berserk from target friendly creatures",
+        "ScriptName": "BlockSpecificBerserkAndGrantShield",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "0",
+        "MaxVal1": "0",
+        "MinVal2": "0",
+        "MaxVal2": "0",
+        "MinVal3": "2",
+        "MaxVal3": "2"
+    },
+    {
+        "ID": "WallOfSlime_Awaken",
+        "Description": "When this creature died, Grant Toxic Armor for 3 turns on friendly creatures and Inflict Curse-Energy on Enemy Team.",
+        "ScriptName": "ParasiticAndAPPoisonOnDeath",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "GhostHag_Awaken",
+        "Description": "When a enemy gets hit with a Magic attack, Grant Silence and Curse for 3 turns",
+        "ScriptName": "SilenceAndCurseOnEnemyMagicDamage",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "GhostStalker_Awaken",
+        "Description": "When this creature attacks a enemy with Immunity Armor, remove it and grant this creature sheild and Immunity Armor for 2 turns.",
+        "ScriptName": "StealImmunityGrantImmunityShieldOnAttack",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "GhostSnake_Awaken",
+        "Description": "When a enemy creature attacks more than 3 times, Grant Curse-Energy for 2 turns",
+        "ScriptName": "IFOppAttack3TimesInflictAPPoisonOnAttacker",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "GhostNinja_Awaken",
+        "Description": "When a friendly creature gets cursed, 1x Bulls-Eye and Defense Up for 2 turns",
+        "ScriptName": "GrantDefenseUpPinpointWhenFriendlyPoison",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "PlainsBarfer_Awaken",
+        "Description": "When opponent second draws a floop, Grant friendly Team Blue Plains, 1x Shield and Wisdom Armor for 2 turns.",
+        "ScriptName": "GrantShieldBrilliantLandPlainsOnOpponentHeroDrawCard",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "NightBlueRex_Awaken",
+        "Description": "When this creature is deployed, Grant Astral Armor and Heroic for 3 turns",
+        "ScriptName": "GrantAstralBraveryOnDeploy",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "GhostCottonCutie_Special",
+        "Description": "When this creature did critical hit, Grant Vanish Armor for 3 turns.",
+        "ScriptName": "StealthOnCritical",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3"
+    },
+    {
+        "ID": "SgtMushroom_Awaken",
+        "Description": "When this creature play Fortitude, Inflict on Curse and Magic Down for 3 turns all enemy team",
+        "ScriptName": "EnemyPoisonAndMagicDownOnEnhanceSTR",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "LtMushroom_Awaken",
+        "Description": "When this creature play Fortitude, Grant Area Magic Counterattack and remove 2 debuff",
+        "ScriptName": "RemoveDebuffMagicCounterOnEnhanceSTR",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "LogKnight_Awaken",
+        "Description": "When this creature play Cornfield, Grant Area Immunity Armor for 2 turns and Regen for 3 turns.",
+        "ScriptName": "AreaImmunityRegenOnLandCorn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "3",
+        "MaxVal2": "3"
+    },
+    {
+        "ID": "WizardDevil_Obsidian",
+        "Description": "Whenever a friendly player plays a card, removes Immunity Armor, Resurrection Armor, and Vanish Armor from all enemy creatures and Silence this creature for 2 turns.",
+        "ScriptName": "FriendlyPlayCardRemoveImmunityAutoReviveStealthAndSelfSilence",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "GreenSlimey_Awaken",
+        "Description": "At the start of every 2 turns, remove Attack Up, Bullseye, Counterattack, Haste, and Fortitude from all enemy creatures",
+        "ScriptName": "RemoveEnemyAttackUpHasteBullEyeCounterattackAndFortitudeOnStartTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "TheMariachi_Awaken",
+        "Description": "When Heroic is played on a friendly creature grant Defense up for 2 turns and Remove 1 debuff.",
+        "ScriptName": "FortifyDEFAndCleanseOnFriendlyBravery",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "1",
+        "MaxVal2": "1"
+    },
+    {
+        "ID": "DragonClaw_Awaken",
+        "Description": "When a friendly creature goes below 50% HP, grant Astral Armor FOR 2 TURNS.",
+        "ScriptName": "GrantAstralToFriendlyOnHPThreshold",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2"
+    },
+    {
+        "ID": "SandRonin_Awaken",
+        "Description": "When thorns is played on a Enemy creature Remove shield and Inflict Slow and Attack Down for 2 turns.",
+        "ScriptName": "RemoveShieldCrippleAndWeakenOnEnemyThorns",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "2",
+        "MaxVal1": "2",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    },
+    {
+        "ID": "SwampsaurusRex_Awaken",
+        "Description": "When this creature\u2019s Poison exceeds 30%, Paralyze all enemy creatures for 1 turns and Remove Shield from them.",
+        "ScriptName": "ParalyzeOnPlagueOver30",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "1",
+        "MaxVal1": "1"
+    },
+    {
+        "ID": "TvDude_Awaken",
+        "Description": "When SandyLands is played on a this creature, Grant friendly team Defense up and Resistance boost for 3 turns and remove 2 debuffs",
+        "ScriptName": "FortifyTeamRemovDebuffOnLandSand",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "3",
+        "MaxVal1": "3",
+        "MinVal2": "3",
+        "MaxVal2": "3",
+        "MinVal3": "2",
+        "MaxVal3": "2"
+    },
+    {
+        "ID": "SandMischievousRexTriplets_Awaken",
+        "Description": "Every 2 turns, if this creature is above 80% HP, Grant Haste for 2 turns to adjacent creatures.",
+        "ScriptName": "AdjacentAdrenalineAboveHealthEachTurn",
+        "FeedsPerLevel": "0",
+        "MaxLevel": "1",
+        "MinVal1": "80",
+        "MaxVal1": "80",
+        "MinVal2": "2",
+        "MaxVal2": "2"
+    }
 ]

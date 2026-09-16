@@ -12,7 +12,7 @@
 					<th scope="col">Name</th>
 					<th scope="col">Banned by</th>
 					<th scope="col">Time</th>
-					<th scope="col"></th>
+					<th scope="col">Actions</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -22,7 +22,10 @@
 					<td>{{ ban.multiplayer_name }}</td>
 					<td>{{ ban.author }}</td>
 					<td>{{ ban.time }}</td>
-					<td><a href="/admin/players/{{ ban.username }}">View Player</a></td>
+					<td>
+						<a href="/admin/players/{{ ban.username }}" class="btn btn-sm btn-primary">View</a>
+						<a href="/admin/players/{{ ban.username }}/unban" class="btn btn-sm btn-success">Unban</a>
+					</td>
 				</tr>
 				{% endfor %}
 			</tbody>

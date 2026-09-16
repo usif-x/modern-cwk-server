@@ -3,7 +3,62 @@
 	<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
 		<h1 class="h2">Dashboard</h1>
 	</div>
-	<br>
+
+	<div class="row mb-4">
+		<div class="col-md-3">
+			<div class="card text-bg-primary">
+				<div class="card-body">
+					<div class="d-flex justify-content-between align-items-center">
+						<div>
+							<h6 class="card-title mb-0">Total Players</h6>
+							<h2 class="mt-2 mb-0">{{ total_players }}</h2>
+						</div>
+						<i class="bi bi-people" style="font-size: 2rem; opacity: 0.5;"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="card text-bg-success">
+				<div class="card-body">
+					<div class="d-flex justify-content-between align-items-center">
+						<div>
+							<h6 class="card-title mb-0">Active (24h)</h6>
+							<h2 class="mt-2 mb-0">{{ active_24h }}</h2>
+						</div>
+						<i class="bi bi-clock-history" style="font-size: 2rem; opacity: 0.5;"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="card text-bg-danger">
+				<div class="card-body">
+					<div class="d-flex justify-content-between align-items-center">
+						<div>
+							<h6 class="card-title mb-0">Banned Players</h6>
+							<h2 class="mt-2 mb-0">{{ total_banned }}</h2>
+						</div>
+						<i class="bi bi-person-x" style="font-size: 2rem; opacity: 0.5;"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="card text-bg-warning">
+				<div class="card-body">
+					<div class="d-flex justify-content-between align-items-center">
+						<div>
+							<h6 class="card-title mb-0">Banned IPs</h6>
+							<h2 class="mt-2 mb-0">{{ total_banned_ips }}</h2>
+						</div>
+						<i class="bi bi-shield-x" style="font-size: 2rem; opacity: 0.5;"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<h4>Recent Activity</h4>
 	<div class="table-responsive small table-bordered" style="max-height: 500px;">
 		<table class="table table-striped table-sm">

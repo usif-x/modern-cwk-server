@@ -1,4 +1,58 @@
 [
-	{"Index":"1","BadWord":"fuck"},
-	{"Index":"2","BadWord":"shit"}
+    {
+        "Index": "1",
+        "BadWord": "fuck"
+    },
+    {
+        "Index": "2",
+        "BadWord": "shit"
+    },
+    {
+        "Index": "3",
+        "BadWord": "asshole"
+    },
+    {
+        "Index": "4",
+        "BadWord": "blowjob"
+    },
+    {
+        "Index": "5",
+        "BadWord": "pussy"
+    },
+    {
+        "Index": "6",
+        "BadWord": "gay"
+    },
+    {
+        "Index": "7",
+        "BadWord": "nigga"
+    },
+    {
+        "Index": "8",
+        "BadWord": "nigger"
+    },
+    {
+        "Index": "9",
+        "BadWord": "ass"
+    },
+    {
+        "Index": "10",
+        "BadWord": "motherfucker"
+    },
+    {
+        "Index": "11",
+        "BadWord": "fuck you"
+    },
+    {
+        "Index": "12",
+        "BadWord": "cum"
+    },
+    {
+        "Index": "13",
+        "BadWord": "cumming"
+    },
+    {
+        "Index": "13",
+        "BadWord": "Bitch"
+    }
 ]
