@@ -1554,8 +1554,39 @@ def AdminRedeemCodes():
     if not isAdmin(current_user):
         return abort(404)
 
-    codes = RedeemCode.query.all()
-    return render_template("admin_redeemcodes.html", codes=codes)
+    codes = RedeemCode.query.order_by(RedeemCode.code).all()
+
+    creatures = []
+    cards = []
+    leaders = []
+    try:
+        with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r") as f:
+            c_data = json.load(f)
+            creatures = sorted([{"id": c.get("ID", ""), "name": c.get("Name", c.get("ID", ""))} for c in c_data if c.get("ID")], key=lambda x: x["name"])
+    except Exception:
+        pass
+
+    try:
+        with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_ActionCards.json"), "r") as f:
+            ac_data = json.load(f)
+            cards = sorted([{"id": c.get("ID", ""), "name": c.get("Name", c.get("ID", ""))} for c in ac_data if c.get("ID")], key=lambda x: x["name"])
+    except Exception:
+        pass
+
+    try:
+        with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r") as f:
+            l_data = json.load(f)
+            leaders = sorted([{"id": l.get("ID", ""), "name": l.get("Name", l.get("ID", ""))} for l in l_data if l.get("ID")], key=lambda x: x["name"])
+    except Exception:
+        pass
+
+    return render_template(
+        "admin_redeemcodes.html",
+        codes=codes,
+        creatures=creatures,
+        cards=cards,
+        leaders=leaders,
+    )
 
 
 @login_required
@@ -1566,28 +1597,47 @@ def AdminRedeemCodeAdd():
 
     code = request.form.get("code", "").strip().upper()
     reward_type = request.form.get("reward_type", "").strip()
-    reward_amount = safe_int(request.form.get("reward_amount", ""), 0)
+    reward_amount = safe_int(request.form.get("reward_amount", ""), 1)
+    reward_item = request.form.get("reward_item", "").strip()
 
-    if not code or not reward_type or reward_amount <= 0:
-        return make_response("Invalid input!", 400)
+    if not code or not reward_type:
+        return make_response("Code and reward type are required!", 400)
+
+    # For item rewards, require reward_item
+    if reward_type in ("Creature", "ActionCard", "Leader"):
+        if not reward_item:
+            return make_response(f"Item selection is required for {reward_type} reward!", 400)
+        if reward_type == "Creature":
+            # For creatures, reward_amount acts as star rating (1-5)
+            reward_amount = min(max(reward_amount, 1), 5)
+        elif reward_type == "Leader":
+            reward_amount = 1
+        elif reward_type == "ActionCard":
+            reward_amount = max(reward_amount, 1)
+    else:
+        if reward_amount <= 0:
+            return make_response("Reward amount must be greater than 0!", 400)
+        reward_item = ""
 
     existing = RedeemCode.query.filter_by(code=code).first()
     if existing:
         existing.reward_type = reward_type
         existing.reward_amount = reward_amount
+        existing.reward_item = reward_item if reward_item else None
         existing.enabled = True
     else:
         new_code = RedeemCode(
             code=code,
             reward_type=reward_type,
             reward_amount=reward_amount,
+            reward_item=reward_item if reward_item else None,
             enabled=True,
             created_by=current_user.username,
         )
         db.session.add(new_code)
 
     db.session.commit()
-    Log("admin", current_user.username + f" added/updated redeem code: {code}")
+    Log("admin", current_user.username + f" added/updated redeem code: {code} ({reward_type} {reward_item} x{reward_amount})")
     return redirect("/admin/redeemcodes")
 
 

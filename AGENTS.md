@@ -132,9 +132,10 @@ cwk-server/
 ### RedeemCode
 | Field | Type | Description |
 |-------|------|-------------|
-| `code` | String(128), PK | Redeem code |
-| `reward_type` | String(128) | Currency type |
-| `reward_amount` | Integer | Amount |
+| `code` | String(128), PK | Redeem code (uppercase) |
+| `reward_type` | String(128) | Currency or item type (`SoftCurrency`, `HardCurrency`, `FreeHardCurrency`, `PvpCurrency`, `EvolutionShards`, `Creature`, `ActionCard`, `Leader`) |
+| `reward_amount` | Integer | Amount (or Star Rating for Creature, Copies for Action Card) |
+| `reward_item` | String(128) | Creature ID, Action Card ID, or Leader ID (for item rewards) |
 | `enabled` | Boolean | Active status |
 | `created_by` | String(128) | Admin who created |
 

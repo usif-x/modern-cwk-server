@@ -16,6 +16,7 @@ class RedeemCode(db.Model):
     code = db.Column(db.String(128), primary_key=True)
     reward_type = db.Column(db.String(128), nullable=False)
     reward_amount = db.Column(db.Integer, nullable=False, default=0)
+    reward_item = db.Column(db.String(128), nullable=True)
     enabled = db.Column(db.Boolean, nullable=False, default=True)
     created_by = db.Column(db.String(128), nullable=True)
 

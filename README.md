@@ -5,27 +5,31 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
 ## Features
 
 - **Game Save Persistence** — Encrypted storage of player game data (base64 + gzip JSON)
-- **Multiplayer** — Player profiles, deck management, PVP leaderboards
-- **Friend System** — Friend requests, ally usage, anonymous helpers
-- **Redeem Codes** — Create and manage reward codes (coins, gems, etc.)
-- **Admin Panel** — Modern, responsive grid admin panel inspired by shadcn/ui
-  - Player management (view, edit resources, ban/unban)
-  - Creature, card, and leader management (add all, add single, max out)
-  - Reference books for creature IDs, action card IDs, leader IDs
-  - Game data viewer with structured sections
-  - Server backups, version management, maintenance mode
-  - Player logs and analytics
-- **Anti-Cheat** — Device binding, leader level validation, auto-ban
-- **Auto-Backup** — Database + data backed up every 4 hours
+- **Multiplayer & PVP** — Player profiles, deck configurations, seasonal PVP leaderboards
+- **PVP Ban List Management** — Global & seasonal bans for specific creatures and leaders via `/persist/static/pvp_banlist` with admin control panel and one-click ban toggle in reference books
+- **Friend System** — Friend discovery, friend requests, ally sharing, and anonymous helpers
+- **Multi-Reward Redeem Codes** — Promotional gift codes supporting:
+  - Currencies: Soft Currency (Coins), Hard Currency (Gems), Free Gems, PVP Wishbones, and Evolution Shards
+  - Game Items: Creatures (with custom star ratings 1–5★), Action Cards (with custom quantities), and Heroes/Leaders
+  - Automated duplicate redemption tracking via `UsedRedeemCodes`
+- **Interactive Player Event Logs** — Audit trail with smart classification badges, compact single-line previews, and a full-featured modal dialog with structured parameter cards, syntax-highlighted JSON viewer, and instant clipboard copy
+- **Admin Panel** — Modern, responsive grid admin panel inspired by shadcn/ui (light/dark mode, Tailwind CSS, Lucide icons):
+  - Player management (view, edit resources, rank sync, ban/unban, JSON save export/import)
+  - Creature, action card, and leader tools (bulk multi-select deletion, delete all, max to 5★, add all 631 creatures, 695 cards, and 83 leaders)
+  - Interactive reference books for all creatures, action cards, and leaders
+  - PVP ban list manager with raw JSON editor
+  - Server backups, version management, maintenance mode, and logs
+- **Anti-Cheat & Rank Sync** — Device binding, automated Rank & RankXP synchronization based on game blueprint curves (`db_PlayerRanks.json`), leader level jump validation, and ACTk detection
+- **Auto-Backup** — Automatic full database + persist directory backups every 4 hours
 
 ## Tech Stack
 
-- Python 3.11+
-- Flask + SQLAlchemy (SQLite)
-- Flask-Login (authentication)
-- Flask-Bcrypt (password hashing)
-- Tailwind CSS + Lucide Icons
-- shadcn/ui modern design system (responsive grid, light/dark mode)
+- **Python 3.11+**
+- **Flask** + **SQLAlchemy** (SQLite)
+- **Flask-Login** (session authentication)
+- **Flask-Bcrypt** (password hashing)
+- **Tailwind CSS** + **Lucide Icons**
+- **shadcn/ui** design system (responsive grid, accessible components, light/dark mode)
 
 ## Quick Start
 
@@ -33,7 +37,7 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the server
+# Run the server (default port 5000)
 python app.py
 
 # Custom port
@@ -43,26 +47,28 @@ python app.py --port 8080
 python app.py --debug
 ```
 
-The first admin account is auto-created on first login. Check the console output for the random password.
+> **Note**: The first admin account is auto-created on first login if no admin exists. Check the terminal output for the generated password.
 
 ## Project Structure
 
 ```
 cwk-server/
-├── app.py                  # Entry point
+├── app.py                  # Thin entry point
 ├── app/
-│   ├── __init__.py         # Flask app factory, globals, scheduler
-│   ├── models.py           # Database models (Player, Admin, Bans, etc.)
-│   ├── utils.py            # Helpers (encrypt/decrypt, logging, etc.)
+│   ├── __init__.py         # Flask app factory, globals, scheduler, DB migration
+│   ├── models.py           # Database models (Player, Admin, Bans, RedeemCode, etc.)
+│   ├── utils.py            # Helpers (encryption/decryption, anti-cheat, logging, XP tables)
 │   └── routes/
-│       ├── game.py         # Client-facing game API
-│       ├── admin.py        # Admin panel routes
-│       ├── multiplayer.py  # Multiplayer routes
+│       ├── __init__.py     # Blueprint registration
+│       ├── game.py         # Client-facing game API & PVP ban list
+│       ├── admin.py        # Admin panel routes & moderation
+│       ├── multiplayer.py  # Multiplayer routes & redeem code API
 │       ├── friends.py      # Friend system routes
-│       └── analytics.py    # Analytics + leaderboard
-├── templates/              # 19 admin panel templates
-├── data/persist/           # Game data, blueprints, logs
-└── instance/               # SQLite database
+│       └── analytics.py    # Analytics & PVP leaderboard
+├── templates/              # 20 Jinja2 admin templates (shadcn/ui style)
+├── data/persist/           # Game data, blueprints, ban lists, logs
+├── instance/               # SQLite database (cardwarskingdom.db)
+└── backup/                 # Automatic zip backups (every 4 hours)
 ```
 
 ## API Endpoints
@@ -74,9 +80,13 @@ cwk-server/
 | GET | `/` | Health check |
 | GET/PUT | `/persist/game` | Game save (by `Player-Id` header) |
 | GET/PUT | `/persist/<uuid>/game` | Game save (by UUID) |
-| GET | `/static/version.txt` | Version + maintenance status |
-| GET | `/persist/static/Blueprints/<file>` | Blueprint data files |
+| GET | `/static/version.txt` | Version string + maintenance status |
+| GET | `/persist/static/manifest.json` | Client asset manifest |
+| GET | `/persist/static/blueprints` | All blueprints bundle (v1.18.0+) |
+| GET | `/persist/static/Blueprints/<file>` | Blueprint data file |
+| GET/POST | `/persist/static/pvp_banlist` | Active PVP season & banned creatures/leaders |
 | POST | `/account/gcAuth/` | Game Center authentication |
+| POST | `/persist/user_action2/` | User tracking action |
 
 ### Friend System
 
@@ -86,82 +96,91 @@ cwk-server/
 | POST | `/persist/friends_find_candidatesDW/` | Search for friends |
 | POST | `/persist/friends_request_withmyinfoDW/` | Send friend request |
 | POST | `/persist/friends_confirm_request_withmyinfoDW/` | Accept request |
-| POST | `/persist/friends_use_friendDW/` | Use as ally |
+| GET | `/persist/friends_deny_request/<uuid>/<invite_id>` | Deny request |
+| GET | `/persist/friends_remove/<uuid>/<invite_id>` | Remove friend |
+| POST | `/persist/friends_use_friendDW/` | Use ally helper (increment help) |
+| POST | `/persist/friends_use_playerDW/` | Use anonymous helper |
 
-### Multiplayer
+### Multiplayer & Redeem Codes
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/multiplayer/new_player/` | Set multiplayer profile |
-| POST | `/multiplayer/update_deck_name/` | Update deck/profile |
-| POST | `/multiplayer/redeemcodeDW/` | Redeem a code |
+| POST | `/multiplayer/update_deck_name/` | Update deck/profile & anti-cheat check |
+| POST | `/multiplayer/redeemcodeDW/` | Redeem code for currencies, creatures, cards, or heroes |
+| POST | `/dw_leaderboard/fetchentries/` | PVP leaderboard entries |
 
 ### Admin Panel
 
 | Endpoint | Description |
 |----------|-------------|
-| `/admin` | Login |
-| `/admin/home` | Dashboard |
-| `/admin/players` | Player list |
-| `/admin/players/<uuid>` | Player detail/edit |
-| `/admin/creatures` | Creature reference book |
-| `/admin/cards` | Action card reference book |
-| `/admin/leaders` | Leader reference book |
-| `/admin/redeemcodes` | Redeem code management |
-| `/admin/logs` | Player logs |
-| `/admin/server` | Server/backups |
+| `/admin` | Login & first-time setup |
+| `/admin/home` | System dashboard with stats & recent activity |
+| `/admin/players` | Sortable player list with bulk ban/unban/delete |
+| `/admin/players/<uuid>` | Player details, resource editor, multi-item actions |
+| `/admin/players/<uuid>/game` | Structured game save viewer and raw editor |
+| `/admin/creatures` | Searchable Creature Book with PVP ban toggles |
+| `/admin/cards` | Searchable Action Card Book |
+| `/admin/leaders` | Searchable Leader / Hero Book |
+| `/admin/redeemcodes` | Redeem codes CRUD with autocomplete item picker |
+| `/admin/pvp_banlist` | Manage PVP banned creatures, leaders & raw JSON |
+| `/admin/logs` | Audit log with interactive structured detail modal |
+| `/admin/bannedplayers` | Banned players list |
+| `/admin/bannedips` | Banned IP addresses list |
+| `/admin/server` | Manual backups, restore triggers, and git pull |
+| `/admin/versions` | Client version and maintenance toggles |
 
 ## Game Data Format
 
-Player saves are stored as:
+Player saves are stored in `Player.game` as:
 ```
 username=<uuid>&data=<base64(gzip(json))>
 ```
 
-### Key Fields
+### Key JSON Fields
 
 | Field | Description |
 |-------|-------------|
 | `SoftCurrency` | Coins |
-| `HardCurrency` | Gems |
+| `HardCurrency` | Gems (total) |
 | `PaidHardCurrency` | Purchased gems |
 | `FreeHardCurrency` | Earned gems |
-| `PvpCurrency` | Wishbones |
+| `PvpCurrency` | PVP Wishbones |
 | `EvolutionShards` | Evolution shards |
 | `InventorySpace` | Inventory capacity |
-| `MultiplayerLevel` | MP rank |
-| `RankXP` | Rank experience |
-| `Zxcvbnm` | PVP ban flag (0/1) |
-| `Inventory` | Items array (creatures, cards, materials) |
-| `CardCollection` | Collected cards |
-| `Leaders` | Owned leaders with skins |
-| `BattleHistory` | PVP battle records |
+| `MultiplayerLevel` | Player level / rank |
+| `RankXP` | Cumulative rank experience |
+| `Zxcvbnm` | PVP ban flag (0 = active, 1 = banned) |
+| `UsedRedeemCodes` | Array of previously redeemed promotional code strings |
+| `Inventory` | Inventory items array (`CR`, `CA`, `XP`) |
+| `CardCollection` | Action card collection dictionary |
+| `Leaders` | Owned leaders and unlocked skins |
+| `BattleHistory` | PVP battle logs |
 
 ### Inventory Types
 
 | `_T` | Type | Fields |
 |------|------|--------|
-| `CR` | Creature | `ID`, `Xp`, `StarRating`, `UniqueID`, `Favorite`, `Passive` |
-| `CA` | Action Card | `ID`, `CreatureUID`, `CreatureSlot` |
+| `CR` | Creature | `ID`, `Xp`, `StarRating`, `UniqueID`, `Favorite`, `Passive`, `PassiveFeeds` |
+| `CA` | Action Card | `ID`, `UniqueID`, `CreatureUID`, `CreatureSlot`, `Favorite` |
 | `XP` | XP Material | `ID` |
 
 ## Database
 
-SQLite database at `instance/cardwarskingdom.db` with tables:
-- `player` — Player accounts and game data
-- `admin` — Admin accounts
-- `bans` — Player and IP bans
-- `logs` — Player activity logs
+SQLite database located at `instance/cardwarskingdom.db` with models:
+- `player` — Player accounts, profiles, and encrypted saves
+- `admin` — Admin credentials and rank
+- `bans` — UUID and IP ban entries
+- `logs` — Player activity audit logs
 - `upsight_logs` — Analytics events
-- `admin_activity` — Admin action history
-- `redeem_code` — Redeem codes
+- `admin_activity` — Admin audit trail
+- `redeem_code` — Promotional codes (`code`, `reward_type`, `reward_amount`, `reward_item`, `enabled`, `created_by`)
 
-## Configuration
+## Configuration & Assets
 
-- **Flask secret key**: Auto-generated in `flaskkey`
-- **Port**: Default 5000, override with `--port`
-- **Database**: SQLite, auto-created on first run
-- **Blueprints**: JSON files in `data/persist/Blueprints/`
-- **Logs**: Daily files in `data/persist/logs/`
-- **Backups**: Zip files in `backup/` (every 4 hours)
-- **Discord webhook**: Optional, URL stored in `discordwebhookurl`
+- **Flask secret key**: Automatically generated in `flaskkey`
+- **Database URI**: SQLite at `instance/cardwarskingdom.db` (auto-migrated)
+- **Blueprints**: Game data in `data/persist/Blueprints/` (`db_Creatures.json`, `db_ActionCards.json`, `db_Leaders.json`, `db_PlayerRanks.json`)
+- **PVP Ban List**: JSON file at `data/persist/pvp_banlist.json`
+- **Backups**: Automatically compressed zip archives in `backup/` every 4 hours
+- **Discord Webhook**: Optional alerts URL stored in `discordwebhookurl`

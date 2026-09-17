@@ -73,6 +73,14 @@ def run_scheduler():
 
 with app.app_context():
     db.create_all()
+    try:
+        from sqlalchemy import text
+        cols = [r[1] for r in db.session.execute(text("PRAGMA table_info(redeem_code)")).fetchall()]
+        if cols and "reward_item" not in cols:
+            db.session.execute(text("ALTER TABLE redeem_code ADD COLUMN reward_item VARCHAR(128)"))
+            db.session.commit()
+    except Exception as e:
+        print(f"Migration notice: {e}")
 
 from app.routes import register_blueprints
 register_blueprints(app)

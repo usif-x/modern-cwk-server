@@ -8,7 +8,12 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Player Event Logs</h1>
-            <p class="text-sm text-muted-foreground mt-1">Audit log of player interactions, saves, and network calls</p>
+            <p class="text-sm text-muted-foreground mt-1">Audit trail of player interactions, deck setups, saves, and network calls</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground bg-muted">
+                {{ logs.total }} total entries
+            </span>
         </div>
     </div>
 
@@ -50,34 +55,99 @@
             <table class="w-full caption-bottom text-sm">
                 <thead class="[&_tr]:border-b border-border bg-muted/40 text-xs text-muted-foreground">
                     <tr class="text-left">
-                        <th class="h-10 px-6 font-medium whitespace-nowrap">Timestamp</th>
-                        <th class="h-10 px-6 font-medium whitespace-nowrap">Player</th>
-                        <th class="h-10 px-6 font-medium whitespace-nowrap">IP Address</th>
-                        <th class="h-10 px-6 font-medium">Message</th>
+                        <th class="h-10 px-4 font-medium whitespace-nowrap">ID</th>
+                        <th class="h-10 px-4 font-medium whitespace-nowrap">Timestamp</th>
+                        <th class="h-10 px-4 font-medium whitespace-nowrap">Player</th>
+                        <th class="h-10 px-4 font-medium whitespace-nowrap">IP Address</th>
+                        <th class="h-10 px-4 font-medium whitespace-nowrap">Event Type</th>
+                        <th class="h-10 px-4 font-medium">Message Preview</th>
+                        <th class="h-10 px-4 text-right font-medium whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
                 <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
                     {% for log in logs.items %}
+                    {% set msg = log.message.strip() %}
+                    {% set first_line = msg.split('\n')[0] %}
                     <tr class="hover:bg-muted/30 transition-colors">
-                        <td class="px-6 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">
-                            {{ log.date }} {{ log.time }}
+                        <!-- ID -->
+                        <td class="px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">
+                            #{{ log.id }}
                         </td>
-                        <td class="px-6 py-2.5 font-mono text-xs whitespace-nowrap">
-                            <a href="/admin/players/{{ log.player }}" class="text-primary hover:underline">
-                                {{ log.player }}
+
+                        <!-- Timestamp -->
+                        <td class="px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">
+                            {{ log.date }} <span class="text-foreground font-semibold">{{ log.time }}</span>
+                        </td>
+
+                        <!-- Player UUID -->
+                        <td class="px-4 py-3 font-mono text-xs whitespace-nowrap">
+                            <a href="/admin/players/{{ log.player }}" class="text-primary hover:underline inline-flex items-center gap-1 font-semibold" title="View Player Profile">
+                                {{ log.player[:13] }}...
+                                <i data-lucide="external-link" class="w-3 h-3 text-muted-foreground"></i>
                             </a>
                         </td>
-                        <td class="px-6 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">
-                            {{ log.ip }}
+
+                        <!-- IP Address -->
+                        <td class="px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1">
+                                <i data-lucide="network" class="w-3 h-3 text-muted-foreground"></i>
+                                {{ log.ip or "—" }}
+                            </span>
                         </td>
-                        <td class="px-6 py-2.5 font-mono text-xs text-foreground whitespace-pre-wrap break-all">
-                            {{ log.message }}
+
+                        <!-- Event Type Badge -->
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            {% if "Set Landscapes" in msg or "Set Deck Rank" in msg %}
+                                <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                                    <i data-lucide="layout-grid" class="w-3 h-3"></i> Deck & Sync
+                                </span>
+                            {% elif "Redeemed code" in msg %}
+                                <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                    <i data-lucide="gift" class="w-3 h-3"></i> Redeem Code
+                                </span>
+                            {% elif "Created new player" in msg %}
+                                <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                                    <i data-lucide="user-plus" class="w-3 h-3"></i> New Player
+                                </span>
+                            {% elif "User Action" in msg %}
+                                <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                    <i data-lucide="activity" class="w-3 h-3"></i> User Action
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-muted text-muted-foreground border border-border">
+                                    <i data-lucide="file-text" class="w-3 h-3"></i> General Log
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Message Preview (Truncated Single Line) -->
+                        <td class="px-4 py-3 max-w-xs md:max-w-md lg:max-w-lg">
+                            <div class="font-mono text-xs text-muted-foreground truncate" title="{{ first_line }}">
+                                {{ first_line }}
+                            </div>
+                        </td>
+
+                        <!-- Action: View Details Modal -->
+                        <td class="px-4 py-3 text-right whitespace-nowrap">
+                            <button
+                                type="button"
+                                onclick="openLogModal({{ log.id }})"
+                                class="inline-flex items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+                            >
+                                <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-primary"></i>
+                                <span>Details</span>
+                            </button>
+
+                            <!-- Raw Log Data in Safe JSON Script Tag -->
+                            <script id="log-data-{{ log.id }}" type="application/json">
+                                {{ {'id': log.id, 'date': log.date, 'time': log.time, 'player': log.player, 'ip': log.ip or '', 'message': log.message}|tojson }}
+                            </script>
                         </td>
                     </tr>
                     {% endfor %}
                     {% if not logs.items %}
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-muted-foreground text-sm">
+                        <td colspan="7" class="px-6 py-12 text-center text-muted-foreground text-sm">
                             No logs found matching criteria.
                         </td>
                     </tr>
@@ -118,4 +188,390 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Log Details Modal Dialog -->
+<div id="logDetailModal" class="fixed inset-0 z-50 bg-background/80 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 overflow-y-auto hidden" role="dialog" aria-modal="true">
+    <div class="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-xl border border-border bg-card text-card-foreground shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150" onclick="event.stopPropagation()">
+        
+        <!-- Modal Header -->
+        <div class="p-5 border-b border-border flex items-center justify-between shrink-0 bg-muted/20">
+            <div class="flex items-center gap-3">
+                <div class="p-2 rounded-lg bg-primary/10 text-primary">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 id="modalLogTitle" class="text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
+                        Log Entry Details
+                    </h3>
+                    <p id="modalLogTimestamp" class="text-xs font-mono text-muted-foreground mt-0.5"></p>
+                </div>
+            </div>
+            <button
+                type="button"
+                onclick="closeLogModal()"
+                class="rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                title="Close (Esc)"
+            >
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Meta Bar -->
+        <div class="px-5 py-3 border-b border-border bg-muted/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="user" class="w-3.5 h-3.5 text-muted-foreground"></i>
+                    <span class="text-muted-foreground">Player:</span>
+                    <a id="modalPlayerLink" href="#" class="font-mono text-primary font-semibold hover:underline inline-flex items-center gap-1">
+                        <span id="modalPlayerId"></span>
+                        <i data-lucide="external-link" class="w-3 h-3"></i>
+                    </a>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="network" class="w-3.5 h-3.5 text-muted-foreground"></i>
+                    <span class="text-muted-foreground">IP:</span>
+                    <span id="modalIp" class="font-mono text-foreground font-semibold"></span>
+                </div>
+            </div>
+            <div id="modalCategoryBadge"></div>
+        </div>
+
+        <!-- View Mode Tabs -->
+        <div class="px-5 pt-3 border-b border-border bg-background flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2">
+                <button
+                    type="button"
+                    id="tabBtnFormatted"
+                    onclick="switchModalTab('formatted')"
+                    class="pb-2.5 px-2 text-xs font-semibold border-b-2 border-primary text-primary transition-colors flex items-center gap-1.5"
+                >
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                    <span>Structured View</span>
+                </button>
+                <button
+                    type="button"
+                    id="tabBtnRaw"
+                    onclick="switchModalTab('raw')"
+                    class="pb-2.5 px-2 text-xs font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+                >
+                    <i data-lucide="code" class="w-3.5 h-3.5"></i>
+                    <span>Raw Message</span>
+                </button>
+            </div>
+            <button
+                type="button"
+                id="modalCopyBtn"
+                onclick="copyModalLog()"
+                class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors mb-2"
+            >
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span id="modalCopyBtnText">Copy Raw</span>
+            </button>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div class="p-5 overflow-y-auto flex-1 space-y-4 max-h-[60vh]">
+            <!-- Formatted Tab Panel -->
+            <div id="tabPanelFormatted" class="space-y-4">
+                <!-- Dynamic Content Generated by JavaScript -->
+                <div id="modalFormattedContent"></div>
+            </div>
+
+            <!-- Raw Tab Panel -->
+            <div id="tabPanelRaw" class="hidden">
+                <pre id="modalRawContent" class="p-4 rounded-lg bg-muted/60 border border-border font-mono text-xs text-foreground whitespace-pre-wrap break-all select-all overflow-x-auto leading-relaxed"></pre>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-4 border-t border-border bg-muted/20 flex items-center justify-end gap-2 shrink-0">
+            <button
+                type="button"
+                onclick="closeLogModal()"
+                class="inline-flex items-center justify-center rounded-md bg-secondary text-secondary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-secondary/80 transition-colors"
+            >
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentModalLog = null;
+
+function tryParseCleanJson(str) {
+    if (!str || typeof str !== 'string') return null;
+    str = str.trim();
+    if (!((str.startsWith('{') && str.endsWith('}')) || (str.startsWith('[') && str.endsWith(']')))) {
+        return null;
+    }
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        try {
+            // Fix client serialization artifacts like `[,{"_T"...` or trailing commas
+            const cleaned = str
+                .replace(/\[\s*,/g, '[')
+                .replace(/,\s*([}\]])/g, '$1');
+            return JSON.parse(cleaned);
+        } catch (e2) {
+            return null;
+        }
+    }
+}
+
+function openLogModal(logId) {
+    const scriptEl = document.getElementById('log-data-' + logId);
+    if (!scriptEl) return;
+    
+    let log;
+    try {
+        log = JSON.parse(scriptEl.textContent);
+    } catch (e) {
+        console.error("Failed to parse log script data:", e);
+        return;
+    }
+
+    currentModalLog = log;
+
+    // Set Header
+    document.getElementById('modalLogTitle').innerHTML = `Log Entry <span class="font-mono text-primary font-bold">#${log.id}</span>`;
+    document.getElementById('modalLogTimestamp').textContent = `${log.date} at ${log.time}`;
+
+    // Set Meta
+    document.getElementById('modalPlayerId').textContent = log.player;
+    document.getElementById('modalPlayerLink').href = `/admin/players/${log.player}`;
+    document.getElementById('modalIp').textContent = log.ip || 'Unknown';
+
+    // Badge
+    const badgeContainer = document.getElementById('modalCategoryBadge');
+    const msg = log.message.trim();
+    if (msg.includes('Set Landscapes') || msg.includes('Set Deck Rank')) {
+        badgeContainer.innerHTML = '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20"><i data-lucide="layout-grid" class="w-3 h-3"></i> Deck & Landscapes Sync</span>';
+    } else if (msg.includes('Redeemed code')) {
+        badgeContainer.innerHTML = '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"><i data-lucide="gift" class="w-3 h-3"></i> Code Redeemed</span>';
+    } else if (msg.includes('Created new player')) {
+        badgeContainer.innerHTML = '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20"><i data-lucide="user-plus" class="w-3 h-3"></i> New Player</span>';
+    } else if (msg.includes('User Action')) {
+        badgeContainer.innerHTML = '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20"><i data-lucide="activity" class="w-3 h-3"></i> User Action</span>';
+    } else {
+        badgeContainer.innerHTML = '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground border border-border"><i data-lucide="file-text" class="w-3 h-3"></i> General Log</span>';
+    }
+
+    // Set Raw Content
+    document.getElementById('modalRawContent').textContent = log.message;
+
+    // Render Formatted Content
+    renderFormattedView(log.message);
+
+    // Reset Tab to Formatted
+    switchModalTab('formatted');
+
+    // Show Modal
+    const modal = document.getElementById('logDetailModal');
+    modal.classList.remove('hidden');
+
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+}
+
+function renderFormattedView(rawMessage) {
+    const container = document.getElementById('modalFormattedContent');
+    container.innerHTML = '';
+
+    const lines = rawMessage.split('\n').map(l => l.trim()).filter(Boolean);
+    const properties = [];
+    const complexBlocks = [];
+
+    lines.forEach(line => {
+        // Match "Set <Key> to <Value>" or "<Key>: <Value>"
+        let match = line.match(/^Set\s+(.*?)\s+to\s+(.*)$/i);
+        if (!match) {
+            match = line.match(/^(.*?):\s*(.*)$/);
+        }
+
+        if (match) {
+            const key = match[1].trim();
+            const val = match[2].trim();
+            const parsedJson = tryParseCleanJson(val);
+
+            if (parsedJson) {
+                complexBlocks.push({ key, json: parsedJson, raw: val });
+            } else {
+                properties.push({ key, val });
+            }
+        } else {
+            // Freeform statement
+            complexBlocks.push({ key: 'Event', text: line });
+        }
+    });
+
+    // 1. Render Properties Grid (Simple Key-Values)
+    if (properties.length > 0) {
+        const gridCard = document.createElement('div');
+        gridCard.className = 'rounded-lg border border-border bg-card p-4 shadow-xs space-y-3';
+        gridCard.innerHTML = `
+            <div class="flex items-center gap-2 pb-2 border-b border-border">
+                <i data-lucide="sliders" class="w-4 h-4 text-primary"></i>
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Properties & Parameters</h4>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                ${properties.map(p => `
+                    <div class="rounded-md border border-border bg-muted/30 p-2.5 space-y-1">
+                        <div class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">${escapeHtml(p.key)}</div>
+                        <div class="font-mono text-xs font-bold text-foreground break-all">${escapeHtml(p.val)}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        container.appendChild(gridCard);
+    }
+
+    // 2. Render Complex JSON Blocks (e.g. Landscapes, Helper Creature)
+    complexBlocks.forEach(block => {
+        if (block.json) {
+            const blockCard = document.createElement('div');
+            blockCard.className = 'rounded-lg border border-border bg-card p-4 shadow-xs space-y-3';
+            
+            // Inspect special CWK payloads like Landscapes with Creatures
+            let specialPreview = '';
+            if (block.json.Creatures && Array.isArray(block.json.Creatures)) {
+                const creatures = block.json.Creatures.filter(c => c && c.ID);
+                if (creatures.length > 0) {
+                    specialPreview = `
+                        <div class="mt-2 pt-2 border-t border-border space-y-2">
+                            <div class="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+                                <i data-lucide="shield" class="w-3.5 h-3.5 text-indigo-500"></i> Equipped Deck Creatures (${creatures.length})
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${creatures.map(c => `
+                                    <span class="inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2 py-1 text-xs font-mono">
+                                        <span class="font-semibold text-foreground">${escapeHtml(c.ID)}</span>
+                                        <span class="text-amber-500 font-bold">${c.StarRating || 1}★</span>
+                                        <span class="text-[10px] text-muted-foreground">#${c.UniqueID || 0}</span>
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            const formattedJsonStr = JSON.stringify(block.json, null, 2);
+            const blockId = 'json-block-' + Math.random().toString(36).substr(2, 9);
+
+            blockCard.innerHTML = `
+                <div class="flex items-center justify-between pb-2 border-b border-border">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="braces" class="w-4 h-4 text-primary"></i>
+                        <h4 class="text-xs font-semibold text-foreground">${escapeHtml(block.key)}</h4>
+                    </div>
+                    <button
+                        type="button"
+                        onclick="copyJsonSnippet('${blockId}', this)"
+                        class="inline-flex items-center gap-1 rounded border border-input bg-background px-2 py-1 text-[11px] font-medium hover:bg-accent transition-colors"
+                    >
+                        <i data-lucide="copy" class="w-3 h-3"></i> Copy JSON
+                    </button>
+                </div>
+                ${specialPreview}
+                <div class="relative">
+                    <pre id="${blockId}" class="p-3 rounded-md bg-muted/70 border border-border font-mono text-xs text-foreground overflow-x-auto max-h-64 leading-relaxed">${escapeHtml(formattedJsonStr)}</pre>
+                </div>
+            `;
+            container.appendChild(blockCard);
+        } else if (block.text) {
+            const textCard = document.createElement('div');
+            textCard.className = 'rounded-lg border border-border bg-muted/30 p-3.5 font-mono text-xs text-foreground flex items-start gap-2';
+            textCard.innerHTML = `
+                <i data-lucide="info" class="w-4 h-4 text-primary shrink-0 mt-0.5"></i>
+                <div class="break-all leading-relaxed">${escapeHtml(block.text)}</div>
+            `;
+            container.appendChild(textCard);
+        }
+    });
+
+    if (properties.length === 0 && complexBlocks.length === 0) {
+        container.innerHTML = `
+            <div class="p-6 text-center text-muted-foreground text-xs font-mono">
+                No structured data could be parsed. Switch to "Raw Message" tab to view original log.
+            </div>
+        `;
+    }
+}
+
+function switchModalTab(tab) {
+    const formattedBtn = document.getElementById('tabBtnFormatted');
+    const rawBtn = document.getElementById('tabBtnRaw');
+    const formattedPanel = document.getElementById('tabPanelFormatted');
+    const rawPanel = document.getElementById('tabPanelRaw');
+
+    if (tab === 'formatted') {
+        formattedBtn.className = 'pb-2.5 px-2 text-xs font-semibold border-b-2 border-primary text-primary transition-colors flex items-center gap-1.5';
+        rawBtn.className = 'pb-2.5 px-2 text-xs font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5';
+        formattedPanel.classList.remove('hidden');
+        rawPanel.classList.add('hidden');
+    } else {
+        rawBtn.className = 'pb-2.5 px-2 text-xs font-semibold border-b-2 border-primary text-primary transition-colors flex items-center gap-1.5';
+        formattedBtn.className = 'pb-2.5 px-2 text-xs font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5';
+        rawPanel.classList.remove('hidden');
+        formattedPanel.classList.add('hidden');
+    }
+}
+
+function closeLogModal() {
+    const modal = document.getElementById('logDetailModal');
+    modal.classList.add('hidden');
+    currentModalLog = null;
+}
+
+function copyModalLog() {
+    if (!currentModalLog) return;
+    navigator.clipboard.writeText(currentModalLog.message).then(() => {
+        const textSpan = document.getElementById('modalCopyBtnText');
+        const old = textSpan.textContent;
+        textSpan.textContent = 'Copied!';
+        setTimeout(() => { textSpan.textContent = old; }, 1800);
+    });
+}
+
+function copyJsonSnippet(elementId, btn) {
+    const pre = document.getElementById(elementId);
+    if (!pre) return;
+    navigator.clipboard.writeText(pre.textContent).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="check" class="w-3 h-3 text-emerald-500"></i> Copied!';
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => {
+            btn.innerHTML = orig;
+            if (window.lucide) lucide.createIcons();
+        }, 1800);
+    });
+}
+
+function escapeHtml(str) {
+    if (typeof str !== 'string') return String(str);
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeLogModal();
+    }
+});
+
+// Close modal on backdrop click
+document.getElementById('logDetailModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeLogModal();
+    }
+});
+</script>
 {% endblock %}
