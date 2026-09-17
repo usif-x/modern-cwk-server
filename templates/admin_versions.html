@@ -1,27 +1,69 @@
 {% extends "admin_base.html" %}
+{% block title %}Versions - CWK Admin{% endblock %}
+{% block breadcrumb %}Versions{% endblock %}
+
 {% block content %}
-	<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-		<h1 class="h2">Versions</h1>
-	</div>
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Client Versions</h1>
+        <p class="text-sm text-muted-foreground mt-1">Configure minimum required game client versions for Android and PC</p>
+    </div>
 
-	<p>Current PC version: {{ pc_version }}</p>
-	<p>Current Android version: {{ android_version }}</p>
+    <!-- Active Versions Display Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xs flex items-center justify-between">
+            <div>
+                <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">PC Client Version</span>
+                <div class="text-2xl font-bold font-mono text-foreground mt-1">{{ pc_version }}</div>
+                <p class="text-xs text-muted-foreground mt-1">Required version string for PC</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                <i data-lucide="monitor" class="w-5 h-5"></i>
+            </div>
+        </div>
 
-  	<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-		<h1 class="h2">Update</h1>
-	</div>
-	
-	<form method="post">
-		<div class="form-group">
-			<label for="pc_version">PC version</label>
-			<input type="text" class="form-control" id="pc_version" name="pc_version" value="{{ pc_version }}" required>
-		</div>
-		<br>
-		<div class="form-group">
-			<label for="android_version">Android version</label>
-			<input type="text" class="form-control" id="android_version" name="android_version" value="{{ android_version }}" required>
-		</div>
-		<br>
-		<button type="submit" class="btn btn-primary">Update</button>
-	</form>
+        <div class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xs flex items-center justify-between">
+            <div>
+                <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Android Client Version</span>
+                <div class="text-2xl font-bold font-mono text-foreground mt-1">{{ android_version }}</div>
+                <p class="text-xs text-muted-foreground mt-1">Required version string for Android APK</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <i data-lucide="smartphone" class="w-5 h-5"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Version Form Card -->
+    <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6 max-w-xl">
+        <div class="border-b border-border pb-3 mb-4">
+            <h2 class="text-base font-semibold tracking-tight">Update Version Strings</h2>
+            <p class="text-xs text-muted-foreground mt-0.5">Clients matching these strings will be allowed through version checks</p>
+        </div>
+
+        <form method="post" class="space-y-4">
+            <div class="space-y-1.5">
+                <label class="text-xs font-medium text-foreground">PC Version</label>
+                <div class="relative">
+                    <input type="text" name="pc_version" value="{{ pc_version }}" required
+                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-xs font-medium text-foreground">Android Version</label>
+                <div class="relative">
+                    <input type="text" name="android_version" value="{{ android_version }}" required
+                        class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                </div>
+            </div>
+
+            <button type="submit" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                <span>Apply Version Updates</span>
+            </button>
+        </form>
+    </div>
+</div>
 {% endblock %}

@@ -1,19 +1,45 @@
 {% extends "admin_base.html" %}
-{% block content %}
-	<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-		<h1 class="h2">Create Admin</h1>
-	</div>
+{% block title %}Create Admin - CWK Admin{% endblock %}
+{% block breadcrumb %}Create Admin{% endblock %}
 
-	<form method="post">
-		<div class="form-group">
-			<label for="username">Username</label>
-			<input type="text" class="form-control" id="username" name="username" required>
-		</div>
-		<br>
-		<div class="form-group">
-			<label for="rank">Rank</label>
-			<input type="number" class="form-control" id="rank" name="rank" required>
-		<br>
-		<button type="submit" class="btn btn-primary">Create</button>
-	</form>
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Create Administrator</h1>
+        <p class="text-sm text-muted-foreground mt-1">Provision a new administrator account for staff and moderators</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6 max-w-lg">
+        <div class="border-b border-border pb-3 mb-6">
+            <h2 class="text-base font-semibold tracking-tight">New Account Details</h2>
+            <p class="text-xs text-muted-foreground mt-0.5">Password will be randomly generated and printed to the server terminal</p>
+        </div>
+
+        <form method="post" class="space-y-4">
+            <div class="space-y-1.5">
+                <label class="text-xs font-medium text-foreground">Admin Username</label>
+                <input type="text" name="username" placeholder="e.g. moderator_finn" required
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-xs font-medium text-foreground">Role / Privilege Level</label>
+                <select name="rank" required
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                    <option value="1">Admin (Standard management & moderation)</option>
+                    <option value="0">Superadmin (Full access including server & maintenance)</option>
+                </select>
+            </div>
+
+            <div class="pt-2">
+                <button type="submit" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors w-full">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>Create Account</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}

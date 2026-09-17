@@ -8,6 +8,7 @@ from app.models import Player, RedeemCode
 from app.utils import (
     DecryptGameData, EncryptGameData, IPFromRequest, InvalidUsername,
     IsUserBanned, Log, PlayerLog, SystemBan, DiscordWebhookMessage,
+    safe_int, GetRankForXP,
 )
 
 multiplayer_bp = Blueprint("multiplayer_bp", __name__)
@@ -32,16 +33,19 @@ def MultiplayerNewPlayer():
     db_user.landscapes = clientData["landscapes"]
     db_user.helper_creature = clientData["helper_creature"]
     db_user.leader = clientData["leader"]
+
     try:
         client_game = DecryptGameData(db_user.game)
-        if client_game and "AdminLeaderLevel" in client_game:
-            db_user.leader_level = client_game["AdminLeaderLevel"]
-        else:
-            db_user.leader_level = clientData["leader_level"]
+        admin_lvl = safe_int(client_game.get("AdminLeaderLevel", 0)) if client_game else 0
+        saved_lvl = safe_int(client_game.get("PlayersLastSavedLevel", 0)) if client_game else 0
+        xp_lvl = GetRankForXP(safe_int(client_game.get("RankXP", 0))) if client_game else 0
+        c_level = safe_int(clientData.get("leader_level", 0))
+        db_user.leader_level = max(db_user.leader_level or 0, admin_lvl, saved_lvl, xp_lvl, c_level)
     except Exception:
-        db_user.leader_level = clientData["leader_level"]
-    db_user.allyboxspace = clientData["allyboxspace"]
-    db_user.level = clientData["level"]
+        db_user.leader_level = safe_int(clientData.get("leader_level", 0), db_user.leader_level or 0)
+
+    db_user.allyboxspace = safe_int(clientData.get("allyboxspace", db_user.allyboxspace or 0))
+    db_user.level = max(safe_int(clientData.get("level", 0)), db_user.level or 0)
     db.session.commit()
 
     PlayerLog(
@@ -57,7 +61,7 @@ def MultiplayerNewPlayer():
                 "name": clientData["name"],
                 "icon": clientData["icon"],
                 "leader": clientData["leader"],
-                "level": str(clientData["leader_level"]),
+                "level": str(db_user.leader_level),
                 "trophies": "0",  # Unused
             },
         }
@@ -81,33 +85,35 @@ def MultiplayerUpdateDeckName():
     db_user.helper_creature = clientData["helper_creature"]
     db_user.leader = clientData["leader"]
 
-    # if this is a fresh account and user is attempting to set leader level to a high number, ban user
-    if db_user.leader_level is None and int(clientData["leader_level"]) > 5:
+    client_game = None
+    try:
+        client_game = DecryptGameData(db_user.game)
+    except Exception:
+        pass
+
+    admin_lvl = safe_int(client_game.get("AdminLeaderLevel", 0)) if client_game else 0
+    saved_lvl = safe_int(client_game.get("PlayersLastSavedLevel", 0)) if client_game else 0
+    xp_lvl = GetRankForXP(safe_int(client_game.get("RankXP", 0))) if client_game else 0
+    authorized_rank = max(db_user.leader_level or 0, admin_lvl, saved_lvl, xp_lvl)
+    client_leader_level = safe_int(clientData.get("leader_level", 0))
+
+    # Anti-cheat check: only ban if client reports a level far exceeding any authorized level
+    if (db_user.leader_level is None or db_user.leader_level == 0) and authorized_rank <= 1 and client_leader_level > 5:
         DiscordWebhookMessage(
             f"{clientData['player_id']} attempted to set leader level to a {clientData['leader_level']} on a fresh account! IP: "
             + IPFromRequest(request)
         )
         SystemBan(clientData["player_id"])
-    elif (
-        db_user.leader_level is not None
-        and int(clientData["leader_level"]) > int(db_user.leader_level) + 10
-    ):  # Make sure leader level is incremented by more than 10, if not, ban user
+    elif authorized_rank > 0 and client_leader_level > authorized_rank + 10:
         DiscordWebhookMessage(
-            f"{clientData['player_id']} attempted to set leader level to {clientData['leader_level']} when it was set to {db_user.leader_level}! IP: "
+            f"{clientData['player_id']} attempted to set leader level to {clientData['leader_level']} when authorized level was {authorized_rank}! IP: "
             + IPFromRequest(request)
         )
         SystemBan(clientData["player_id"])
 
-    try:
-        client_game = DecryptGameData(db_user.game)
-        if client_game and "AdminLeaderLevel" in client_game:
-            db_user.leader_level = client_game["AdminLeaderLevel"]
-        else:
-            db_user.leader_level = clientData["leader_level"]
-    except Exception:
-        db_user.leader_level = clientData["leader_level"]
-    db_user.allyboxspace = clientData["allyboxspace"]
-
+    # Safely update leader level: never downgrade below authorized rank
+    db_user.leader_level = max(authorized_rank, client_leader_level)
+    db_user.allyboxspace = safe_int(clientData.get("allyboxspace", db_user.allyboxspace or 0))
     db.session.commit()
 
     PlayerLog(

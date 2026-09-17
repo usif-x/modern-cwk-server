@@ -1,15 +1,68 @@
 {% extends "admin_base.html" %}
+{% block title %}Maintenance - CWK Admin{% endblock %}
+{% block breadcrumb %}Maintenance{% endblock %}
+
 {% block content %}
-	<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-		<h1 class="h2">Maintenance</h1>
-	</div>
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Maintenance Mode</h1>
+        <p class="text-sm text-muted-foreground mt-1">Control game access during database updates and maintenance windows</p>
+    </div>
 
-	<p>Maintenance: {{ maintenance }}</p>
+    <!-- Status Card -->
+    <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6 sm:p-8 max-w-2xl">
+        <div class="flex items-start gap-4 mb-6">
+            {% if maintenance %}
+                <div class="w-12 h-12 rounded-xl bg-destructive/15 text-destructive flex items-center justify-center shrink-0 border border-destructive/20">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-bold text-foreground">Maintenance Mode is ACTIVE</h2>
+                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold bg-destructive/15 text-destructive border border-destructive/20">
+                            Offline to Players
+                        </span>
+                    </div>
+                    <p class="text-sm text-muted-foreground">
+                        Game clients connecting to the server will be greeted with a maintenance notice and will not be able to load into battles or save progress.
+                    </p>
+                </div>
+            {% else %}
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                    <i data-lucide="check-circle" class="w-6 h-6"></i>
+                </div>
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-bold text-foreground">Maintenance Mode is DISABLED</h2>
+                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            Normal Operation
+                        </span>
+                    </div>
+                    <p class="text-sm text-muted-foreground">
+                        All game API endpoints are active and accepting player traffic, saves, and multiplayer matchmaking.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
 
-	{% if maintenance %}
-		<a href="/admin/maintenance/disable" class="btn btn-primary">Disable</a>
-	{% else %}
-		<a href="/admin/maintenance/enable" class="btn btn-primary">Enable</a>
-	{% endif %}
+        <div class="pt-6 border-t border-border flex items-center justify-between">
+            <span class="text-xs text-muted-foreground font-mono">
+                Status: {% if maintenance %}503 MAINTENANCE{% else %}200 OK{% endif %}
+            </span>
 
+            {% if maintenance %}
+                <a href="/admin/maintenance/disable" class="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 text-white px-5 py-2.5 text-sm font-medium shadow-xs hover:bg-emerald-700 transition-colors" onclick="return confirm('Disable maintenance mode and allow players to connect?')">
+                    <i data-lucide="power" class="w-4 h-4"></i>
+                    <span>Disable Maintenance Mode</span>
+                </a>
+            {% else %}
+                <a href="/admin/maintenance/enable" class="inline-flex items-center gap-1.5 rounded-md bg-destructive text-destructive-foreground px-5 py-2.5 text-sm font-medium shadow-xs hover:bg-destructive/90 transition-colors" onclick="return confirm('Enable maintenance mode? All players will be blocked from saving and connecting.')">
+                    <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                    <span>Enable Maintenance Mode</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -1,9 +1,62 @@
 {% extends "admin_base.html" %}
-{% block content %}
-	<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-		<h1 class="h2">Logs</h1>
-	</div>
+{% block title %}Misc Tools - CWK Admin{% endblock %}
+{% block breadcrumb %}Tools{% endblock %}
 
-	<a href="/admin/logs/delete/olderthan/14" class="btn btn-danger">Delete logs older than 14 days</a>
-	<a href="/admin/upsight/delete/olderthan/14" class="btn btn-danger">Delete Upsight logs older than 14 days</a>
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Maintenance Tools</h1>
+        <p class="text-sm text-muted-foreground mt-1">Database maintenance utilities, log purges, and storage management</p>
+    </div>
+
+    <!-- Cleanup Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Purge Player Logs -->
+        <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-semibold tracking-tight">Prune Server Logs</h2>
+                    <div class="w-8 h-8 rounded-md bg-destructive/10 text-destructive flex items-center justify-center">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </div>
+                </div>
+
+                <p class="text-sm text-muted-foreground mb-6">
+                    Deletes player interaction and server diagnostic logs that were created more than 14 days ago to optimize database performance and conserve disk space.
+                </p>
+            </div>
+
+            <div>
+                <a href="/admin/logs/delete/olderthan/14" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-destructive/90 transition-colors w-full sm:w-auto" onclick="return confirm('Are you sure you want to permanently delete all server logs older than 14 days?')">
+                    <i data-lucide="alert-octagon" class="w-4 h-4"></i>
+                    <span>Prune Logs Older Than 14 Days</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Purge Upsight Logs -->
+        <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-semibold tracking-tight">Prune Upsight Analytics</h2>
+                    <div class="w-8 h-8 rounded-md bg-destructive/10 text-destructive flex items-center justify-center">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </div>
+                </div>
+
+                <p class="text-sm text-muted-foreground mb-6">
+                    Deletes telemetry logs and gameplay telemetry events older than 14 days. Anti-cheat signals older than this threshold will be purged.
+                </p>
+            </div>
+
+            <div>
+                <a href="/admin/upsight/delete/olderthan/14" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-destructive/90 transition-colors w-full sm:w-auto" onclick="return confirm('Are you sure you want to permanently delete all Upsight analytics logs older than 14 days?')">
+                    <i data-lucide="alert-octagon" class="w-4 h-4"></i>
+                    <span>Prune Upsight Older Than 14 Days</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

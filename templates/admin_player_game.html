@@ -1,10 +1,288 @@
-<!DOCTYPE html>
-<html>
-<body>
-	<form action="/admin/players/{{player_id}}/game/edit" method="post">
-		<textarea rows="50" cols="100" name="player_game">{{game}}</textarea>
-		<br>
-		<input type="submit" value="Save">
-	</form>
-</body>
-</html>
+{% extends "admin_base.html" %}
+{% block title %}Game Save - {{ player_id }} - CWK Admin{% endblock %}
+{% block breadcrumb %}
+<a href="/admin/players" class="hover:text-foreground">Players</a> / <a href="/admin/players/{{ player_id }}" class="hover:text-foreground">{{ player_id[:8] }}...</a> / <span>Game Save</span>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Top Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Game Save Data</h1>
+                <span class="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs font-mono text-muted-foreground bg-muted">
+                    {{ player_id }}
+                </span>
+            </div>
+            <p class="text-sm text-muted-foreground mt-1">Full decrypted save structure and direct JSON modification</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="/admin/players/{{ player_id }}" class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Back to Profile</span>
+            </a>
+            <button onclick="document.getElementById('rawJson').classList.toggle('hidden'); document.getElementById('readableView').classList.toggle('hidden')"
+                class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors">
+                <i data-lucide="code" class="w-4 h-4"></i>
+                <span>Toggle Raw Editor</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Readable View -->
+    <div id="readableView" class="space-y-6">
+        {% if game is mapping %}
+        <!-- Currencies Grid Card -->
+        <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6">
+            <div class="border-b border-border pb-3 mb-4">
+                <h2 class="text-base font-semibold tracking-tight">Currencies & Balances</h2>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div class="rounded-lg border border-border bg-muted/20 p-3.5">
+                    <span class="text-xs font-medium text-muted-foreground">Soft Currency</span>
+                    <p class="font-mono font-bold text-lg text-foreground mt-1">{{ game.SoftCurrency|default(0) }}</p>
+                </div>
+                <div class="rounded-lg border border-border bg-muted/20 p-3.5">
+                    <span class="text-xs font-medium text-muted-foreground">Hard Currency</span>
+                    <p class="font-mono font-bold text-lg text-foreground mt-1">{{ game.HardCurrency|default(0) }}</p>
+                </div>
+                <div class="rounded-lg border border-border bg-muted/20 p-3.5">
+                    <span class="text-xs font-medium text-muted-foreground">Paid Hard</span>
+                    <p class="font-mono font-bold text-lg text-foreground mt-1">{{ game.PaidHardCurrency|default(0) }}</p>
+                </div>
+                <div class="rounded-lg border border-border bg-muted/20 p-3.5">
+                    <span class="text-xs font-medium text-muted-foreground">Free Hard</span>
+                    <p class="font-mono font-bold text-lg text-foreground mt-1">{{ game.FreeHardCurrency|default(0) }}</p>
+                </div>
+                <div class="rounded-lg border border-border bg-muted/20 p-3.5">
+                    <span class="text-xs font-medium text-muted-foreground">PVP Currency</span>
+                    <p class="font-mono font-bold text-lg text-foreground mt-1">{{ game.PvpCurrency|default(0) }}</p>
+                </div>
+                <div class="rounded-lg border border-border bg-muted/20 p-3.5">
+                    <span class="text-xs font-medium text-muted-foreground">Evolution Shards</span>
+                    <p class="font-mono font-bold text-lg text-foreground mt-1">{{ game.EvolutionShards|default(0) }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Stats Grid Card -->
+        <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6">
+            <div class="border-b border-border pb-3 mb-4">
+                <h2 class="text-base font-semibold tracking-tight">Account Parameters</h2>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div class="rounded-lg border border-border bg-muted/20 p-3.5">
+                    <span class="text-xs font-medium text-muted-foreground">MP Level</span>
+                    <p class="font-mono font-bold text-lg text-foreground mt-1">{{ game.MultiplayerLevel|default(0) }}</p>
+                </div>
+                <div class="rounded-lg border border-border bg-muted/20 p-3.5">
+                    <span class="text-xs font-medium text-muted-foreground">Rank XP</span>
+                    <p class="font-mono font-bold text-lg text-foreground mt-1">{{ game.RankXP|default(0) }}</p>
+                </div>
+                <div class="rounded-lg border border-border bg-muted/20 p-3.5">
+                    <span class="text-xs font-medium text-muted-foreground">Inventory Space</span>
+                    <p class="font-mono font-bold text-lg text-foreground mt-1">{{ game.InventorySpace|default(0) }}</p>
+                </div>
+                <div class="rounded-lg border border-border bg-muted/20 p-3.5">
+                    <span class="text-xs font-medium text-muted-foreground">PVP Banned</span>
+                    <p class="font-mono font-bold text-lg {% if game.Zxcvbnm %}text-destructive{% else %}text-emerald-500{% endif %} mt-1">
+                        {{ 'YES' if game.Zxcvbnm else 'NO' }}
+                    </p>
+                </div>
+                <div class="rounded-lg border border-border bg-muted/20 p-3.5">
+                    <span class="text-xs font-medium text-muted-foreground">Installed</span>
+                    <p class="font-mono text-xs text-foreground mt-2 truncate">{{ game.InstalledDate|default('N/A') }}</p>
+                </div>
+                <div class="rounded-lg border border-border bg-muted/20 p-3.5">
+                    <span class="text-xs font-medium text-muted-foreground">MP Name</span>
+                    <p class="font-semibold text-sm text-foreground mt-1 truncate">{{ game.MultiplayerPlayerName|default('N/A') }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Datatable -->
+        {% if game.Inventory %}
+        <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden">
+            <div class="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <h2 class="text-base font-semibold tracking-tight">Inventory Items ({{ game.Inventory|length }})</h2>
+                <div class="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+                    <span>{{ game.Inventory|selectattr('_T', 'equalto', 'CR')|list|length }} creatures</span> &middot;
+                    <span>{{ game.Inventory|selectattr('_T', 'equalto', 'CA')|list|length }} cards</span>
+                </div>
+            </div>
+            <div class="relative w-full overflow-auto max-h-[400px]">
+                <table class="w-full caption-bottom text-sm">
+                    <thead class="[&_tr]:border-b border-border bg-muted/40 sticky top-0 backdrop-blur text-xs text-muted-foreground">
+                        <tr class="text-left">
+                            <th class="h-9 px-4 font-medium">#</th>
+                            <th class="h-9 px-4 font-medium">Type</th>
+                            <th class="h-9 px-4 font-medium">ID</th>
+                            <th class="h-9 px-4 font-medium">XP</th>
+                            <th class="h-9 px-4 font-medium">Stars</th>
+                            <th class="h-9 px-4 font-medium">Unique ID</th>
+                        </tr>
+                    </thead>
+                    <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+                        {% for item in game.Inventory %}
+                        <tr class="hover:bg-muted/30 transition-colors">
+                            <td class="px-4 py-2 font-mono text-xs text-muted-foreground">{{ loop.index0 }}</td>
+                            <td class="px-4 py-2">
+                                {% if item._T == 'CR' %}
+                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">CR</span>
+                                {% elif item._T == 'CA' %}
+                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">CA</span>
+                                {% elif item._T == 'XP' %}
+                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">XP</span>
+                                {% else %}
+                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-muted text-muted-foreground border border-border">{{ item._T }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2 font-mono text-xs font-medium text-foreground">{{ item.ID|default('—') }}</td>
+                            <td class="px-4 py-2 font-mono text-xs text-muted-foreground">{{ item.Xp|default('—') }}</td>
+                            <td class="px-4 py-2 text-xs text-amber-500">
+                                {% if item.StarRating %}
+                                    {% for i in range(item.StarRating|int) %}&#9733;{% endfor %}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="px-4 py-2 font-mono text-xs text-muted-foreground">{{ item.UniqueID|default('—') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Card Collection Datatable -->
+        {% if game.CardCollection %}
+        <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden">
+            <div class="p-6 border-b border-border">
+                <h2 class="text-base font-semibold tracking-tight">Card Collection ({{ game.CardCollection|length }})</h2>
+            </div>
+            <div class="relative w-full overflow-auto max-h-[350px]">
+                <table class="w-full caption-bottom text-sm">
+                    <thead class="[&_tr]:border-b border-border bg-muted/40 sticky top-0 backdrop-blur text-xs text-muted-foreground">
+                        <tr class="text-left">
+                            <th class="h-9 px-4 font-medium">#</th>
+                            <th class="h-9 px-4 font-medium">Card ID</th>
+                            <th class="h-9 px-4 font-medium">Stat (Level)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+                        {% for card in game.CardCollection %}
+                        <tr class="hover:bg-muted/30 transition-colors">
+                            <td class="px-4 py-2 font-mono text-xs text-muted-foreground">{{ loop.index0 }}</td>
+                            <td class="px-4 py-2 font-mono text-xs font-medium text-foreground">{{ card.ID }}</td>
+                            <td class="px-4 py-2 font-mono text-xs text-muted-foreground">{{ card.Stat|default('—') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Leaders Datatable -->
+        {% if game.Leaders %}
+        <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden">
+            <div class="p-6 border-b border-border">
+                <h2 class="text-base font-semibold tracking-tight">Leaders ({{ game.Leaders|length }})</h2>
+            </div>
+            <div class="relative w-full overflow-auto max-h-[350px]">
+                <table class="w-full caption-bottom text-sm">
+                    <thead class="[&_tr]:border-b border-border bg-muted/40 sticky top-0 backdrop-blur text-xs text-muted-foreground">
+                        <tr class="text-left">
+                            <th class="h-9 px-4 font-medium">#</th>
+                            <th class="h-9 px-4 font-medium">Leader ID</th>
+                            <th class="h-9 px-4 font-medium">Skin</th>
+                        </tr>
+                    </thead>
+                    <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+                        {% for leader in game.Leaders %}
+                        <tr class="hover:bg-muted/30 transition-colors">
+                            <td class="px-4 py-2 font-mono text-xs text-muted-foreground">{{ loop.index0 }}</td>
+                            <td class="px-4 py-2 font-mono text-xs font-medium text-foreground">{{ leader.ID }}</td>
+                            <td class="px-4 py-2 font-mono text-xs text-muted-foreground">{{ leader.Skin|default('Default') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Other JSON Data Collapsible -->
+        {% set shown = ['SoftCurrency', 'HardCurrency', 'PaidHardCurrency', 'FreeHardCurrency', 'PvpCurrency', 'EvolutionShards', 'MultiplayerLevel', 'RankXP', 'InventorySpace', 'Zxcvbnm', 'InstalledDate', 'MultiplayerPlayerName', 'Inventory', 'CardCollection', 'Leaders', 'BattleHistory'] %}
+        {% set remaining = [] %}
+        {% for key, value in game.items() %}
+            {% if key not in shown %}
+                {% set _ = remaining.append((key, value)) %}
+            {% endif %}
+        {% endfor %}
+        {% if remaining %}
+        <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden">
+            <div class="p-6 border-b border-border flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors"
+                onclick="document.getElementById('otherData').classList.toggle('hidden')">
+                <div>
+                    <h2 class="text-base font-semibold tracking-tight">Other Data Fields ({{ remaining|length }})</h2>
+                    <p class="text-xs text-muted-foreground mt-0.5">Click to toggle view</p>
+                </div>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-muted-foreground"></i>
+            </div>
+            <div id="otherData" class="hidden relative w-full overflow-auto max-h-[400px]">
+                <table class="w-full caption-bottom text-sm">
+                    <thead class="[&_tr]:border-b border-border bg-muted/40 text-xs text-muted-foreground">
+                        <tr class="text-left">
+                            <th class="h-9 px-6 font-medium">Key</th>
+                            <th class="h-9 px-6 font-medium">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+                        {% for key, value in remaining %}
+                        <tr class="hover:bg-muted/30 transition-colors">
+                            <td class="px-6 py-2.5 font-mono text-xs font-medium text-foreground">{{ key }}</td>
+                            <td class="px-6 py-2.5 font-mono text-xs text-muted-foreground break-all">{{ value|tojson|truncate(200) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xs">
+            <p class="text-sm text-muted-foreground mb-4">Unstructured save data. Raw dump:</p>
+            <pre class="p-4 rounded-lg bg-zinc-950 text-zinc-100 font-mono text-xs overflow-auto max-h-[600px] border border-border">{{ game }}</pre>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Raw JSON Editor View -->
+    <div id="rawJson" class="hidden rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden">
+        <div class="p-6 border-b border-border flex items-center justify-between">
+            <div>
+                <h2 class="text-base font-semibold tracking-tight">Direct JSON Save Editor</h2>
+                <p class="text-xs text-muted-foreground mt-0.5">Directly modify and persist raw save structure</p>
+            </div>
+        </div>
+        <div class="p-6">
+            <form action="/admin/players/{{ player_id }}/game/edit" method="post" class="space-y-4">
+                <textarea name="player_game" rows="24"
+                    class="w-full rounded-lg bg-zinc-950 text-zinc-100 font-mono text-xs p-4 border border-zinc-800 focus:outline-none focus:ring-1 focus:ring-zinc-600 leading-relaxed">{{ game|tojson(indent=2) if game is mapping else game }}</textarea>
+                <div class="flex items-center gap-3">
+                    <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>Save Changes</span>
+                    </button>
+                    <button type="button" onclick="if(confirm('Discard changes?')){document.getElementById('rawJson').classList.add('hidden');document.getElementById('readableView').classList.remove('hidden')}"
+                        class="inline-flex items-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

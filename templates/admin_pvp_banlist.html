@@ -1,0 +1,227 @@
+{% extends "admin_base.html" %}
+{% block title %}PVP Banlist - CWK Admin{% endblock %}
+{% block breadcrumb %}PVP Banlist{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2.5">
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">PVP Banlist</h1>
+                <span class="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground">
+                    Season Moderation
+                </span>
+            </div>
+            <p class="text-sm text-muted-foreground mt-1">Manage global and seasonal creature & leader bans served to the game client</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="/persist/static/pvp_banlist" target="_blank" class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors" title="View live client JSON output">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+                <span>View Live API</span>
+            </a>
+            <a href="/admin/creatures" class="inline-flex items-center gap-1.5 rounded-md bg-secondary text-secondary-foreground px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-secondary/80 transition-colors">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                <span>Creature Book</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-xs">
+            <span class="text-xs font-medium text-muted-foreground">Banned Creatures</span>
+            <div class="text-2xl font-bold font-mono tracking-tight text-destructive mt-1">{{ banned_creatures|length }}</div>
+        </div>
+        <div class="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-xs">
+            <span class="text-xs font-medium text-muted-foreground">Banned Leaders</span>
+            <div class="text-2xl font-bold font-mono tracking-tight text-amber-500 mt-1">{{ banned_leaders|length }}</div>
+        </div>
+        <div class="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-xs">
+            <span class="text-xs font-medium text-muted-foreground">Active Seasons / Rules</span>
+            <div class="text-2xl font-bold font-mono tracking-tight text-foreground mt-1">{{ banlist.active_bans|length }}</div>
+        </div>
+    </div>
+
+    <!-- Active Seasons Banner -->
+    <div class="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-xs">
+        <h2 class="text-sm font-semibold tracking-tight text-foreground mb-3 flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-primary"></i>
+            <span>Active Ban Rules & Schedules</span>
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {% for ban_rule in banlist.active_bans %}
+            <div class="rounded-lg border border-border bg-muted/40 p-3.5 space-y-1.5 text-xs">
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-foreground">{{ ban_rule.name or ban_rule.id }}</span>
+                    <span class="font-mono text-[11px] px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">{{ ban_rule.id }}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-muted-foreground font-mono pt-1">
+                    <div>Starts: <span class="text-foreground">{{ ban_rule.starts }}</span></div>
+                    <div>Expires: <span class="text-foreground">{{ ban_rule.expires }}</span></div>
+                </div>
+            </div>
+            {% endfor %}
+            {% if not banlist.active_bans %}
+            <p class="text-xs text-muted-foreground">No active schedule rules registered.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Grid: Creatures & Leaders -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Banned Creatures Section -->
+        <div class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xs space-y-5 flex flex-col justify-between">
+            <div class="space-y-4">
+                <div class="border-b border-border pb-3 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-semibold tracking-tight">Banned Creatures</h2>
+                        <p class="text-xs text-muted-foreground mt-0.5">Creatures prohibited from entering PVP matches</p>
+                    </div>
+                    <span class="font-mono text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">
+                        {{ banned_creatures|length }}
+                    </span>
+                </div>
+
+                <!-- Add Creature Form -->
+                <form action="/admin/pvp_banlist/add_creature" method="POST" class="flex gap-2">
+                    <div class="relative flex-1">
+                        <input
+                            type="text"
+                            name="creature_id"
+                            list="creatureList"
+                            placeholder="Type or select creature ID (e.g. CornBall_Awaken)..."
+                            required
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                        <datalist id="creatureList">
+                            {% for c in all_creatures %}
+                            <option value="{{ c.ID }}">{{ c.Name }} ({{ c.ID }})</option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                    <button type="submit" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-destructive text-destructive-foreground px-3.5 py-2 text-xs font-medium shadow-xs hover:bg-destructive/90 transition-colors">
+                        <i data-lucide="ban" class="w-3.5 h-3.5"></i>
+                        <span>Ban</span>
+                    </button>
+                </form>
+
+                <!-- Banned Creatures List -->
+                <div class="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                    {% for c in banned_creatures %}
+                    <div class="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors">
+                        <div class="flex flex-col min-w-0 pr-2">
+                            <span class="font-medium text-sm text-foreground truncate">{{ c.Name }}</span>
+                            <span class="font-mono text-xs text-muted-foreground truncate">{{ c.ID }}</span>
+                        </div>
+                        <form action="/admin/pvp_banlist/remove_creature/{{ c.ID }}" method="POST" class="shrink-0">
+                            <button type="submit" class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-destructive hover:text-destructive-foreground transition-colors" title="Remove from banlist">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                <span>Unban</span>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+
+                    {% if not banned_creatures %}
+                    <div class="py-10 text-center text-muted-foreground text-xs rounded-lg border border-dashed border-border">
+                        <i data-lucide="shield-check" class="w-8 h-8 mx-auto mb-2 text-emerald-500/80"></i>
+                        No creatures are currently banned in PVP.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Banned Leaders Section -->
+        <div class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xs space-y-5 flex flex-col justify-between">
+            <div class="space-y-4">
+                <div class="border-b border-border pb-3 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-semibold tracking-tight">Banned Leaders</h2>
+                        <p class="text-xs text-muted-foreground mt-0.5">Heroes / Leaders prohibited from entering PVP</p>
+                    </div>
+                    <span class="font-mono text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">
+                        {{ banned_leaders|length }}
+                    </span>
+                </div>
+
+                <!-- Add Leader Form -->
+                <form action="/admin/pvp_banlist/add_leader" method="POST" class="flex gap-2">
+                    <div class="relative flex-1">
+                        <input
+                            type="text"
+                            name="leader_id"
+                            list="leaderList"
+                            placeholder="Type or select leader ID (e.g. Leader_Finn)..."
+                            required
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                        <datalist id="leaderList">
+                            {% for l in all_leaders %}
+                            <option value="{{ l.ID }}">{{ l.Name }} ({{ l.ID }})</option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                    <button type="submit" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-amber-600 text-white px-3.5 py-2 text-xs font-medium shadow-xs hover:bg-amber-700 transition-colors">
+                        <i data-lucide="ban" class="w-3.5 h-3.5"></i>
+                        <span>Ban</span>
+                    </button>
+                </form>
+
+                <!-- Banned Leaders List -->
+                <div class="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                    {% for l in banned_leaders %}
+                    <div class="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors">
+                        <div class="flex flex-col min-w-0 pr-2">
+                            <span class="font-medium text-sm text-foreground truncate">{{ l.Name }}</span>
+                            <span class="font-mono text-xs text-muted-foreground truncate">{{ l.ID }}</span>
+                        </div>
+                        <form action="/admin/pvp_banlist/remove_leader/{{ l.ID }}" method="POST" class="shrink-0">
+                            <button type="submit" class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-destructive hover:text-destructive-foreground transition-colors" title="Remove from banlist">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                <span>Unban</span>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+
+                    {% if not banned_leaders %}
+                    <div class="py-10 text-center text-muted-foreground text-xs rounded-lg border border-dashed border-border">
+                        <i data-lucide="crown" class="w-8 h-8 mx-auto mb-2 text-amber-500/80"></i>
+                        No leaders are currently banned in PVP.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raw JSON Editor Card -->
+    <div class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xs">
+        <div class="border-b border-border pb-3 mb-4 flex items-center justify-between">
+            <div>
+                <h2 class="text-base font-semibold tracking-tight">Direct JSON Banlist Editor</h2>
+                <p class="text-xs text-muted-foreground mt-0.5">Edit or paste the complete raw JSON configuration stored on disk</p>
+            </div>
+            <span class="text-xs font-mono text-muted-foreground">data/persist/pvp_banlist.json</span>
+        </div>
+
+        <form action="/admin/pvp_banlist/edit_raw" method="POST" class="space-y-4">
+            <textarea
+                name="raw_json"
+                rows="10"
+                class="w-full rounded-md border border-input bg-background p-3 font-mono text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >{{ raw_json }}</textarea>
+
+            <div class="flex items-center justify-end">
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Save Raw JSON</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

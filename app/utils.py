@@ -9,6 +9,8 @@ import time as _time
 from datetime import datetime
 from io import BytesIO
 
+import bisect
+
 import discord_webhook
 from flask import Request
 
@@ -113,6 +115,71 @@ def safe_int(value, default=0):
         return default
 
 
+_RANK_XP_CACHE = None
+
+
+def _LoadRankXPTable():
+    global _RANK_XP_CACHE
+    if _RANK_XP_CACHE is not None:
+        return _RANK_XP_CACHE
+
+    path = os.path.join(ROOT_DIR, "data/persist/Blueprints/db_XPTables.json")
+    rank_to_xp = {}
+    xp_thresholds = []
+    ranks = []
+
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                tables = json.load(f)
+            for r in tables:
+                if "Level" in r and "PlayerRank" in r:
+                    lvl = int(r["Level"])
+                    xp = int(r["PlayerRank"])
+                    rank_to_xp[lvl] = xp
+                    xp_thresholds.append(xp)
+                    ranks.append(lvl)
+        except Exception as e:
+            Log("admin", f"Failed to load db_XPTables.json: {e}")
+
+    _RANK_XP_CACHE = (rank_to_xp, xp_thresholds, ranks)
+    return _RANK_XP_CACHE
+
+
+def GetRankXPTable():
+    rank_to_xp, _, _ = _LoadRankXPTable()
+    return rank_to_xp
+
+
+def GetXPForRank(rank: int) -> int:
+    try:
+        rank = int(rank)
+    except (ValueError, TypeError):
+        return 0
+    rank_to_xp, _, ranks = _LoadRankXPTable()
+    if not rank_to_xp or rank <= 1:
+        return 0
+    max_rank = ranks[-1] if ranks else 999
+    if rank >= max_rank:
+        return rank_to_xp.get(max_rank, 496423604)
+    return rank_to_xp.get(rank, 0)
+
+
+def GetRankForXP(xp: int) -> int:
+    try:
+        xp = int(xp)
+    except (ValueError, TypeError):
+        return 1
+    _, xp_thresholds, ranks = _LoadRankXPTable()
+    if not xp_thresholds or not ranks or xp <= 0:
+        return 1
+    idx = bisect.bisect_right(xp_thresholds, xp) - 1
+    if idx < 0:
+        return 1
+    return ranks[idx]
+
+
+
 def GetNameFromSave(save):
     try:
         game = DecryptGameData(save)
@@ -120,7 +187,7 @@ def GetNameFromSave(save):
         return None
     if game is None:
         return None
-    return game["MultiplayerPlayerName"]
+    return game.get("MultiplayerPlayerName")
 
 
 def IPFromRequest(request: Request):
@@ -297,3 +364,34 @@ def GetPlayerWins(player_id):
         if battle["youWon"] == True and battle["season"] == currentSeason:
             wins += 1
     return wins
+
+
+def GetPvpBanlist():
+    filepath = os.path.join(ROOT_DIR, "data/persist/pvp_banlist.json")
+    if os.path.exists(filepath):
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            Log("persist", f"Error reading pvp_banlist.json: {e}")
+    return {
+        "active_bans": [
+            {
+                "expires": "2099-12-31T23:59:59Z",
+                "id": "global_permanent_bans",
+                "name": "Permanent Bans (All Seasons)",
+                "starts": "2020-01-01T00:00:00Z",
+            }
+        ],
+        "banned_creatures": [],
+        "banned_leaders": [],
+    }
+
+
+def SavePvpBanlist(data):
+    filepath = os.path.join(ROOT_DIR, "data/persist/pvp_banlist.json")
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    return True
+

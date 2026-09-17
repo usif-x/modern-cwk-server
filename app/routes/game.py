@@ -1,15 +1,16 @@
 import json, os, hashlib, hmac, time
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.parse import parse_qs
 from flask import Blueprint, abort, jsonify, make_response, redirect, render_template, request, send_from_directory
 from flask_login import current_user
 
-from app import maintenance, app
+from app import maintenance, app, db
 from app.models import Player, UpsightLogs
 from app.utils import (
     DecryptGameData, EncryptGameData, DiscordWebhookMessage, IPFromRequest,
     InvalidUsername, IsUserBanned, Log, PlayerLog, UpdateLastOnline,
-    GetAllyInfo, GetPlayerWins, SystemBan, get_hash_string,
+    GetAllyInfo, GetPlayerWins, SystemBan, get_hash_string, safe_int, GetRankForXP,
+    GetPvpBanlist,
 )
 
 game_bp = Blueprint('game_bp', __name__)
@@ -79,6 +80,16 @@ def MonthlyStore():
         "FeaturedItems": [],
         "ResetTime": 0,
     })
+
+
+@game_bp.route("/persist/static/pvp_banlist", methods=["GET", "POST"])
+@game_bp.route("/persist/static/pvp_banlist/", methods=["GET", "POST"])
+def PvpBanlist():
+    data = GetPvpBanlist()
+    data["server_time"] = datetime.now(timezone.utc).isoformat()
+    return jsonify(data)
+
+
 
 
 @game_bp.route("/persist/messages_received_ids")
@@ -318,14 +329,30 @@ def PersistGame(player_id=None):
 
         try:
             client_game = DecryptGameData(data)
-            if client_game and "AdminLeaderLevel" in client_game:
-                db_user.leader_level = client_game["AdminLeaderLevel"]
-            if client_game and "AdminPlayerLevel" in client_game:
-                db_user.level = client_game["AdminPlayerLevel"]
+            server_game = DecryptGameData(db_user.game) if db_user.game else None
 
             if client_game:
-                server_game = DecryptGameData(db_user.game)
                 if server_game:
+                    # 1. Preserve admin overrides
+                    admin_leader = safe_int(server_game.get("AdminLeaderLevel", 0))
+                    admin_player = safe_int(server_game.get("AdminPlayerLevel", 0))
+                    if admin_leader > 0:
+                        client_game["AdminLeaderLevel"] = admin_leader
+                    if admin_player > 0:
+                        client_game["AdminPlayerLevel"] = admin_player
+
+                    # 2. Prevent downgrade of RankXP and PlayersLastSavedLevel
+                    server_xp = safe_int(server_game.get("RankXP", 0))
+                    client_xp = safe_int(client_game.get("RankXP", 0))
+                    if server_xp > client_xp:
+                        client_game["RankXP"] = server_xp
+
+                    server_lvl = safe_int(server_game.get("PlayersLastSavedLevel", 0))
+                    client_lvl = safe_int(client_game.get("PlayersLastSavedLevel", 0))
+                    if server_lvl > client_lvl:
+                        client_game["PlayersLastSavedLevel"] = server_lvl
+
+                    # 3. Merge CardCollection, Inventory, Leaders
                     client_cards = {c.get("ID") for c in client_game.get("CardCollection", [])}
                     for card in server_game.get("CardCollection", []):
                         if card.get("ID") not in client_cards:
@@ -350,9 +377,22 @@ def PersistGame(player_id=None):
                         if leader.get("ID") not in client_leaders:
                             client_game.setdefault("Leaders", []).append(leader)
 
-                    data = EncryptGameData(client_game, username)
-        except Exception:
-            pass
+                data = EncryptGameData(client_game, username)
+
+                # Update db_user with effective rank and player level
+                effective_rank = max(
+                    db_user.leader_level or 0,
+                    safe_int(client_game.get("AdminLeaderLevel", 0)),
+                    safe_int(client_game.get("PlayersLastSavedLevel", 0)),
+                    GetRankForXP(safe_int(client_game.get("RankXP", 0))),
+                )
+                if effective_rank > 0:
+                    db_user.leader_level = effective_rank
+
+                if "AdminPlayerLevel" in client_game:
+                    db_user.level = max(db_user.level or 0, safe_int(client_game["AdminPlayerLevel"], 0))
+        except Exception as e:
+            Log("persist", f"Error merging PUT game data for {username}: {e}")
 
         db_user.game = data
         db.session.commit()
