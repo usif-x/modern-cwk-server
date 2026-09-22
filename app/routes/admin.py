@@ -5,11 +5,15 @@ from flask_login import current_user, login_required, login_user, logout_user
 
 from app import db, bcrypt, maintenance, badcharaters, app as flask_app
 from app.models import Admin, AdminActivity, Bans, Logs, Player, RedeemCode, UpsightLogs
+
 from app.utils import (
     DecryptGameData, EncryptGameData, DiscordWebhookMessage, GetNameFromSave,
     GetPlayerWins, IPFromRequest, InvalidUsername, IsUserBanned, Log,
     PlayerLog, safe_int, time_ago_string, isAdmin, Backup, UpdateLastOnline,
     GetXPForRank, GetRankForXP, GetRankXPTable, GetPvpBanlist, SavePvpBanlist,
+    FindBrokenSaveIssues, RepairGameData, GetBanExpiry, FormatBanExpiry,
+    BuildTransferredGame, GetPvpRankName, GetTutorialOnlyCreatureIds,
+    IsTutorialOnlyCreature, GetLeaderSkinBase, GetLeaderSkins,
 )
 
 admin_bp = Blueprint('admin_bp', __name__)
@@ -257,6 +261,60 @@ def AdminPlayers():
 
 
 @login_required
+@admin_bp.route("/admin/top_pvp")
+def AdminTopPvp():
+    if not isAdmin(current_user):
+        return abort(404)
+
+    entries = []
+    for player in Player.query.all():
+        if player.game is None or player.game in (b"", b" "):
+            continue
+        try:
+            game = DecryptGameData(player.game)
+        except Exception:
+            continue
+        if not isinstance(game, dict):
+            continue
+
+        name = player.multiplayer_name or game.get("MultiplayerPlayerName") or "Unnamed Player"
+        last_online = player.last_online
+        if last_online is not None:
+            try:
+                last_online = datetime.fromtimestamp(
+                    last_online, tz=timezone.utc
+                ).strftime("%Y-%m-%d %H:%M:%S UTC")
+            except (ValueError, TypeError, OSError):
+                last_online = str(last_online)
+
+        multiplayer_level = safe_int(game.get("MultiplayerLevel", 0))
+        entries.append(
+            {
+                "username": player.username,
+                "multiplayer_name": name,
+                "multiplayer_level": multiplayer_level,
+                "pvp_rank_name": GetPvpRankName(multiplayer_level),
+                "leader_level": safe_int(player.leader_level, 0),
+                "best_multiplayer_level": safe_int(game.get("BestMultiplayerLevel", 0)),
+                "rank_xp": safe_int(game.get("RankXP", 0)),
+                "is_banned": IsUserBanned(player.username),
+                "last_online": last_online,
+            }
+        )
+
+    # Lower MultiplayerLevel = better PVP rank (1 = Super Amadeus, 25 = Dweeb).
+    entries.sort(key=lambda e: (e["multiplayer_level"] if e["multiplayer_level"] > 0 else 999))
+    for index, entry in enumerate(entries):
+        entry["ranking"] = index + 1
+
+    return render_template(
+        "admin_top_pvp.html",
+        players=entries[:50],
+        total_players=len(entries),
+    )
+
+
+@login_required
 @admin_bp.route("/admin/players/<player>")
 def AdminPlayer(player):
     if not isAdmin(current_user):
@@ -286,9 +344,36 @@ def AdminPlayer(player):
         game = None
 
     if game is None:
-        return render_template("admin_player.html", player=player)
+        return render_template(
+            "admin_player.html",
+            player=player,
+            is_banned=IsUserBanned(player["username"]),
+            save_issues=["Game save could not be decrypted. Use Import JSON to restore it."],
+            SoftCurrency=0,
+            HardCurrency=0,
+            PvpCurrency=0,
+            EvolutionShards=0,
+            InstalledDate="N/A",
+            PVPBanned=False,
+            MultiplayerLevel=0,
+            InventorySpace=0,
+            RankXP=0,
+            BattleHistory=[],
+            DeviceName=player["devicename"],
+            Inventory=[],
+            CardCollection=[],
+            Leaders=[],
+            HelperCreature=None,
+            invalid_creature_count=0,
+            rank_xp_json=json.dumps(GetRankXPTable()),
+        )
+
+    save_issues = FindBrokenSaveIssues(game)
 
     battle_history = game.get("BattleHistory", [])
+    if not isinstance(battle_history, list):
+        battle_history = []
+    battle_history = [b for b in battle_history if isinstance(b, dict)]
     battle_history.sort(key=lambda x: x.get("recordTime", 0))
 
     for battle in battle_history:
@@ -307,8 +392,14 @@ def AdminPlayer(player):
     Inventory = game.get("Inventory", [])
 
     # remove all items that are not creatures
-    if Inventory is not None:
-        Inventory = [item for item in Inventory if item.get("_T") == "CR"]
+    if not isinstance(Inventory, list):
+        Inventory = []
+    Inventory = [item for item in Inventory if isinstance(item, dict) and item.get("_T") == "CR"]
+
+    tutorial_creature_ids = GetTutorialOnlyCreatureIds()
+    invalid_creature_count = sum(
+        1 for item in Inventory if item.get("ID") in tutorial_creature_ids
+    )
 
     # parse helper creature JSON
     helper_creature = None
@@ -326,10 +417,18 @@ def AdminPlayer(player):
     if effective_rank > (player.get("leader_level") or 0):
         player["leader_level"] = effective_rank
 
+    card_collection = game.get("CardCollection", [])
+    if not isinstance(card_collection, list):
+        card_collection = []
+    leaders = game.get("Leaders", [])
+    if not isinstance(leaders, list):
+        leaders = []
+
     return render_template(
         "admin_player.html",
         player=player,
         is_banned=IsUserBanned(player["username"]),
+        save_issues=save_issues,
         SoftCurrency=game.get("SoftCurrency", 0),
         HardCurrency=int(game.get("PaidHardCurrency", 0)) + int(game.get("FreeHardCurrency", 0)),
         PvpCurrency=game.get("PvpCurrency", 0),
@@ -344,9 +443,10 @@ def AdminPlayer(player):
         BattleHistory=battle_history,
         DeviceName=player["devicename"],
         Inventory=Inventory,
-        CardCollection=game.get("CardCollection", []),
-        Leaders=game.get("Leaders", []),
+        CardCollection=card_collection,
+        Leaders=leaders,
         HelperCreature=helper_creature,
+        invalid_creature_count=invalid_creature_count,
         rank_xp_json=json.dumps(GetRankXPTable()),
     )
 
@@ -449,9 +549,24 @@ def AdminPlayerEdit(player):
         game["PvpCurrency"] = safe_int(request.form["PvpCurrency"], game.get("PvpCurrency", 0))
     if "InventorySpace" in request.form:
         game["InventorySpace"] = safe_int(request.form["InventorySpace"], game.get("InventorySpace", 0))
-    if "MultiplayerLevel" in request.form:
-        new_rank = safe_int(request.form["MultiplayerLevel"], game.get("MultiplayerLevel", 0))
-        game["MultiplayerLevel"] = new_rank
+    # PVP rank: MultiplayerLevel and BestMultiplayerLevel are always kept equal
+    # (1 = Super Amadeus best, 25 = Dweeb worst).
+    if "MultiplayerLevel" in request.form or "BestMultiplayerLevel" in request.form:
+        source_value = request.form.get(
+            "MultiplayerLevel", request.form.get("BestMultiplayerLevel")
+        )
+        new_pvp_rank = safe_int(source_value, game.get("MultiplayerLevel", 1))
+        game["MultiplayerLevel"] = new_pvp_rank
+        game["BestMultiplayerLevel"] = new_pvp_rank
+    if "PointsInMultiplayerLevel" in request.form:
+        game["PointsInMultiplayerLevel"] = safe_int(
+            request.form["PointsInMultiplayerLevel"], game.get("PointsInMultiplayerLevel", 0)
+        )
+    if "MultiplayerName" in request.form:
+        new_name = request.form["MultiplayerName"].strip()
+        if new_name and new_name != db_player.multiplayer_name:
+            db_player.multiplayer_name = new_name
+            game["MultiplayerPlayerName"] = new_name
 
     # Synchronize Rank (leader_level), Player Level (level), RankXP, and PlayersLastSavedLevel
     old_leader_level = safe_int(db_player.leader_level, 0)
@@ -532,6 +647,8 @@ def AdminPlayerAddCreature(player):
 
     if not creature_id:
         return make_response("Creature ID is required!", 400)
+    if IsTutorialOnlyCreature(creature_id):
+        return make_response("This is a tutorial-only creature and cannot be added to a player.", 400)
 
     new_creature = {
         "_T": "CR",
@@ -662,6 +779,8 @@ def AdminPlayerMaxCreature(player, index):
     creatures = [item for item in inventory if item.get("_T") == "CR"]
 
     if 0 <= index < len(creatures):
+        if IsTutorialOnlyCreature(creatures[index].get("ID")):
+            return make_response("This is a tutorial-only creature and cannot be modified.", 400)
         creatures[index]["StarRating"] = 5
         creatures[index]["Xp"] = 70325
         db_player.game = EncryptGameData(game, player)
@@ -823,6 +942,8 @@ def AdminPlayerAddAllCreatures(player):
     with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r") as f:
         all_creatures = json.load(f)
 
+    tutorial_ids = GetTutorialOnlyCreatureIds()
+
     existing_ids = set()
     inventory = game.get("Inventory", [])
     for item in inventory:
@@ -833,16 +954,12 @@ def AdminPlayerAddAllCreatures(player):
     added = 0
     for creature in all_creatures:
         cid = creature["ID"]
+        # Tutorial-only creatures are not collectible; granting them makes the
+        # game client flag the save as tampered (Zxcvbnm = 1).
+        if cid in tutorial_ids:
+            continue
         if cid not in existing_ids:
-            card_slots = int(creature.get("CardSlots", 1))
-            default_cards = []
-            for i in range(1, 6):
-                ac = creature.get(f"ActionCard{i}", "")
-                if ac:
-                    default_cards.append(ac)
-            default_cards = default_cards[:card_slots]
-
-            inventory.append({
+            new_creature = {
                 "_T": "CR",
                 "ID": cid,
                 "UniqueID": next_uid,
@@ -851,8 +968,16 @@ def AdminPlayerAddAllCreatures(player):
                 "Passive": 1,
                 "PassiveFeeds": 0,
                 "StarRating": 1,
-                "Cards": default_cards,
-            })
+            }
+            card_slots = int(creature.get("CardSlots", 1))
+            default_cards = [
+                creature.get(f"ActionCard{i}", "") for i in range(1, 6)
+            ]
+            default_cards = [c for c in default_cards if c][:card_slots]
+            if default_cards:
+                new_creature["Cards"] = default_cards
+
+            inventory.append(new_creature)
             next_uid += 1
             added += 1
 
@@ -882,10 +1007,15 @@ def AdminPlayerMaxAllCreatures(player):
         all_creatures = json.load(f)
     creature_blueprint_map = {c["ID"]: c for c in all_creatures}
 
+    tutorial_ids = GetTutorialOnlyCreatureIds()
+
     inventory = game.get("Inventory", [])
     count = 0
     for item in inventory:
         if item.get("_T") == "CR":
+            # Never max/modify non-collectible tutorial creatures.
+            if item.get("ID") in tutorial_ids:
+                continue
             item["StarRating"] = 5
             item["Xp"] = 70325
             if "Cards" not in item:
@@ -896,7 +1026,9 @@ def AdminPlayerMaxAllCreatures(player):
                     ac = bp.get(f"ActionCard{i}", "")
                     if ac:
                         default_cards.append(ac)
-                item["Cards"] = default_cards[:card_slots]
+                default_cards = default_cards[:card_slots]
+                if default_cards:
+                    item["Cards"] = default_cards
             count += 1
 
     game["Inventory"] = inventory
@@ -904,6 +1036,56 @@ def AdminPlayerMaxAllCreatures(player):
     db.session.commit()
 
     Log("admin", current_user.username + f" maxed {count} creatures for player: " + player)
+    return redirect("/admin/players/" + player)
+
+
+@login_required
+@admin_bp.route("/admin/players/<player>/remove_invalid_creatures", methods=["POST"])
+def AdminPlayerRemoveInvalidCreatures(player):
+    if not isAdmin(current_user):
+        return abort(404)
+
+    db_player = Player.query.filter_by(username=player).first()
+    if db_player is None:
+        return make_response("No player found!", 404)
+
+    game = DecryptGameData(db_player.game)
+    if game is None or not isinstance(game, dict):
+        return make_response("No game data found!", 400)
+
+    tutorial_ids = GetTutorialOnlyCreatureIds()
+    inventory = game.get("Inventory", [])
+    if not isinstance(inventory, list):
+        inventory = []
+
+    removed = [
+        item
+        for item in inventory
+        if isinstance(item, dict)
+        and item.get("_T") == "CR"
+        and item.get("ID") in tutorial_ids
+    ]
+    game["Inventory"] = [
+        item
+        for item in inventory
+        if not (
+            isinstance(item, dict)
+            and item.get("_T") == "CR"
+            and item.get("ID") in tutorial_ids
+        )
+    ]
+    # Clear the client tamper flag so the account can play PVP again.
+    game["Zxcvbnm"] = 0
+
+    db_player.game = EncryptGameData(game, player)
+    db.session.commit()
+
+    Log(
+        "admin",
+        current_user.username
+        + f" removed {len(removed)} invalid tutorial creature(s) and cleared the PVP ban flag for player: "
+        + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -924,6 +1106,8 @@ def AdminPlayerAddMaxCreature(player):
     creature_id = request.form.get("creature_id", "").strip()
     if not creature_id:
         return make_response("Creature ID is required!", 400)
+    if IsTutorialOnlyCreature(creature_id):
+        return make_response("This is a tutorial-only creature and cannot be added to a player.", 400)
 
     inventory = game.get("Inventory", [])
     next_uid = max([item.get("UniqueID", 0) for item in inventory if item.get("_T") == "CR"], default=0) + 1
@@ -1019,14 +1203,18 @@ def AdminPlayerAddAllLeaders(player):
     with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r") as f:
         all_leaders = json.load(f)
 
-    existing_ids = set()
     leaders = game.get("Leaders", [])
-    for leader in leaders:
-        existing_ids.add(leader.get("ID"))
+    if not isinstance(leaders, list):
+        leaders = []
+    existing_ids = {l.get("ID") for l in leaders if isinstance(l, dict)}
 
+    # Only base heroes are added here; skins belong in OwnedSkins and are
+    # handled by the separate "Add All Skins" action.
     added = 0
     for leader in all_leaders:
         lid = leader["ID"]
+        if leader.get("SkinOf"):
+            continue
         if lid not in existing_ids:
             leaders.append({"ID": lid, "Skin": lid, "OwnedSkins": []})
             added += 1
@@ -1035,7 +1223,7 @@ def AdminPlayerAddAllLeaders(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" added {added} leaders to player: " + player)
+    Log("admin", current_user.username + f" added {added} heroes to player: " + player)
     return redirect("/admin/players/" + player)
 
 
@@ -1058,9 +1246,33 @@ def AdminPlayerAddLeader(player):
         return make_response("Leader ID is required!", 400)
 
     leaders = game.get("Leaders", [])
-    existing_ids = {l.get("ID") for l in leaders}
+    if not isinstance(leaders, list):
+        leaders = []
+    by_id = {l.get("ID"): l for l in leaders if isinstance(l, dict)}
 
-    if leader_id not in existing_ids:
+    base_id = GetLeaderSkinBase(leader_id)
+    if base_id:
+        # This ID is a skin: store it inside its base hero's OwnedSkins.
+        base_entry = by_id.get(base_id)
+        if base_entry is None:
+            base_entry = {"ID": base_id, "Skin": base_id, "OwnedSkins": []}
+            leaders.append(base_entry)
+        owned = base_entry.get("OwnedSkins")
+        if not isinstance(owned, list):
+            owned = []
+            base_entry["OwnedSkins"] = owned
+        if leader_id not in owned:
+            owned.append(leader_id)
+            game["Leaders"] = leaders
+            db_player.game = EncryptGameData(game, player)
+            db.session.commit()
+            Log(
+                "admin",
+                current_user.username
+                + f" added skin {leader_id} to hero {base_id} for player: "
+                + player,
+            )
+    elif leader_id not in by_id:
         leaders.append({"ID": leader_id, "Skin": leader_id, "OwnedSkins": []})
         game["Leaders"] = leaders
         db_player.game = EncryptGameData(game, player)
@@ -1088,14 +1300,27 @@ def AdminPlayerAddAllSkins(player):
         all_leaders = json.load(f)
 
     leaders = game.get("Leaders", [])
-    owned_ids = {l.get("ID") for l in leaders}
+    if not isinstance(leaders, list):
+        leaders = []
+    by_id = {l.get("ID"): l for l in leaders if isinstance(l, dict)}
 
+    # Skins are attached to their base hero's OwnedSkins, never added as
+    # independent leaders. Only heroes the player already owns get their skins.
     added = 0
     for blueprint in all_leaders:
         skin_of = blueprint.get("SkinOf")
         lid = blueprint["ID"]
-        if skin_of and skin_of in owned_ids and lid not in owned_ids:
-            leaders.append({"ID": lid, "Skin": lid, "OwnedSkins": []})
+        if not skin_of:
+            continue
+        base_entry = by_id.get(skin_of)
+        if base_entry is None:
+            continue
+        owned = base_entry.get("OwnedSkins")
+        if not isinstance(owned, list):
+            owned = []
+            base_entry["OwnedSkins"] = owned
+        if lid not in owned:
+            owned.append(lid)
             added += 1
 
     game["Leaders"] = leaders
@@ -1216,6 +1441,7 @@ def AdminPlayerMaxResources(player):
     game["AdminLeaderLevel"] = target_rank
     game["AdminPlayerLevel"] = target_rank
     game["MultiplayerLevel"] = 10
+    game["BestMultiplayerLevel"] = 10
     game["Zxcvbnm"] = 0
 
     db_player.leader_level = target_rank
@@ -1290,6 +1516,125 @@ def AdminPlayerImportSave(player):
 
 
 @login_required
+@admin_bp.route("/admin/players/<player>/fix_save", methods=["POST"])
+def AdminPlayerFixSave(player):
+    if not isAdmin(current_user):
+        return abort(404)
+
+    db_player = Player.query.filter_by(username=player).first()
+    if db_player is None:
+        return make_response("No player found!", 404)
+
+    game = DecryptGameData(db_player.game)
+    if game is None or not isinstance(game, dict):
+        return make_response(
+            "Game save could not be decrypted. Use Import JSON with a valid save instead.",
+            400,
+        )
+
+    issues_found = FindBrokenSaveIssues(game)
+    repaired, repairs = RepairGameData(
+        game,
+        username=db_player.username,
+        fallback_name=db_player.multiplayer_name or "",
+    )
+
+    db_player.game = EncryptGameData(repaired, player)
+
+    effective_rank = max(
+        safe_int(repaired.get("PlayersLastSavedLevel", 0)),
+        GetRankForXP(safe_int(repaired.get("RankXP", 0))),
+        safe_int(repaired.get("AdminLeaderLevel", 0)),
+        1,
+    )
+    db_player.leader_level = max(safe_int(db_player.leader_level, 0), effective_rank)
+    db_player.level = max(safe_int(db_player.level, 0), effective_rank)
+    ally_space = safe_int(repaired.get("AllyBoxSpace", 0), 0)
+    if ally_space > 0:
+        db_player.allyboxspace = ally_space
+
+    db.session.commit()
+
+    Log(
+        "admin",
+        current_user.username
+        + f" repaired save for player: {player} ({len(issues_found)} issue(s), {len(repairs)} repair(s))",
+    )
+    return redirect("/admin/players/" + player)
+
+
+@login_required
+@admin_bp.route("/admin/players/<player>/transfer_progress", methods=["POST"])
+def AdminPlayerTransferProgress(player):
+    if not isAdmin(current_user):
+        return abort(404)
+
+    source = Player.query.filter_by(username=player).first()
+    if source is None:
+        return make_response("Source player not found!", 404)
+
+    target_uuid = (request.form.get("target_uuid") or "").strip()
+    if not target_uuid:
+        return make_response("Target account UUID is required!", 400)
+    if target_uuid == player:
+        return make_response("Source and target accounts must be different!", 400)
+
+    target = Player.query.filter_by(username=target_uuid).first()
+    if target is None:
+        return make_response("Target player not found!", 404)
+
+    source_game = DecryptGameData(source.game)
+    if source_game is None or not isinstance(source_game, dict):
+        return make_response("Source account has no valid save data to transfer!", 400)
+
+    target_game = DecryptGameData(target.game)
+
+    # Start from the source's full progress, then restore the target's identity,
+    # currencies and PVP flag so only progress/items are transferred.
+    new_game = BuildTransferredGame(
+        source_game,
+        target_game,
+        target.username,
+        target_name=target.multiplayer_name or "",
+    )
+
+    target.game = EncryptGameData(new_game, target.username)
+
+    # Transfer gameplay/profile fields, but never the display name.
+    if source.leader_level is not None:
+        target.leader_level = source.leader_level
+    if source.level is not None:
+        target.level = source.level
+    if source.allyboxspace is not None:
+        target.allyboxspace = source.allyboxspace
+    target.deck = source.deck
+    target.deck_rank = source.deck_rank
+    target.landscapes = source.landscapes
+    target.helper_creature = source.helper_creature
+    target.leader = source.leader
+
+    effective_rank = max(
+        safe_int(target.leader_level, 0),
+        GetRankForXP(safe_int(new_game.get("RankXP", 0))),
+        safe_int(new_game.get("PlayersLastSavedLevel", 0)),
+        1,
+    )
+    target.leader_level = effective_rank
+    target.level = max(safe_int(target.level, 0), effective_rank)
+
+    db.session.commit()
+
+    Log(
+        "admin",
+        current_user.username + " transferred progress from " + player + " to " + target_uuid,
+    )
+    DiscordWebhookMessage(
+        current_user.username + " transferred progress from " + player + " to " + target_uuid
+    )
+    return redirect("/admin/players/" + target.username)
+
+
+@login_required
 @admin_bp.route("/admin/players/<player>/reset_save", methods=["POST"])
 def AdminPlayerResetSave(player):
     if not isAdmin(current_user):
@@ -1306,7 +1651,8 @@ def AdminPlayerResetSave(player):
         "PvpCurrency": 50,
         "EvolutionShards": 0,
         "InventorySpace": 50,
-        "MultiplayerLevel": 1,
+        "MultiplayerLevel": 25,
+        "BestMultiplayerLevel": 25,
         "RankXP": 0,
         "PlayersLastSavedLevel": 1,
         "AdminLeaderLevel": 1,
@@ -1369,11 +1715,34 @@ def AdminPlayersBulkAction():
         return redirect("/admin/players")
 
     if action == "ban":
+        expires = GetBanExpiry(
+            request.form.get("duration", "perm"),
+            request.form.get("custom_amount", 1),
+            request.form.get("custom_unit", "hours"),
+        )
         for pid in player_ids:
-            if not IsUserBanned(pid):
-                db.session.add(Bans(username=pid, bantype="userid", author=current_user.username, time=int(time.time())))
+            ban = Bans.query.filter_by(username=pid).first()
+            if ban is not None:
+                ban.bantype = "userid"
+                ban.author = current_user.username
+                ban.time = int(time.time())
+                ban.expires = expires
+            else:
+                db.session.add(
+                    Bans(
+                        username=pid,
+                        bantype="userid",
+                        author=current_user.username,
+                        time=int(time.time()),
+                        expires=expires,
+                    )
+                )
         db.session.commit()
-        Log("admin", current_user.username + f" bulk banned {len(player_ids)} players")
+        Log(
+            "admin",
+            current_user.username
+            + f" bulk banned {len(player_ids)} players (expires: {FormatBanExpiry(expires)})",
+        )
     elif action == "unban":
         for pid in player_ids:
             Bans.query.filter_by(username=pid, bantype="userid").delete()
@@ -1390,7 +1759,7 @@ def AdminPlayersBulkAction():
 
 
 @login_required
-@admin_bp.route("/admin/players/<player>/<action>")
+@admin_bp.route("/admin/players/<player>/<action>", methods=["GET", "POST"])
 def AdminPlayerAction(player, action):
     if not isAdmin(current_user):
         return abort(404)
@@ -1398,22 +1767,32 @@ def AdminPlayerAction(player, action):
     Log("admin", current_user.username + " performed " + action + " on " + player)
 
     if action == "ban":
-        # check if player id is in banlist, if not, add it
-        if not IsUserBanned(player):
-            newban = Bans(
-                username=player,
-                bantype="userid",
-                author=current_user.username,
-                time=int(time.time()),
+        expires = GetBanExpiry(
+            request.form.get("duration", request.args.get("duration", "perm")),
+            request.form.get("custom_amount", request.args.get("custom_amount", 1)),
+            request.form.get("custom_unit", request.args.get("custom_unit", "hours")),
+        )
+        ban = Bans.query.filter_by(username=player).first()
+        if ban is not None:
+            ban.bantype = "userid"
+            ban.author = current_user.username
+            ban.time = int(time.time())
+            ban.expires = expires
+        else:
+            db.session.add(
+                Bans(
+                    username=player,
+                    bantype="userid",
+                    author=current_user.username,
+                    time=int(time.time()),
+                    expires=expires,
+                )
             )
-            db.session.add(newban)
-            db.session.commit()
+        db.session.commit()
     elif action == "unban":
-        # check if player id is in banlist, if yes, remove it
-        if IsUserBanned(player):
-            player_check = Bans.query.filter_by(username=player).first()
-            db.session.delete(player_check)
-            db.session.commit()
+        # remove the ban regardless of its current/expired state
+        Bans.query.filter_by(username=player, bantype="userid").delete()
+        db.session.commit()
     else:
         return make_response("Invalid action!", 400)
 
@@ -1468,22 +1847,28 @@ def AdminBannedPlayers():
     if not isAdmin(current_user):
         return abort(404)
 
+    # purge bans that have already expired
+    now = int(time.time())
+    Bans.query.filter(
+        Bans.bantype == "userid", Bans.expires.isnot(None), Bans.expires != 0, Bans.expires <= now
+    ).delete(synchronize_session=False)
+    db.session.commit()
+
     bans = Bans.query.filter_by(bantype="userid").all()
     bans = [ban.as_dict() for ban in bans]
 
     # get player name
     for ban in bans:
-        ban["multiplayer_name"] = (
-            Player.query.filter_by(username=ban["username"]).first().multiplayer_name
-        )
-        if ban["multiplayer_name"] is None:
-            ban["multiplayer_name"] = GetNameFromSave(
-                Player.query.filter_by(username=ban["username"]).first().game
-            )
+        player = Player.query.filter_by(username=ban["username"]).first()
+        ban["multiplayer_name"] = player.multiplayer_name if player else "Unnamed Player"
+        if ban["multiplayer_name"] is None and player is not None:
+            ban["multiplayer_name"] = GetNameFromSave(player.game)
         if ban["time"] is not None:
             ban["time"] = datetime.fromtimestamp(ban["time"], tz=timezone.utc).strftime(
                 "%Y-%m-%d %H:%M:%S UTC"
             )
+        ban["expires_display"] = FormatBanExpiry(ban.get("expires"))
+        ban["is_permanent"] = ban.get("expires") in (None, 0)
 
     return render_template("admin_bannedplayers.html", bans=bans)
 

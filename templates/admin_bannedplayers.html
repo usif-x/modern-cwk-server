@@ -26,7 +26,8 @@
                         <th class="h-10 px-6 font-medium">Player UUID</th>
                         <th class="h-10 px-6 font-medium">Display Name</th>
                         <th class="h-10 px-6 font-medium">Banned By</th>
-                        <th class="h-10 px-6 font-medium">Timestamp</th>
+                        <th class="h-10 px-6 font-medium">Banned At</th>
+                        <th class="h-10 px-6 font-medium">Expires</th>
                         <th class="h-10 px-6 text-right font-medium">Actions</th>
                     </tr>
                 </thead>
@@ -47,6 +48,15 @@
                         <td class="px-6 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">
                             {{ ban.time }}
                         </td>
+                        <td class="px-6 py-3 text-xs whitespace-nowrap">
+                            {% if ban.is_permanent %}
+                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-destructive/10 text-destructive border border-destructive/20">
+                                    Permanent
+                                </span>
+                            {% else %}
+                                <span class="font-mono text-muted-foreground">{{ ban.expires_display }}</span>
+                            {% endif %}
+                        </td>
                         <td class="px-6 py-3 text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <a href="/admin/players/{{ ban.username }}" class="inline-flex items-center rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
@@ -61,7 +71,7 @@
                     {% endfor %}
                     {% if not bans %}
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-muted-foreground text-sm">
+                        <td colspan="6" class="px-6 py-12 text-center text-muted-foreground text-sm">
                             No banned players currently.
                         </td>
                     </tr>

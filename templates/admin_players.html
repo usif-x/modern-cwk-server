@@ -57,6 +57,27 @@
                 <span class="text-xs font-medium text-foreground"><span id="playersSelectedCount">0</span> player(s) selected</span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
+                <select name="duration" id="bulkBanDuration" onchange="toggleBulkBanCustom()" class="inline-flex h-8 rounded-md border border-input bg-background px-2 py-0.5 text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Bulk ban duration">
+                    <option value="1h">1 Hour</option>
+                    <option value="6h">6 Hours</option>
+                    <option value="12h">12 Hours</option>
+                    <option value="1d">1 Day</option>
+                    <option value="3d">3 Days</option>
+                    <option value="1w">1 Week</option>
+                    <option value="2w">2 Weeks</option>
+                    <option value="1m">1 Month</option>
+                    <option value="custom">Custom…</option>
+                    <option value="perm" selected>Permanent</option>
+                </select>
+                <span id="bulkBanCustom" class="hidden items-center gap-1">
+                    <input type="number" name="custom_amount" min="1" value="1" class="inline-flex h-8 w-16 rounded-md border border-input bg-background px-2 py-0.5 font-mono text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                    <select name="custom_unit" class="inline-flex h-8 rounded-md border border-input bg-background px-2 py-0.5 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                        <option value="hours">Hours</option>
+                        <option value="days">Days</option>
+                        <option value="weeks">Weeks</option>
+                        <option value="months">Months</option>
+                    </select>
+                </span>
                 <button type="button" onclick="deselectAllPlayers()" class="inline-flex items-center rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-accent transition-colors">
                     Deselect
                 </button>
@@ -193,11 +214,28 @@ function deselectAllPlayers() {
     updatePlayersSelection();
 }
 
+function toggleBulkBanCustom() {
+    const select = document.getElementById('bulkBanDuration');
+    const wrap = document.getElementById('bulkBanCustom');
+    if (!select || !wrap) return;
+    if (select.value === 'custom') {
+        wrap.classList.remove('hidden');
+        wrap.classList.add('inline-flex');
+    } else {
+        wrap.classList.add('hidden');
+        wrap.classList.remove('inline-flex');
+    }
+}
+
 function submitBulkPlayerAction(action) {
     const count = document.querySelectorAll('.player-cb:checked').length;
     if (count === 0) return;
     let message = '';
-    if (action === 'ban') message = `Are you sure you want to BAN ${count} selected player(s)?`;
+    if (action === 'ban') {
+        const select = document.getElementById('bulkBanDuration');
+        const label = select ? select.options[select.selectedIndex].text : 'Permanent';
+        message = `Are you sure you want to BAN ${count} selected player(s)? Duration: ${label}`;
+    }
     else if (action === 'unban') message = `Are you sure you want to UNBAN ${count} selected player(s)?`;
     else if (action === 'delete') message = `DANGER: Are you sure you want to permanently DELETE ${count} player accounts? This cannot be undone!`;
 

@@ -40,7 +40,7 @@ cwk-server/
 │   ├── Blueprints/                 # Game data JSON files (creatures, cards, etc.)
 │   └── logs/                       # Daily log files (YYYY-MM-DD.txt)
 ├── static/admin/                   # Bootstrap CSS/JS assets (legacy)
-├── templates/                      # 19 Jinja2 admin templates
+├── templates/                      # 21 Jinja2 admin templates
 │   ├── admin_base.html             # Base layout (Tailwind + shadcn/ui sidebar & theme toggle)
 │   ├── admin_login.html            # Login page
 │   ├── admin_home.html             # Dashboard
@@ -50,6 +50,7 @@ cwk-server/
 │   ├── admin_creatures.html        # Creature book (searchable reference)
 │   ├── admin_cards.html            # Action card book (searchable reference)
 │   ├── admin_leaders.html          # Leader book (searchable reference)
+│   ├── admin_top_pvp.html          # Top PVP players (by Multiplayer Level)
 │   ├── admin_redeemcodes.html      # Redeem codes CRUD
 │   ├── admin_versions.html         # Version management
 │   ├── admin_server.html           # Server/backups
@@ -101,6 +102,7 @@ cwk-server/
 | `bantype` | String(80) | `"userid"` or `"ip"` |
 | `author` | String(80) | Admin username or `"SYSTEM"` |
 | `time` | Integer | Unix timestamp |
+| `expires` | Integer | Unix expiry timestamp; `0`/NULL = permanent |
 
 ### Logs
 | Field | Type | Description |
@@ -164,7 +166,9 @@ Each card has: `{"ID": "<card_id>", "Stat": <level>}`
 
 ### Leader Items
 
-Each leader has: `{"ID": "Leader_Name", "Skin": "Skin_Name"}`
+Each base hero has: `{"ID": "Leader_Finn", "Skin": "Leader_Finn", "OwnedSkins": ["Leader_FinnPajama", ...]}`
+
+Skins are stored inside their base hero's `OwnedSkins` — they must never be added as independent entries in `Leaders` (the client flags this). `db_Leaders.json` contains 32 base heroes and 51 skins; a skin entry has a `SkinOf` field pointing at its base hero.
 
 ## Route Reference
 
@@ -233,10 +237,11 @@ Each leader has: `{"ID": "Leader_Name", "Skin": "Skin_Name"}`
 | GET | `/admin/server/pull` | Git pull |
 | GET/POST | `/admin/createadmin` | Create admin |
 | GET | `/admin/players` | Player list (sortable) |
+| GET | `/admin/top_pvp` | Top PVP players ranked by Multiplayer Level (1 = Super Amadeus best, 25 = Dweeb) |
 | GET | `/admin/players/<uuid>` | Player detail |
 | GET | `/admin/players/<uuid>/game` | Game data viewer |
 | POST | `/admin/players/<uuid>/game/edit` | Overwrite raw data |
-| POST | `/admin/players/<uuid>/edit` | Edit resources |
+| POST | `/admin/players/<uuid>/edit` | Edit resources (incl. `MultiplayerName` to rename player) |
 | POST | `/admin/players/<uuid>/add_creature` | Add creature |
 | POST | `/admin/players/<uuid>/delete_creature/<idx>` | Delete creature |
 | POST | `/admin/players/<uuid>/delete_all_creatures` | Delete all creatures |
@@ -246,19 +251,22 @@ Each leader has: `{"ID": "Leader_Name", "Skin": "Skin_Name"}`
 | POST | `/admin/players/<uuid>/delete_card/<idx>` | Delete action card |
 | POST | `/admin/players/<uuid>/delete_all_cards` | Delete all action cards |
 | POST | `/admin/players/<uuid>/delete_cards_bulk` | Multi-delete selected action cards |
-| POST | `/admin/players/<uuid>/add_all_creatures` | Add all 631 creatures |
+| POST | `/admin/players/<uuid>/add_all_creatures` | Add all 625 collectible creatures (skips `TutorialOnly`) |
+| POST | `/admin/players/<uuid>/remove_invalid_creatures` | Remove tutorial-only creatures & clear `Zxcvbnm` PVP ban flag |
 | POST | `/admin/players/<uuid>/max_all_creatures` | Max all creatures to 5★ |
 | POST | `/admin/players/<uuid>/add_max_creature` | Add single max creature |
 | POST | `/admin/players/<uuid>/add_all_cards` | Add all 695 action cards |
-| POST | `/admin/players/<uuid>/add_all_leaders` | Add all 83 leaders |
-| POST | `/admin/players/<uuid>/add_leader` | Add single leader |
+| POST | `/admin/players/<uuid>/add_all_leaders` | Add all 32 base heroes (skips skins) |
+| POST | `/admin/players/<uuid>/add_leader` | Add single hero; a skin ID is attached to its base hero's `OwnedSkins` |
 | POST | `/admin/players/<uuid>/delete_leader/<idx>` | Delete single leader |
 | POST | `/admin/players/<uuid>/delete_all_leaders` | Delete all leaders |
 | POST | `/admin/players/<uuid>/delete_leaders_bulk` | Multi-delete selected leaders |
-| POST | `/admin/players/<uuid>/add_all_skins` | Add all leader skins |
+| POST | `/admin/players/<uuid>/add_all_skins` | Attach all skins to the player's owned heroes via `OwnedSkins` |
 | POST | `/admin/players/<uuid>/max_resources` | Max all currencies preset |
 | GET | `/admin/players/<uuid>/export_save` | Download save as JSON |
 | POST | `/admin/players/<uuid>/import_save` | Upload & replace save JSON |
+| POST | `/admin/players/<uuid>/fix_save` | Detect & repair broken save fields / duplicate creature IDs (deletes nothing) |
+| POST | `/admin/players/<uuid>/transfer_progress` | Copy progress to target UUID (keeps target name & currencies; source untouched) |
 | POST | `/admin/players/<uuid>/reset_save` | Reset save to starter values |
 | POST | `/admin/players/<uuid>/delete` | Delete player account |
 | POST | `/admin/players/bulk_action` | Bulk ban, unban, or delete players |
@@ -296,14 +304,25 @@ Each leader has: `{"ID": "Leader_Name", "Skin": "Skin_Name"}`
 | `Log(category, message)` | `app/utils.py` | Write to daily log file |
 | `PlayerLog(ip, player, message)` | `app/utils.py` | Create Logs DB entry |
 | `DiscordWebhookMessage(message)` | `app/utils.py` | Send Discord webhook + log to AdminActivity |
-| `IsUserBanned(username, ip)` | `app/utils.py` | Check ban list |
-| `SystemBan(username)` | `app/utils.py` | Auto-ban (anti-cheat) |
+| `IsUserBanned(username, ip)` | `app/utils.py` | Check active (non-expired) ban list |
+| `SystemBan(username)` | `app/utils.py` | Auto-ban (anti-cheat), permanent |
+| `GetBanExpiry(duration, amount, unit)` | `app/utils.py` | Resolve a ban duration to a unix expiry (0 = permanent) |
+| `FormatBanExpiry(expires)` | `app/utils.py` | Human-readable ban expiry (`"Permanent"` when 0/NULL) |
+| `FindBrokenSaveIssues(game)` | `app/utils.py` | Return list of missing/invalid save fields & duplicate creature IDs |
+| `RepairGameData(game, username, fallback_name)` | `app/utils.py` | Fill missing fields / fix duplicate IDs without deleting data |
+| `BuildTransferredGame(source, target, username, name)` | `app/utils.py` | Copy progress to a target save keeping target name & currencies |
 | `UpdateLastOnline(player_id)` | `app/utils.py` | Update last_online timestamp |
 | `GetAllyInfo(player_id, isally)` | `app/utils.py` | Build ally info dict |
 | `GetPlayerWins(player_id)` | `app/utils.py` | Count PVP wins this season |
 | `GetXPForRank(rank)` | `app/utils.py` | Get required cumulative RankXP for a given player rank |
 | `GetRankForXP(xp)` | `app/utils.py` | Calculate player rank from cumulative RankXP |
 | `GetRankXPTable()` | `app/utils.py` | Return full level -> XP dictionary from blueprints |
+| `GetPvpRankName(level)` | `app/utils.py` | PVP league name for a MultiplayerLevel (1 = Super Amadeus) |
+| `GetTutorialOnlyCreatureIds()` | `app/utils.py` | Set of `TutorialOnly` creature IDs (non-collectible) |
+| `IsTutorialOnlyCreature(id)` | `app/utils.py` | True if a creature is tutorial-only |
+| `GetLeaderSkinBase(id)` | `app/utils.py` | Base hero ID if the ID is a skin, else `None` |
+| `GetLeaderSkins(base_id)` | `app/utils.py` | Skin IDs belonging to a base hero |
+| `NormalizeLeaders(leaders)` | `app/utils.py` | Fold skin entries into their base hero's `OwnedSkins` |
 | `InvalidUsername(username)` | `app/utils.py` | Validate username |
 | `IPFromRequest(request)` | `app/utils.py` | Extract client IP |
 
@@ -314,7 +333,9 @@ Each leader has: `{"ID": "Leader_Name", "Skin": "Skin_Name"}`
 3. **Device binding** — First `X-Nick-Description` header is stored; subsequent saves must match
 4. **Header validation** — PUT requires: `Player-Id`, `Age`, `User-Agent`, `Platform`, `Version`, `X-Nick-Description`
 5. **Username validation** — Blocks special characters and reserved names ("ua", "guest")
-6. **PVP ban** — `Zxcvbnm` flag in game data blocks save operations
+6. **PVP ban** — `Zxcvbnm` flag in game data blocks save operations. It is set by the game client when it detects tampering — e.g. when non-collectible `TutorialOnly` creatures (`TUT_*`) are granted. Creature tools skip these IDs, and `remove_invalid_creatures` clears existing ones plus the flag
+7. **Temporary bans** — Ban rows carry an optional `expires` unix timestamp (`0`/NULL = permanent). Expired bans are treated as inactive by `IsUserBanned` and purged from the banned-players list
+8. **Save integrity** — The admin player page runs `FindBrokenSaveIssues` and offers a non-destructive `fix_save` repair (fills missing fields, reassigns duplicate creature IDs, folds independent skin entries into their base hero's `OwnedSkins`)
 
 ## Conventions
 

@@ -15,10 +15,16 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
 - **Interactive Player Event Logs** — Audit trail with smart classification badges, compact single-line previews, and a full-featured modal dialog with structured parameter cards, syntax-highlighted JSON viewer, and instant clipboard copy
 - **Admin Panel** — Modern, responsive grid admin panel inspired by shadcn/ui (light/dark mode, Tailwind CSS, Lucide icons):
   - Player management (view, edit resources, rank sync, ban/unban, JSON save export/import)
-  - Creature, action card, and leader tools (bulk multi-select deletion, delete all, max to 5★, add all 631 creatures, 695 cards, and 83 leaders)
+  - Creature, action card, and leader tools (bulk multi-select deletion, delete all, max to 5★, add all 625 collectible creatures, 695 cards, and 32 base heroes)
+  - Heroes and skins are handled separately: "Add All Heroes" adds only base leaders, and "Add All Skins" attaches skins to owned heroes via `OwnedSkins` (never as independent heroes)
+  - Tutorial-only creatures are automatically skipped so granting them can't trigger the client's `Zxcvbnm` PVP-ban flag; a cleanup button removes any already present and clears the flag
   - Interactive reference books for all creatures, action cards, and leaders
+  - **Top PVP Players** leaderboard ranked by Multiplayer Level (`1` = Super Amadeus best → `25` = Dweeb), with league names and a champion spotlight
   - PVP ban list manager with raw JSON editor
   - Server backups, version management, maintenance mode, and logs
+- **Progress Transfer** — Copy all account progress (creatures, action cards, leaders, unlocks, rank, quests) from one account to another. The target keeps its own name and currencies (gems, coins, wishbones, etc.); the source account is left untouched
+- **Broken Save Detection & Repair** — The admin panel automatically detects missing/invalid save fields and duplicate creature IDs. A one-click **Fix Save** repairs the structure without deleting any items
+- **Temporary Bans** — Bans support an optional expiry. Admins pick a preset duration (hour, day, week, month) or a custom amount/unit; expired bans are treated as inactive and purged automatically
 - **Anti-Cheat & Rank Sync** — Device binding, automated Rank & RankXP synchronization based on game blueprint curves (`db_PlayerRanks.json`), leader level jump validation, and ACTk detection
 - **Auto-Backup** — Automatic full database + persist directory backups every 4 hours
 
@@ -65,7 +71,7 @@ cwk-server/
 │       ├── multiplayer.py  # Multiplayer routes & redeem code API
 │       ├── friends.py      # Friend system routes
 │       └── analytics.py    # Analytics & PVP leaderboard
-├── templates/              # 20 Jinja2 admin templates (shadcn/ui style)
+├── templates/              # 21 Jinja2 admin templates (shadcn/ui style)
 ├── data/persist/           # Game data, blueprints, ban lists, logs
 ├── instance/               # SQLite database (cardwarskingdom.db)
 └── backup/                 # Automatic zip backups (every 4 hours)
@@ -117,8 +123,11 @@ cwk-server/
 | `/admin` | Login & first-time setup |
 | `/admin/home` | System dashboard with stats & recent activity |
 | `/admin/players` | Sortable player list with bulk ban/unban/delete |
-| `/admin/players/<uuid>` | Player details, resource editor, multi-item actions |
+| `/admin/top_pvp` | Top PVP Players ranked by Multiplayer Level (1 = best) |
+| `/admin/players/<uuid>` | Player details, resource editor, multi-item actions (incl. change multiplayer name) |
 | `/admin/players/<uuid>/game` | Structured game save viewer and raw editor |
+| `/admin/players/<uuid>/fix_save` | Detect & repair broken save fields (no data deleted) |
+| `/admin/players/<uuid>/transfer_progress` | Copy progress to another account (keeps target name/currencies) |
 | `/admin/creatures` | Searchable Creature Book with PVP ban toggles |
 | `/admin/cards` | Searchable Action Card Book |
 | `/admin/leaders` | Searchable Leader / Hero Book |
@@ -148,7 +157,8 @@ username=<uuid>&data=<base64(gzip(json))>
 | `PvpCurrency` | PVP Wishbones |
 | `EvolutionShards` | Evolution shards |
 | `InventorySpace` | Inventory capacity |
-| `MultiplayerLevel` | Player level / rank |
+| `MultiplayerLevel` | PVP league level (1 = Super Amadeus best, 25 = Dweeb) |
+| `BestMultiplayerLevel` | Best PVP league reached (kept equal to `MultiplayerLevel`) |
 | `RankXP` | Cumulative rank experience |
 | `Zxcvbnm` | PVP ban flag (0 = active, 1 = banned) |
 | `UsedRedeemCodes` | Array of previously redeemed promotional code strings |
@@ -170,7 +180,7 @@ username=<uuid>&data=<base64(gzip(json))>
 SQLite database located at `instance/cardwarskingdom.db` with models:
 - `player` — Player accounts, profiles, and encrypted saves
 - `admin` — Admin credentials and rank
-- `bans` — UUID and IP ban entries
+- `bans` — UUID and IP ban entries (`expires` = unix timestamp, `0`/NULL = permanent)
 - `logs` — Player activity audit logs
 - `upsight_logs` — Analytics events
 - `admin_activity` — Admin audit trail

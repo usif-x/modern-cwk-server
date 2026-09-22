@@ -79,6 +79,10 @@ with app.app_context():
         if cols and "reward_item" not in cols:
             db.session.execute(text("ALTER TABLE redeem_code ADD COLUMN reward_item VARCHAR(128)"))
             db.session.commit()
+        ban_cols = [r[1] for r in db.session.execute(text("PRAGMA table_info(bans)")).fetchall()]
+        if ban_cols and "expires" not in ban_cols:
+            db.session.execute(text("ALTER TABLE bans ADD COLUMN expires INTEGER DEFAULT 0"))
+            db.session.commit()
     except Exception as e:
         print(f"Migration notice: {e}")
 
