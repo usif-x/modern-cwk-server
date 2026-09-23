@@ -68,5 +68,84 @@
             </div>
         </div>
     </div>
+
+    <!-- Automatic Backups & Telegram Card -->
+    <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="text-base font-semibold tracking-tight">Automatic Backups &amp; Telegram Delivery</h2>
+                <p class="text-xs text-muted-foreground mt-0.5">Schedule automatic backups and push the archive to your Telegram admin chat.</p>
+            </div>
+            <div class="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center text-primary">
+                <i data-lucide="send" class="w-4 h-4"></i>
+            </div>
+        </div>
+
+        <form action="/admin/server/settings" method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div class="space-y-1.5">
+                <label class="text-xs font-medium text-foreground">Backup Interval (hours)</label>
+                <input type="number" step="0.5" min="0" name="backup_interval_hours" value="{{ backup_interval }}"
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <p class="text-[11px] text-muted-foreground">e.g. 1 = hourly, 4 = every 4 hours, 0 = disabled</p>
+            </div>
+            <label class="flex items-center gap-2 cursor-pointer select-none h-9">
+                <input type="checkbox" name="backup_to_telegram" {% if settings.backup_to_telegram %}checked{% endif %} class="w-4 h-4 rounded border-input">
+                <span class="text-sm font-medium text-foreground">Send backup to Telegram</span>
+            </label>
+            <div class="flex items-center gap-2">
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Save Settings</span>
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-4 pt-4 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="flex items-center gap-2 text-xs">
+                <span class="font-medium text-muted-foreground">Telegram bot (.env):</span>
+                {% if telegram_configured %}
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Configured</span>
+                {% else %}
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Not configured — set TELEGRAM_BOT_TOKEN and TELEGRAM_ADMIN_ID in .env</span>
+                {% endif %}
+            </div>
+            <form action="/admin/server/telegram_test" method="POST" class="inline">
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span>Send Test Message</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Upload & Restore Backup Card -->
+    <div class="rounded-xl border border-destructive/30 bg-destructive/5 text-card-foreground shadow-xs p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="text-base font-semibold tracking-tight">Upload &amp; Restore Backup</h2>
+                <p class="text-xs text-muted-foreground mt-0.5">Restore the database and persist files from a backup .zip archive</p>
+            </div>
+            <div class="w-8 h-8 rounded-md bg-destructive/10 text-destructive flex items-center justify-center">
+                <i data-lucide="upload" class="w-4 h-4"></i>
+            </div>
+        </div>
+
+        <div class="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-muted-foreground mb-4">
+            <p class="flex items-center gap-1.5 font-medium text-destructive mb-1">
+                <i data-lucide="triangle-alert" class="w-3.5 h-3.5"></i> Destructive operation
+            </p>
+            This replaces the live database and <code class="font-mono">data/persist</code> folder with the archive contents. A safety snapshot is taken first. You may be signed out afterwards if the restored database has different admin credentials.
+        </div>
+
+        <form action="/admin/server/upload_backup" method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <input type="file" name="backup_file" accept=".zip" required
+                class="text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border file:border-border file:text-xs file:bg-background file:text-foreground hover:file:bg-accent cursor-pointer">
+            <button type="submit" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-destructive/90 transition-colors whitespace-nowrap"
+                onclick="return confirm('Restore the server from this backup? The current database and files will be replaced.')">
+                <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                <span>Upload &amp; Restore</span>
+            </button>
+        </form>
+    </div>
 </div>
 {% endblock %}

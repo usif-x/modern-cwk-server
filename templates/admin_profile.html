@@ -1,0 +1,120 @@
+{% extends "admin_base.html" %}
+{% block title %}Secret Profile - CWK Admin{% endblock %}
+{% block breadcrumb %}Secret Profile{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2.5">
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Secret Profile</h1>
+                <span class="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-mono font-semibold bg-muted text-muted-foreground">
+                    {{ admin.username }}
+                </span>
+            </div>
+            <p class="text-sm text-muted-foreground mt-1">Manage your email, password and passwordless 6-digit passkey</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Email Card -->
+        <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-base font-semibold tracking-tight">Email Address</h2>
+                    <p class="text-xs text-muted-foreground mt-0.5">Used for account recovery notifications</p>
+                </div>
+                <div class="w-8 h-8 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+                    <i data-lucide="mail" class="w-4 h-4"></i>
+                </div>
+            </div>
+            <form action="/admin/profile/email" method="POST" class="space-y-3">
+                <input type="email" name="email" value="{{ admin.email or '' }}" placeholder="admin@example.com"
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Save Email</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Change Password Card -->
+        <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-base font-semibold tracking-tight">Change Password</h2>
+                    <p class="text-xs text-muted-foreground mt-0.5">Minimum 8 characters</p>
+                </div>
+                <div class="w-8 h-8 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+                    <i data-lucide="key-round" class="w-4 h-4"></i>
+                </div>
+            </div>
+            <form action="/admin/profile/password" method="POST" class="space-y-3">
+                <input type="password" name="current_password" required placeholder="Current password" autocomplete="current-password"
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <input type="password" name="new_password" required placeholder="New password" autocomplete="new-password"
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <input type="password" name="confirm_password" required placeholder="Confirm new password" autocomplete="new-password"
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Update Password</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Passkey Card -->
+    <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="text-base font-semibold tracking-tight flex items-center gap-2">
+                    Passkey Login
+                    {% if admin.passkey_enabled %}
+                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Enabled</span>
+                    {% else %}
+                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-muted text-muted-foreground border border-border">Disabled</span>
+                    {% endif %}
+                </h2>
+                <p class="text-xs text-muted-foreground mt-0.5">Sign in with only a 6-digit code — no username or password needed</p>
+            </div>
+            <div class="w-8 h-8 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+                <i data-lucide="fingerprint" class="w-4 h-4"></i>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <form action="/admin/profile/passkey" method="POST" class="space-y-3">
+                <label class="text-xs font-medium text-foreground">Set / Replace Passkey (6 digits)</label>
+                <input type="text" name="passkey" inputmode="numeric" pattern="\d{6}" maxlength="6" required placeholder="123456"
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono tracking-[0.4em] text-center text-lg shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <input type="text" name="confirm_passkey" inputmode="numeric" pattern="\d{6}" maxlength="6" required placeholder="Repeat passkey"
+                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono tracking-[0.4em] text-center text-lg shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors">
+                    <i data-lucide="fingerprint" class="w-4 h-4"></i>
+                    <span>Save Passkey</span>
+                </button>
+            </form>
+
+            <div class="flex flex-col justify-between">
+                <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-muted-foreground">
+                    <p class="flex items-center gap-1.5 font-medium text-amber-700 dark:text-amber-300 mb-1">
+                        <i data-lucide="triangle-alert" class="w-3.5 h-3.5"></i> Keep it secret
+                    </p>
+                    A 6-digit passkey is convenient but easy to guess. Anyone who knows it can sign in as you, so never share it or use an obvious code.
+                </div>
+                {% if admin.passkey_enabled %}
+                <form action="/admin/profile/passkey/disable" method="POST" class="mt-4">
+                    <button type="submit" class="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 text-destructive px-4 py-2 text-sm font-medium shadow-xs hover:bg-destructive/20 transition-colors"
+                        onclick="return confirm('Disable passkey login for your account?')">
+                        <i data-lucide="shield-off" class="w-4 h-4"></i>
+                        <span>Disable Passkey Login</span>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

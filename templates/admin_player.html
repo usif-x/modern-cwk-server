@@ -450,6 +450,8 @@
                         <option value="4">4★</option>
                         <option value="5" selected>5★</option>
                     </select>
+                    <input type="number" name="count" value="1" min="1" max="10" title="How many to add (1-10)"
+                        class="flex h-9 w-16 rounded-md border border-input bg-background px-2 py-1 font-mono text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                     <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-primary text-primary-foreground px-3 py-1 text-xs font-medium shadow-xs hover:bg-primary/90 transition-colors">
                         Add Creature
                     </button>
@@ -523,10 +525,16 @@
                                 </td>
                                 <td class="px-4 py-2 text-right">
                                     <div class="flex items-center justify-end gap-1">
-                                        <!-- Max Single Creature Button -->
+                                        <!-- Max / Downgrade Single Creature Button -->
+                                        {% if item.StarRating == 5 and item.Xp == 70325 %}
+                                        <button type="submit" formaction="/admin/players/{{ player.username }}/downgrade_creature/{{ loop.index0 }}" class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 transition-colors" title="Downgrade to 1★ 0 XP" onclick="return confirm('Downgrade this creature to 1★ 0 XP?')">
+                                            Downgrade
+                                        </button>
+                                        {% else %}
                                         <button type="submit" formaction="/admin/players/{{ player.username }}/max_creature/{{ loop.index0 }}" class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium border border-border bg-background hover:bg-accent text-foreground transition-colors" title="Max this creature to 5★ 70,325 XP">
                                             Max 5★
                                         </button>
+                                        {% endif %}
                                         <!-- Delete Single Creature Button -->
                                         <button type="submit" formaction="/admin/players/{{ player.username }}/delete_creature/{{ loop.index0 }}" class="inline-flex items-center justify-center rounded p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Delete Creature" onclick="return confirm('Delete this creature?')">
                                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -550,7 +558,7 @@
         <div class="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h2 class="text-base font-semibold tracking-tight">Action Card Collection</h2>
-                <p class="text-xs text-muted-foreground mt-0.5"><span id="cardCountDisplay">{{ CardCollection|length }}</span> cards collected</p>
+                <p class="text-xs text-muted-foreground mt-0.5"><span id="cardCountDisplay">{{ CardInventory|length }}</span> card copies &middot; {{ CardCollection|length }} unique</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <form action="/admin/players/{{ player.username }}/add_all_cards" method="POST" class="inline">
@@ -574,6 +582,8 @@
             <form action="/admin/players/{{ player.username }}/add_card" method="POST" class="flex gap-2 max-w-md">
                 <input type="text" name="card_id" placeholder="Card ID (e.g. CORN_0001)" required
                     class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <input type="number" name="count" value="1" min="1" max="10" title="How many copies (1-10)"
+                    class="flex h-9 w-16 rounded-md border border-input bg-background px-2 py-1 font-mono text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                 <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-primary text-primary-foreground px-4 py-2 text-xs font-medium shadow-xs hover:bg-primary/90 transition-colors">
                     Add Card
                 </button>
@@ -622,7 +632,7 @@
                             </tr>
                         </thead>
                         <tbody class="[&_tr:last-child]:border-0 divide-y divide-border" id="cardsTableBody">
-                            {% for item in CardCollection %}
+                            {% for item in CardInventory %}
                             <tr class="hover:bg-muted/30 transition-colors card-row">
                                 <td class="px-3 py-2 w-10">
                                     <input type="checkbox" name="indexes" value="{{ loop.index0 }}" onchange="updateCardsSelection()" class="card-cb w-4 h-4 rounded border-input cursor-pointer">
@@ -630,13 +640,18 @@
                                 <td class="px-3 py-2 font-mono text-xs text-muted-foreground">{{ loop.index0 }}</td>
                                 <td class="px-4 py-2 font-mono text-xs font-medium text-foreground card-id-cell">{{ item.ID }}</td>
                                 <td class="px-4 py-2 text-right">
-                                    <button type="submit" formaction="/admin/players/{{ player.username }}/delete_card/{{ loop.index0 }}" class="inline-flex items-center justify-center rounded p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Delete Card" onclick="return confirm('Delete this card?')">
-                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                    </button>
+                                    <div class="flex items-center justify-end gap-1">
+                                        <button type="submit" formaction="/admin/players/{{ player.username }}/add_card_copy/{{ loop.index0 }}" class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium border border-border bg-background hover:bg-accent text-foreground transition-colors" title="Add another copy of this card">
+                                            Add Copy
+                                        </button>
+                                        <button type="submit" formaction="/admin/players/{{ player.username }}/delete_card/{{ loop.index0 }}" class="inline-flex items-center justify-center rounded p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Delete Card" onclick="return confirm('Delete this card?')">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
-                            {% if not CardCollection %}
+                            {% if not CardInventory %}
                             <tr><td colspan="4" class="px-4 py-8 text-center text-muted-foreground text-xs">No cards in collection.</td></tr>
                             {% endif %}
                         </tbody>
@@ -727,6 +742,7 @@
                                 <th class="h-9 px-4 font-medium">Hero ID</th>
                                 <th class="h-9 px-4 font-medium">Equipped Skin</th>
                                 <th class="h-9 px-4 font-medium">Skins Owned</th>
+                                <th class="h-9 px-4 font-medium">Add Skin</th>
                                 <th class="h-9 px-4 text-right font-medium">Action</th>
                             </tr>
                         </thead>
@@ -744,6 +760,24 @@
                                         {{ item.OwnedSkins|length if item.OwnedSkins else 0 }}
                                     </span>
                                 </td>
+                                <td class="px-4 py-2">
+                                    {% set available_skins = leader_skins.get(item.ID, []) %}
+                                    {% if available_skins %}
+                                    <div class="flex items-center gap-1">
+                                        <select class="skin-select flex h-8 max-w-[190px] rounded-md border border-input bg-background px-2 py-0.5 font-mono text-[11px] shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Select a skin to add to this hero">
+                                            {% for skin in available_skins %}
+                                            <option value="{{ skin }}">{{ skin }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="button" class="add-skin-btn inline-flex items-center gap-1 rounded-md border border-input bg-background px-2 py-1 text-[11px] font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors whitespace-nowrap" title="Add the selected skin to this hero">
+                                            <i data-lucide="plus" class="w-3 h-3"></i>
+                                            Add
+                                        </button>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-[11px] text-muted-foreground">All skins owned</span>
+                                    {% endif %}
+                                </td>
                                 <td class="px-4 py-2 text-right">
                                     <button type="submit" formaction="/admin/players/{{ player.username }}/delete_leader/{{ loop.index0 }}" class="inline-flex items-center justify-center rounded p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Delete Leader" onclick="return confirm('Delete this hero and its skins?')">
                                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -752,11 +786,15 @@
                             </tr>
                             {% endfor %}
                             {% if not Leaders %}
-                            <tr><td colspan="6" class="px-4 py-8 text-center text-muted-foreground text-xs">No heroes found in save.</td></tr>
+                            <tr><td colspan="7" class="px-4 py-8 text-center text-muted-foreground text-xs">No heroes found in save.</td></tr>
                             {% endif %}
                         </tbody>
                     </table>
                 </div>
+            </form>
+            <!-- Helper form for adding a specific skin (kept outside the bulk form) -->
+            <form id="addSkinForm" action="/admin/players/{{ player.username }}/add_leader" method="POST" class="hidden">
+                <input type="hidden" name="leader_id" id="addSkinInput" value="">
             </form>
         </div>
     </div>
@@ -869,9 +907,9 @@ function deselectAllCreatures() {
 function submitBulkDeleteCreatures() {
     const count = document.querySelectorAll('.creature-cb:checked').length;
     if (count === 0) return;
-    if (confirm(`Are you sure you want to delete ${count} selected creature(s)?`)) {
-        document.getElementById('bulkDeleteCreaturesForm').submit();
-    }
+    cwkConfirm(`Are you sure you want to delete ${count} selected creature(s)?`).then(function (ok) {
+        if (ok) document.getElementById('bulkDeleteCreaturesForm').submit();
+    });
 }
 
 // ==================== CARDS FILTER & MULTI-SELECT ====================
@@ -924,9 +962,9 @@ function deselectAllCards() {
 function submitBulkDeleteCards() {
     const count = document.querySelectorAll('.card-cb:checked').length;
     if (count === 0) return;
-    if (confirm(`Are you sure you want to delete ${count} selected card(s)?`)) {
-        document.getElementById('bulkDeleteCardsForm').submit();
-    }
+    cwkConfirm(`Are you sure you want to delete ${count} selected card(s)?`).then(function (ok) {
+        if (ok) document.getElementById('bulkDeleteCardsForm').submit();
+    });
 }
 
 // ==================== LEADERS FILTER & MULTI-SELECT ====================
@@ -980,9 +1018,9 @@ function deselectAllLeaders() {
 function submitBulkDeleteLeaders() {
     const count = document.querySelectorAll('.leader-cb:checked').length;
     if (count === 0) return;
-    if (confirm(`Are you sure you want to delete ${count} selected leader(s)?`)) {
-        document.getElementById('bulkDeleteLeadersForm').submit();
-    }
+    cwkConfirm(`Are you sure you want to delete ${count} selected leader(s)?`).then(function (ok) {
+        if (ok) document.getElementById('bulkDeleteLeadersForm').submit();
+    });
 }
 
 // ==================== RANK & XP SYNCHRONIZATION ====================
@@ -1099,5 +1137,18 @@ function submitBulkDeleteLeaders() {
         if (calcRankDisplay) calcRankDisplay.textContent = `Rank ${getRankForXp(initialXp)}`;
     }
 })();
+
+// ==================== ADD SPECIFIC HERO SKIN ====================
+document.querySelectorAll('.add-skin-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        const wrap = btn.closest('div');
+        const select = wrap ? wrap.querySelector('.skin-select') : null;
+        const input = document.getElementById('addSkinInput');
+        const form = document.getElementById('addSkinForm');
+        if (!select || !input || !form || !select.value) return;
+        input.value = select.value;
+        form.submit();
+    });
+});
 </script>
 {% endblock %}

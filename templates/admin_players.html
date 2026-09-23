@@ -239,10 +239,11 @@ function submitBulkPlayerAction(action) {
     else if (action === 'unban') message = `Are you sure you want to UNBAN ${count} selected player(s)?`;
     else if (action === 'delete') message = `DANGER: Are you sure you want to permanently DELETE ${count} player accounts? This cannot be undone!`;
 
-    if (confirm(message)) {
+    cwkConfirm(message).then(function (ok) {
+        if (!ok) return;
         document.getElementById('bulkActionInput').value = action;
         document.getElementById('bulkPlayersForm').submit();
-    }
+    });
 }
 </script>
 {% endblock %}

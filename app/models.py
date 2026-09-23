@@ -27,6 +27,9 @@ class Admin(UserMixin, db.Model):
     )
     password: Mapped[str] = mapped_column(db.String(80), nullable=False)
     rank: Mapped[int] = mapped_column(db.Integer, nullable=False)
+    email = db.Column(db.String(255), nullable=True)
+    passkey = db.Column(db.String(80), nullable=True)
+    passkey_enabled = db.Column(db.Boolean, nullable=False, default=False)
 
     def get_id(self):
         return str(self.username)

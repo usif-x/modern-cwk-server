@@ -69,6 +69,10 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- Theme Initializer (Prevent flash of unstyled theme) -->
     <script>
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -132,6 +136,28 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.25); border-radius: 9999px; }
         ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
+
+        /* SweetAlert2 theme (follows light/dark CSS variables) */
+        .swal2-popup {
+            background: hsl(var(--card)) !important;
+            color: hsl(var(--card-foreground)) !important;
+            border: 1px solid hsl(var(--border)) !important;
+            border-radius: var(--radius) !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25) !important;
+        }
+        .swal2-title, .swal2-html-container { color: hsl(var(--card-foreground)) !important; }
+        .swal2-html-container { font-size: 0.9rem !important; }
+        .swal2-styled.swal2-confirm {
+            background: hsl(var(--primary)) !important;
+            color: hsl(var(--primary-foreground)) !important;
+            border-radius: calc(var(--radius) - 2px) !important;
+        }
+        .swal2-styled.swal2-cancel {
+            background: hsl(var(--secondary)) !important;
+            color: hsl(var(--secondary-foreground)) !important;
+            border-radius: calc(var(--radius) - 2px) !important;
+        }
+        .swal2-styled:focus { box-shadow: none !important; }
     </style>
 </head>
 <body class="bg-background text-foreground min-h-screen antialiased flex flex-col selection:bg-zinc-900 selection:text-white dark:selection:bg-zinc-100 dark:selection:text-zinc-900">
@@ -297,9 +323,14 @@
                             </span>
                         </div>
                     </div>
-                    <a href="/admin/logout" title="Sign Out" class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors">
-                        <i data-lucide="log-out" class="w-4 h-4"></i>
-                    </a>
+                    <div class="flex items-center">
+                        <a href="/admin/profile" title="Secret Profile" class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
+                            <i data-lucide="user-cog" class="w-4 h-4"></i>
+                        </a>
+                        <a href="/admin/logout" title="Sign Out" class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors">
+                            <i data-lucide="log-out" class="w-4 h-4"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -368,6 +399,102 @@
                 backdrop.classList.add('hidden');
             }
         }
+    </script>
+
+    <!-- SweetAlert2 helpers + legacy confirm interception -->
+    <script>
+        // Promise-based confirm using SweetAlert2 (theme aware).
+        function cwkConfirm(message, options) {
+            const opts = options || {};
+            const danger = /danger|delete|wipe|reset|permanently|ban|disable|remove|clear/i.test(message || '');
+            return Swal.fire({
+                title: opts.title || (danger ? 'Please confirm' : 'Are you sure?'),
+                text: message || '',
+                icon: opts.icon || (danger ? 'warning' : 'question'),
+                showCancelButton: true,
+                confirmButtonText: opts.confirmText || 'Confirm',
+                cancelButtonText: opts.cancelText || 'Cancel',
+                reverseButtons: true,
+                focusCancel: !!danger,
+                customClass: { popup: 'cwk-swal' },
+            }).then(function (result) {
+                return result.isConfirmed;
+            });
+        }
+
+        function cwkAlert(message, options) {
+            const opts = options || {};
+            return Swal.fire({
+                title: opts.title || 'Notice',
+                text: message || '',
+                icon: opts.icon || 'info',
+                confirmButtonText: opts.confirmText || 'OK',
+                customClass: { popup: 'cwk-swal' },
+            });
+        }
+
+        // Convert legacy `onclick="return confirm('...')"` attributes once the DOM is ready.
+        function cwkUpgradeLegacyConfirms(root) {
+            (root || document).querySelectorAll('[onclick]').forEach(function (el) {
+                const oc = el.getAttribute('onclick') || '';
+                const m = oc.match(/^\s*(?:return\s+)?confirm\((['"`])([\s\S]*?)\1\)\s*;?\s*$/);
+                if (m) {
+                    el.setAttribute('data-confirm', m[2]);
+                    el.removeAttribute('onclick');
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            cwkUpgradeLegacyConfirms(document);
+        });
+
+        // Intercept link / non-submit clicks with data-confirm.
+        document.addEventListener('click', function (e) {
+            const el = e.target.closest('[data-confirm]');
+            if (!el) return;
+            const isSubmit = (el.tagName === 'BUTTON' && (el.type === 'submit' || el.form)) ||
+                             (el.tagName === 'INPUT' && el.type === 'submit');
+            if (isSubmit) return; // handled by the submit listener
+
+            e.preventDefault();
+            e.stopPropagation();
+            cwkConfirm(el.getAttribute('data-confirm')).then(function (ok) {
+                if (!ok) return;
+                if (el.tagName === 'A' && el.href) {
+                    window.location.href = el.href;
+                } else if (el.dataset.href) {
+                    window.location.href = el.dataset.href;
+                }
+            });
+        }, true);
+
+        // Intercept form submits whose submitter (or form) has data-confirm.
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            let el = e.submitter && e.submitter.hasAttribute && e.submitter.hasAttribute('data-confirm')
+                ? e.submitter
+                : null;
+            if (!el) {
+                el = form.querySelector('button[type=submit][data-confirm], input[type=submit][data-confirm]');
+            }
+            if (!el) return;
+            if (el.dataset.confirmed === '1') {
+                el.dataset.confirmed = '';
+                return;
+            }
+
+            e.preventDefault();
+            cwkConfirm(el.getAttribute('data-confirm')).then(function (ok) {
+                if (!ok) return;
+                el.dataset.confirmed = '1';
+                if (e.submitter) {
+                    form.requestSubmit(e.submitter);
+                } else {
+                    form.submit();
+                }
+            });
+        }, true);
     </script>
 </body>
 </html>

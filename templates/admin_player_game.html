@@ -276,7 +276,7 @@
                         <i data-lucide="save" class="w-4 h-4"></i>
                         <span>Save Changes</span>
                     </button>
-                    <button type="button" onclick="if(confirm('Discard changes?')){document.getElementById('rawJson').classList.add('hidden');document.getElementById('readableView').classList.remove('hidden')}"
+                    <button type="button" onclick="cwkConfirm('Discard changes?').then(function(ok){if(ok){document.getElementById('rawJson').classList.add('hidden');document.getElementById('readableView').classList.remove('hidden');}})"
                         class="inline-flex items-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
                         Cancel
                     </button>

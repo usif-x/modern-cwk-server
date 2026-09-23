@@ -181,6 +181,37 @@
                     Sign In
                 </button>
             </form>
+
+            <div class="relative my-5">
+                <div class="absolute inset-0 flex items-center"><span class="w-full border-t border-border"></span></div>
+                <div class="relative flex justify-center text-xs uppercase">
+                    <span class="bg-card px-2 text-muted-foreground">or use passkey</span>
+                </div>
+            </div>
+
+            <form method="post" action="/admin/passkey" class="space-y-3">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium leading-none text-foreground">6-Digit Passkey</label>
+                    <input
+                        type="text"
+                        name="passkey"
+                        inputmode="numeric"
+                        pattern="\d{6}"
+                        maxlength="6"
+                        required
+                        autocomplete="one-time-code"
+                        placeholder="••••••"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-center font-mono text-lg tracking-[0.5em] ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                    >
+                </div>
+                <button
+                    type="submit"
+                    class="inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-medium transition-colors bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 w-full shadow-xs cursor-pointer"
+                >
+                    <i data-lucide="fingerprint" class="w-4 h-4"></i>
+                    <span>Sign In with Passkey</span>
+                </button>
+            </form>
         </div>
 
         <!-- Card Footer -->

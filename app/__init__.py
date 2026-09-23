@@ -64,11 +64,13 @@ def load_user(user_id):
 
 
 def run_scheduler():
-    from app.utils import Backup
-    schedule.every(4).hours.do(Backup)
+    from app.utils import RunScheduledBackup
     while True:
-        schedule.run_pending()
-        time.sleep(1)
+        try:
+            RunScheduledBackup()
+        except Exception as e:
+            print(f"Scheduler notice: {e}")
+        time.sleep(60)
 
 
 with app.app_context():
@@ -82,6 +84,15 @@ with app.app_context():
         ban_cols = [r[1] for r in db.session.execute(text("PRAGMA table_info(bans)")).fetchall()]
         if ban_cols and "expires" not in ban_cols:
             db.session.execute(text("ALTER TABLE bans ADD COLUMN expires INTEGER DEFAULT 0"))
+            db.session.commit()
+        admin_cols = [r[1] for r in db.session.execute(text("PRAGMA table_info(admin)")).fetchall()]
+        if admin_cols:
+            if "email" not in admin_cols:
+                db.session.execute(text("ALTER TABLE admin ADD COLUMN email VARCHAR(255)"))
+            if "passkey" not in admin_cols:
+                db.session.execute(text("ALTER TABLE admin ADD COLUMN passkey VARCHAR(80)"))
+            if "passkey_enabled" not in admin_cols:
+                db.session.execute(text("ALTER TABLE admin ADD COLUMN passkey_enabled BOOLEAN DEFAULT 0"))
             db.session.commit()
     except Exception as e:
         print(f"Migration notice: {e}")

@@ -20,11 +20,15 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
   - Tutorial-only creatures are automatically skipped so granting them can't trigger the client's `Zxcvbnm` PVP-ban flag; a cleanup button removes any already present and clears the flag
   - Interactive reference books for all creatures, action cards, and leaders
   - **Top PVP Players** leaderboard ranked by Multiplayer Level (`1` = Super Amadeus best → `25` = Dweeb), with league names and a champion spotlight
+  - Modern, theme-aware confirmation dialogs (SweetAlert2); per-hero "Add Skin" picker in the heroes section
   - PVP ban list manager with raw JSON editor
-  - Server backups, version management, maintenance mode, and logs
+  - **Secret Profile** — per-admin email, password change, and a passwordless 6-digit login passkey
+  - Server backups (configurable interval, Telegram delivery, upload & restore), version management, maintenance mode, and logs
 - **Progress Transfer** — Copy all account progress (creatures, action cards, leaders, unlocks, rank, quests) from one account to another. The target keeps its own name and currencies (gems, coins, wishbones, etc.); the source account is left untouched
 - **Broken Save Detection & Repair** — The admin panel automatically detects missing/invalid save fields and duplicate creature IDs. A one-click **Fix Save** repairs the structure without deleting any items
 - **Temporary Bans** — Bans support an optional expiry. Admins pick a preset duration (hour, day, week, month) or a custom amount/unit; expired bans are treated as inactive and purged automatically
+- **Automatic Telegram Backups** — Backups run on a configurable interval (default 4h, can be set to 1h or any custom value) and are delivered to an admin Telegram chat via bot (`TELEGRAM_BOT_TOKEN` + `TELEGRAM_ADMIN_ID` in `.env`). Backups can also be uploaded/restored from the admin panel
+- **Creature & Card Tooling** — Add 1–10 copies at once, max/downgrade a creature from the same button, and duplicate action cards with one click
 - **Anti-Cheat & Rank Sync** — Device binding, automated Rank & RankXP synchronization based on game blueprint curves (`db_PlayerRanks.json`), leader level jump validation, and ACTk detection
 - **Auto-Backup** — Automatic full database + persist directory backups every 4 hours
 
@@ -62,8 +66,9 @@ cwk-server/
 ├── app.py                  # Thin entry point
 ├── app/
 │   ├── __init__.py         # Flask app factory, globals, scheduler, DB migration
+│   ├── config.py           # .env loader (Telegram bot token / admin id, backup interval)
 │   ├── models.py           # Database models (Player, Admin, Bans, RedeemCode, etc.)
-│   ├── utils.py            # Helpers (encryption/decryption, anti-cheat, logging, XP tables)
+│   ├── utils.py            # Helpers (encryption/decryption, backups, Telegram, anti-cheat, XP tables)
 │   └── routes/
 │       ├── __init__.py     # Blueprint registration
 │       ├── game.py         # Client-facing game API & PVP ban list
@@ -71,7 +76,7 @@ cwk-server/
 │       ├── multiplayer.py  # Multiplayer routes & redeem code API
 │       ├── friends.py      # Friend system routes
 │       └── analytics.py    # Analytics & PVP leaderboard
-├── templates/              # 21 Jinja2 admin templates (shadcn/ui style)
+├── templates/              # 22 Jinja2 admin templates (shadcn/ui style)
 ├── data/persist/           # Game data, blueprints, ban lists, logs
 ├── instance/               # SQLite database (cardwarskingdom.db)
 └── backup/                 # Automatic zip backups (every 4 hours)
@@ -128,6 +133,8 @@ cwk-server/
 | `/admin/players/<uuid>/game` | Structured game save viewer and raw editor |
 | `/admin/players/<uuid>/fix_save` | Detect & repair broken save fields (no data deleted) |
 | `/admin/players/<uuid>/transfer_progress` | Copy progress to another account (keeps target name/currencies) |
+| `/admin/players/<uuid>/add_card_copy/<idx>` | Duplicate an action card |
+| `/admin/players/<uuid>/downgrade_creature/<idx>` | Reset a maxed creature to 1★ |
 | `/admin/creatures` | Searchable Creature Book with PVP ban toggles |
 | `/admin/cards` | Searchable Action Card Book |
 | `/admin/leaders` | Searchable Leader / Hero Book |
@@ -136,7 +143,9 @@ cwk-server/
 | `/admin/logs` | Audit log with interactive structured detail modal |
 | `/admin/bannedplayers` | Banned players list |
 | `/admin/bannedips` | Banned IP addresses list |
-| `/admin/server` | Manual backups, restore triggers, and git pull |
+| `/admin/profile` | Secret Profile: email, password, 6-digit passkey |
+| `/admin/passkey` | Passwordless login using only a 6-digit passkey |
+| `/admin/server` | Manual backups, interval/Telegram settings, upload & restore, git pull |
 | `/admin/versions` | Client version and maintenance toggles |
 
 ## Game Data Format
@@ -179,7 +188,7 @@ username=<uuid>&data=<base64(gzip(json))>
 
 SQLite database located at `instance/cardwarskingdom.db` with models:
 - `player` — Player accounts, profiles, and encrypted saves
-- `admin` — Admin credentials and rank
+- `admin` — Admin credentials, rank, `email`, and optional `passkey` / `passkey_enabled`
 - `bans` — UUID and IP ban entries (`expires` = unix timestamp, `0`/NULL = permanent)
 - `logs` — Player activity audit logs
 - `upsight_logs` — Analytics events
@@ -192,5 +201,10 @@ SQLite database located at `instance/cardwarskingdom.db` with models:
 - **Database URI**: SQLite at `instance/cardwarskingdom.db` (auto-migrated)
 - **Blueprints**: Game data in `data/persist/Blueprints/` (`db_Creatures.json`, `db_ActionCards.json`, `db_Leaders.json`, `db_PlayerRanks.json`)
 - **PVP Ban List**: JSON file at `data/persist/pvp_banlist.json`
-- **Backups**: Automatically compressed zip archives in `backup/` every 4 hours
+- **Backups**: Compressed zip archives in `backup/`; interval configurable in the admin Server page (default 4h). Upload & restore supported
+- **Runtime settings**: `data/persist/settings.json` (backup interval, Telegram toggle, last backup time)
+- **.env** (gitignored, copy from `.env.example`):
+  - `TELEGRAM_BOT_TOKEN` — Telegram bot token from @BotFather
+  - `TELEGRAM_ADMIN_ID` — chat id that receives backups
+  - `BACKUP_INTERVAL_HOURS` — optional default interval override
 - **Discord Webhook**: Optional alerts URL stored in `discordwebhookurl`

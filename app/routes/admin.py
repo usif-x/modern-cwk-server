@@ -1,4 +1,4 @@
-import json, os, random, re, secrets, string, subprocess, time
+import json, os, random, re, secrets, shutil, string, subprocess, tempfile, time, zipfile
 from datetime import datetime, timezone
 from flask import Blueprint, Response, abort, jsonify, make_response, redirect, render_template, request
 from flask_login import current_user, login_required, login_user, logout_user
@@ -14,6 +14,7 @@ from app.utils import (
     FindBrokenSaveIssues, RepairGameData, GetBanExpiry, FormatBanExpiry,
     BuildTransferredGame, GetPvpRankName, GetTutorialOnlyCreatureIds,
     IsTutorialOnlyCreature, GetLeaderSkinBase, GetLeaderSkins,
+    LoadSettings, SaveSettings, SendBackupToTelegram, GetBackupIntervalHours,
 )
 
 admin_bp = Blueprint('admin_bp', __name__)
@@ -152,7 +153,16 @@ def AdminServer():
             datetime.strptime(last_backup_file, "%Y-%m-%d_%H-%M-%S")
         )
 
-    return render_template("admin_server.html", last_backup=last_backup)
+    settings = LoadSettings()
+    from app.config import TelegramConfigured
+
+    return render_template(
+        "admin_server.html",
+        last_backup=last_backup,
+        settings=settings,
+        backup_interval=GetBackupIntervalHours(),
+        telegram_configured=TelegramConfigured(),
+    )
 
 
 @login_required
@@ -164,7 +174,119 @@ def AdminBackup():
     backup = Backup()
     if not backup:
         return make_response("Failed to backup", 400)
+    settings = LoadSettings()
+    settings["last_backup"] = int(time.time())
+    SaveSettings(settings)
+    if settings.get("backup_to_telegram", True):
+        SendBackupToTelegram(backup)
     return redirect("/admin/server")
+
+
+@login_required
+@admin_bp.route("/admin/server/settings", methods=["POST"])
+def AdminServerSettings():
+    if not isAdmin(current_user):
+        return abort(404)
+
+    settings = LoadSettings()
+    if "backup_interval_hours" in request.form:
+        try:
+            hours = float(request.form["backup_interval_hours"])
+        except (ValueError, TypeError):
+            return make_response("Invalid backup interval!", 400)
+        settings["backup_interval_hours"] = max(0.0, hours)
+    settings["backup_to_telegram"] = "backup_to_telegram" in request.form
+    SaveSettings(settings)
+
+    Log(
+        "admin",
+        current_user.username
+        + " updated backup settings (interval: "
+        + str(settings.get("backup_interval_hours"))
+        + "h, telegram: "
+        + str(settings.get("backup_to_telegram"))
+        + ")",
+    )
+    return redirect("/admin/server")
+
+
+@login_required
+@admin_bp.route("/admin/server/telegram_test", methods=["POST"])
+def AdminServerTelegramTest():
+    if not isAdmin(current_user):
+        return abort(404)
+
+    from app.config import TelegramConfigured
+    from app.utils import SendTelegramMessage
+
+    if not TelegramConfigured():
+        return make_response("Telegram bot token / admin id not configured in .env", 400)
+    ok = SendTelegramMessage("CWK Admin: Telegram notifications are working.")
+    if not ok:
+        return make_response("Failed to send Telegram message. Check the bot token and chat id.", 400)
+    return redirect("/admin/server")
+
+
+@login_required
+@admin_bp.route("/admin/server/upload_backup", methods=["POST"])
+def AdminServerUploadBackup():
+    """Restore the server from an uploaded backup .zip (db + persist folder)."""
+    if not isAdmin(current_user):
+        return abort(404)
+
+    file = request.files.get("backup_file")
+    if file is None or file.filename == "":
+        return make_response("No backup file uploaded!", 400)
+    if not file.filename.lower().endswith(".zip"):
+        return make_response("Backup must be a .zip archive.", 400)
+
+    tmp_dir = tempfile.mkdtemp(prefix="cwk_restore_")
+    try:
+        zip_path = os.path.join(tmp_dir, "upload.zip")
+        file.save(zip_path)
+        if not zipfile.is_zipfile(zip_path):
+            return make_response("Uploaded file is not a valid zip archive.", 400)
+
+        extract_dir = os.path.join(tmp_dir, "extract")
+        os.makedirs(extract_dir, exist_ok=True)
+        with zipfile.ZipFile(zip_path) as archive:
+            # guard against zip-slip
+            real_extract = os.path.realpath(extract_dir)
+            for member in archive.namelist():
+                if not os.path.realpath(os.path.join(extract_dir, member)).startswith(real_extract):
+                    return make_response("Invalid archive: unsafe path detected.", 400)
+            archive.extractall(extract_dir)
+
+        db_src = None
+        persist_src = None
+        for root, dirs, files in os.walk(extract_dir):
+            if db_src is None and "cardwarskingdom.db" in files:
+                db_src = os.path.join(root, "cardwarskingdom.db")
+            if persist_src is None and "persist" in dirs:
+                persist_src = os.path.join(root, "persist")
+        if db_src is None:
+            return make_response("Invalid backup: database file not found inside archive.", 400)
+
+        # Snapshot the current state first so a bad restore can be undone.
+        Backup()
+
+        shutil.copy(db_src, os.path.join(ROOT_DIR, "instance/cardwarskingdom.db"))
+        if persist_src is not None:
+            persist_dest = os.path.join(ROOT_DIR, "data/persist")
+            if os.path.isdir(persist_dest):
+                shutil.rmtree(persist_dest)
+            shutil.copytree(persist_src, persist_dest)
+
+        db.session.remove()
+        db.engine.dispose()
+
+        Log("admin", current_user.username + " restored the server from an uploaded backup")
+        DiscordWebhookMessage(
+            current_user.username + " restored the server from an uploaded backup"
+        )
+        return redirect("/admin/server")
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 @login_required
@@ -216,6 +338,123 @@ def AdminCreateAdmin():
             + rank,
         )
         return "Admin created! Username: " + username + " Password: " + password
+
+
+@admin_bp.route("/admin/passkey", methods=["POST"])
+def AdminPasskeyLogin():
+    """Passwordless login using a 6-digit passkey only."""
+    passkey = (request.form.get("passkey") or "").strip()
+    if not re.fullmatch(r"\d{6}", passkey):
+        return make_response("Passkey must be exactly 6 digits.", 400)
+
+    for admin in Admin.query.filter_by(passkey_enabled=True).all():
+        if admin.passkey and bcrypt.check_password_hash(admin.passkey, passkey):
+            login_user(admin, remember=True)
+            Log("admin", admin.username + " signed in with passkey")
+            return redirect("/admin/home")
+
+    time.sleep(1)
+    Log("admin", "Failed passkey login attempt from " + IPFromRequest(request))
+    return make_response("Invalid passkey!", 400)
+
+
+@login_required
+@admin_bp.route("/admin/profile")
+def AdminProfile():
+    if not isAdmin(current_user):
+        return abort(404)
+
+    admin = Admin.query.filter_by(username=current_user.username).first()
+    if admin is None:
+        return abort(404)
+    return render_template("admin_profile.html", admin=admin)
+
+
+@login_required
+@admin_bp.route("/admin/profile/email", methods=["POST"])
+def AdminProfileEmail():
+    if not isAdmin(current_user):
+        return abort(404)
+
+    admin = Admin.query.filter_by(username=current_user.username).first()
+    if admin is None:
+        return abort(404)
+
+    email = (request.form.get("email") or "").strip()
+    if email and not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        return make_response("Invalid email address.", 400)
+    admin.email = email or None
+    db.session.commit()
+    Log("admin", admin.username + " updated their profile email")
+    return redirect("/admin/profile")
+
+
+@login_required
+@admin_bp.route("/admin/profile/password", methods=["POST"])
+def AdminProfilePassword():
+    if not isAdmin(current_user):
+        return abort(404)
+
+    admin = Admin.query.filter_by(username=current_user.username).first()
+    if admin is None:
+        return abort(404)
+
+    current = request.form.get("current_password", "")
+    new_password = request.form.get("new_password", "")
+    confirm = request.form.get("confirm_password", "")
+    if not bcrypt.check_password_hash(admin.password, current):
+        return make_response("Current password is incorrect.", 400)
+    if len(new_password) < 8:
+        return make_response("New password must be at least 8 characters.", 400)
+    if new_password != confirm:
+        return make_response("New passwords do not match.", 400)
+
+    admin.password = bcrypt.generate_password_hash(new_password).decode("utf-8")
+    db.session.commit()
+    Log("admin", admin.username + " changed their password")
+    DiscordWebhookMessage(admin.username + " changed their admin password")
+    return redirect("/admin/profile")
+
+
+@login_required
+@admin_bp.route("/admin/profile/passkey", methods=["POST"])
+def AdminProfilePasskey():
+    if not isAdmin(current_user):
+        return abort(404)
+
+    admin = Admin.query.filter_by(username=current_user.username).first()
+    if admin is None:
+        return abort(404)
+
+    passkey = (request.form.get("passkey") or "").strip()
+    confirm = (request.form.get("confirm_passkey") or "").strip()
+    if not re.fullmatch(r"\d{6}", passkey):
+        return make_response("Passkey must be exactly 6 digits.", 400)
+    if passkey != confirm:
+        return make_response("Passkeys do not match.", 400)
+
+    admin.passkey = bcrypt.generate_password_hash(passkey).decode("utf-8")
+    admin.passkey_enabled = True
+    db.session.commit()
+    Log("admin", admin.username + " set a login passkey")
+    return redirect("/admin/profile")
+
+
+@login_required
+@admin_bp.route("/admin/profile/passkey/disable", methods=["POST"])
+def AdminProfilePasskeyDisable():
+    if not isAdmin(current_user):
+        return abort(404)
+
+    admin = Admin.query.filter_by(username=current_user.username).first()
+    if admin is None:
+        return abort(404)
+
+    admin.passkey = None
+    admin.passkey_enabled = False
+    db.session.commit()
+    Log("admin", admin.username + " disabled their login passkey")
+    return redirect("/admin/profile")
 
 
 @login_required
@@ -362,7 +601,9 @@ def AdminPlayer(player):
             DeviceName=player["devicename"],
             Inventory=[],
             CardCollection=[],
+            CardInventory=[],
             Leaders=[],
+            leader_skins={},
             HelperCreature=None,
             invalid_creature_count=0,
             rank_xp_json=json.dumps(GetRankXPTable()),
@@ -389,12 +630,13 @@ def AdminPlayer(player):
             player["devicename"],
         )
 
-    Inventory = game.get("Inventory", [])
+    raw_inventory = game.get("Inventory", [])
+    if not isinstance(raw_inventory, list):
+        raw_inventory = []
 
-    # remove all items that are not creatures
-    if not isinstance(Inventory, list):
-        Inventory = []
-    Inventory = [item for item in Inventory if isinstance(item, dict) and item.get("_T") == "CR"]
+    # creatures vs individual action-card copies
+    Inventory = [item for item in raw_inventory if isinstance(item, dict) and item.get("_T") == "CR"]
+    CardInventory = [item for item in raw_inventory if isinstance(item, dict) and item.get("_T") == "CA"]
 
     tutorial_creature_ids = GetTutorialOnlyCreatureIds()
     invalid_creature_count = sum(
@@ -424,6 +666,21 @@ def AdminPlayer(player):
     if not isinstance(leaders, list):
         leaders = []
 
+    # Per-hero list of skins the player does not own yet (for the Add Skin picker)
+    leader_skins = {}
+    for leader in leaders:
+        if not isinstance(leader, dict):
+            continue
+        base_id = leader.get("ID")
+        if not base_id:
+            continue
+        owned = leader.get("OwnedSkins")
+        if not isinstance(owned, list):
+            owned = []
+        leader_skins[base_id] = [
+            skin for skin in GetLeaderSkins(base_id) if skin not in owned
+        ]
+
     return render_template(
         "admin_player.html",
         player=player,
@@ -444,7 +701,9 @@ def AdminPlayer(player):
         DeviceName=player["devicename"],
         Inventory=Inventory,
         CardCollection=card_collection,
+        CardInventory=CardInventory,
         Leaders=leaders,
+        leader_skins=leader_skins,
         HelperCreature=helper_creature,
         invalid_creature_count=invalid_creature_count,
         rank_xp_json=json.dumps(GetRankXPTable()),
@@ -644,27 +903,41 @@ def AdminPlayerAddCreature(player):
     creature_id = request.form.get("creature_id", "").strip()
     creature_xp = int(request.form.get("creature_xp", 0))
     creature_stars = int(request.form.get("creature_stars", 1))
+    count = safe_int(request.form.get("count", 1), 1)
+    count = max(1, min(10, count))
 
     if not creature_id:
         return make_response("Creature ID is required!", 400)
     if IsTutorialOnlyCreature(creature_id):
         return make_response("This is a tutorial-only creature and cannot be added to a player.", 400)
 
-    new_creature = {
-        "_T": "CR",
-        "ID": creature_id,
-        "Xp": creature_xp,
-        "StarRating": creature_stars,
-    }
+    inventory = game.get("Inventory")
+    if not isinstance(inventory, list):
+        inventory = []
+    next_uid = max(
+        [i.get("UniqueID", 0) for i in inventory if isinstance(i, dict) and i.get("_T") == "CR"],
+        default=0,
+    ) + 1
 
-    if game.get("Inventory") is None:
-        game["Inventory"] = []
-    game["Inventory"].append(new_creature)
+    for _ in range(count):
+        inventory.append({
+            "_T": "CR",
+            "ID": creature_id,
+            "UniqueID": next_uid,
+            "Xp": creature_xp,
+            "Favorite": 0,
+            "Passive": 1,
+            "PassiveFeeds": 0,
+            "StarRating": creature_stars,
+        })
+        next_uid += 1
+
+    game["Inventory"] = inventory
 
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + " added creature " + creature_id + " to player: " + player)
+    Log("admin", current_user.username + f" added {count} x {creature_id} to player: " + player)
     return redirect("/admin/players/" + player)
 
 
@@ -791,6 +1064,33 @@ def AdminPlayerMaxCreature(player, index):
 
 
 @login_required
+@admin_bp.route("/admin/players/<player>/downgrade_creature/<int:index>", methods=["POST"])
+def AdminPlayerDowngradeCreature(player, index):
+    if not isAdmin(current_user):
+        return abort(404)
+
+    db_player = Player.query.filter_by(username=player).first()
+    if db_player is None:
+        return make_response("No player found!", 404)
+
+    game = DecryptGameData(db_player.game)
+    if game is None:
+        return make_response("No game data found!", 400)
+
+    inventory = game.get("Inventory", [])
+    creatures = [item for item in inventory if item.get("_T") == "CR"]
+
+    if 0 <= index < len(creatures):
+        creatures[index]["StarRating"] = 1
+        creatures[index]["Xp"] = 0
+        db_player.game = EncryptGameData(game, player)
+        db.session.commit()
+        Log("admin", current_user.username + f" downgraded creature index {index} for player: " + player)
+
+    return redirect("/admin/players/" + player)
+
+
+@login_required
 @admin_bp.route("/admin/players/<player>/add_card", methods=["POST"])
 def AdminPlayerAddCard(player):
     if not isAdmin(current_user):
@@ -805,16 +1105,77 @@ def AdminPlayerAddCard(player):
         return make_response("No game data found!", 400)
 
     card_id = request.form.get("card_id", "").strip()
+    count = safe_int(request.form.get("count", 1), 1)
+    count = max(1, min(10, count))
     if not card_id:
         return make_response("Card ID is required!", 400)
 
-    new_card = {"ID": card_id, "Stat": 1}
-    if game.get("CardCollection") is None:
-        game["CardCollection"] = []
-    game["CardCollection"].append(new_card)
+    card_collection = game.get("CardCollection")
+    if not isinstance(card_collection, list):
+        card_collection = []
+    if card_id not in {c.get("ID") for c in card_collection if isinstance(c, dict)}:
+        card_collection.append({"ID": card_id, "Stat": 1})
+
+    inventory = game.get("Inventory")
+    if not isinstance(inventory, list):
+        inventory = []
+    next_uid = max([item.get("UniqueID", 0) for item in inventory if isinstance(item, dict)], default=0) + 1
+
+    for _ in range(count):
+        inventory.append({
+            "_T": "CA",
+            "ID": card_id,
+            "UniqueID": next_uid,
+            "Favorite": 0,
+            "CreatureUID": -1,
+            "CreatureSlot": 0,
+        })
+        next_uid += 1
+
+    game["CardCollection"] = card_collection
+    game["Inventory"] = inventory
+
+    db_player.game = EncryptGameData(game, player)
+    db.session.commit()
+
+    Log("admin", current_user.username + f" added {count} x card {card_id} to player: " + player)
+    return redirect("/admin/players/" + player)
+
+
+@login_required
+@admin_bp.route("/admin/players/<player>/add_card_copy/<int:index>", methods=["POST"])
+def AdminPlayerAddCardCopy(player, index):
+    if not isAdmin(current_user):
+        return abort(404)
+
+    db_player = Player.query.filter_by(username=player).first()
+    if db_player is None:
+        return make_response("No player found!", 404)
+
+    game = DecryptGameData(db_player.game)
+    if game is None:
+        return make_response("No game data found!", 400)
 
     inventory = game.get("Inventory", [])
-    next_uid = max([item.get("UniqueID", 0) for item in inventory], default=0) + 1
+    if not isinstance(inventory, list):
+        inventory = []
+    cards = [item for item in inventory if isinstance(item, dict) and item.get("_T") == "CA"]
+
+    if not (0 <= index < len(cards)):
+        return redirect("/admin/players/" + player)
+
+    card_id = cards[index].get("ID")
+    if not card_id:
+        return redirect("/admin/players/" + player)
+
+    card_collection = game.get("CardCollection")
+    if not isinstance(card_collection, list):
+        card_collection = []
+    if card_id not in {c.get("ID") for c in card_collection if isinstance(c, dict)}:
+        card_collection.append({"ID": card_id, "Stat": 1})
+    game["CardCollection"] = card_collection
+
+    next_uid = max([item.get("UniqueID", 0) for item in inventory if isinstance(item, dict)], default=0) + 1
     inventory.append({
         "_T": "CA",
         "ID": card_id,
@@ -828,7 +1189,7 @@ def AdminPlayerAddCard(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + " added card " + card_id + " to player: " + player)
+    Log("admin", current_user.username + f" added a copy of card {card_id} for player: " + player)
     return redirect("/admin/players/" + player)
 
 
@@ -2186,7 +2547,9 @@ def AdminLeaders():
         return abort(404)
     query = (request.args.get("q") or request.args.get("query") or "").strip().lower()
     with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r") as f:
-        leaders = json.load(f)
+        all_leaders = json.load(f)
+    # Leader Book shows base heroes only; skins live under their hero's OwnedSkins.
+    leaders = [l for l in all_leaders if not l.get("SkinOf")]
     if query:
         leaders = [l for l in leaders if query in l.get("ID", "").lower() or query in l.get("Name", "").lower()]
     banned_set = set(GetPvpBanlist().get("banned_leaders", []))

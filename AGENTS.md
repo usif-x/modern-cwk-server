@@ -11,7 +11,8 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
 - **Python 3.11+**, Flask, SQLAlchemy (SQLite), Flask-Login, Flask-Bcrypt
 - **Database**: SQLite at `instance/cardwarskingdom.db`
 - **Frontend**: Tailwind CSS (CDN) + Lucide Icons + shadcn/ui design system (modern, responsive grid, light/dark mode)
-- **Dependencies**: `flask`, `flask_sqlalchemy`, `flask_login`, `flask_bcrypt`, `schedule`, `discord-webhook`
+- **Dependencies**: `flask`, `flask_sqlalchemy`, `flask_login`, `flask_bcrypt`, `schedule`, `discord-webhook`, `python-dotenv`, `requests`
+- **Config**: `.env` (gitignored, copy from `.env.example`) — `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_ID`, optional `BACKUP_INTERVAL_HOURS`
 
 ## File Structure
 
@@ -20,8 +21,9 @@ cwk-server/
 ├── app.py                          # Thin entry point (18 lines)
 ├── app/
 │   ├── __init__.py                 # Flask app factory, db, globals, scheduler
+│   ├── config.py                   # .env loader (Telegram token/id, backup interval)
 │   ├── models.py                   # All DB models
-│   ├── utils.py                    # All helpers (encrypt/decrypt, logging, etc.)
+│   ├── utils.py                    # All helpers (encrypt/decrypt, backups, Telegram, logging, etc.)
 │   └── routes/
 │       ├── __init__.py             # Blueprint registration
 │       ├── game.py                 # Game API routes (client-facing)
@@ -40,9 +42,10 @@ cwk-server/
 │   ├── Blueprints/                 # Game data JSON files (creatures, cards, etc.)
 │   └── logs/                       # Daily log files (YYYY-MM-DD.txt)
 ├── static/admin/                   # Bootstrap CSS/JS assets (legacy)
-├── templates/                      # 21 Jinja2 admin templates
+├── templates/                      # 22 Jinja2 admin templates
 │   ├── admin_base.html             # Base layout (Tailwind + shadcn/ui sidebar & theme toggle)
-│   ├── admin_login.html            # Login page
+│   ├── admin_login.html            # Login page (username/password + passkey)
+│   ├── admin_profile.html          # Secret profile (email, password, passkey)
 │   ├── admin_home.html             # Dashboard
 │   ├── admin_player.html           # Player detail/edit
 │   ├── admin_player_game.html      # Game data viewer
@@ -94,6 +97,9 @@ cwk-server/
 | `username` | String(80), PK | Admin username |
 | `password` | String(80) | Bcrypt password hash |
 | `rank` | Integer | 0 = superadmin |
+| `email` | String(255) | Optional recovery email |
+| `passkey` | String(80) | Bcrypt hash of the 6-digit passkey (optional) |
+| `passkey_enabled` | Boolean | Allow passwordless passkey login |
 
 ### Bans
 | Field | Type | Description |
@@ -168,7 +174,7 @@ Each card has: `{"ID": "<card_id>", "Stat": <level>}`
 
 Each base hero has: `{"ID": "Leader_Finn", "Skin": "Leader_Finn", "OwnedSkins": ["Leader_FinnPajama", ...]}`
 
-Skins are stored inside their base hero's `OwnedSkins` — they must never be added as independent entries in `Leaders` (the client flags this). `db_Leaders.json` contains 32 base heroes and 51 skins; a skin entry has a `SkinOf` field pointing at its base hero.
+Skins are stored inside their base hero's `OwnedSkins` — they must never be added as independent entries in `Leaders` (the client flags this). `db_Leaders.json` contains 32 base heroes and 51 skins; a skin entry has a `SkinOf` field pointing at its base hero. The admin **Leader Book** (`/admin/leaders`) shows base heroes only.
 
 ## Route Reference
 
@@ -229,11 +235,20 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | Method | Route | Description |
 |--------|-------|-------------|
 | GET/POST | `/admin` | Login (auto-creates first admin) |
+| POST | `/admin/passkey` | Passwordless login with a 6-digit passkey only |
 | GET | `/admin/home` | Dashboard |
+| GET | `/admin/profile` | Secret profile (email, password, passkey) |
+| POST | `/admin/profile/email` | Update admin email |
+| POST | `/admin/profile/password` | Change admin password |
+| POST | `/admin/profile/passkey` | Set/replace 6-digit passkey |
+| POST | `/admin/profile/passkey/disable` | Disable passkey login |
 | GET | `/admin/logout` | Logout |
 | GET/POST | `/admin/versions` | Version management |
-| GET | `/admin/server` | Server/backups |
-| GET | `/admin/server/backup` | Trigger backup |
+| GET | `/admin/server` | Server/backups + interval & Telegram settings |
+| GET | `/admin/server/backup` | Trigger backup (and send to Telegram) |
+| POST | `/admin/server/settings` | Save backup interval / Telegram toggle |
+| POST | `/admin/server/telegram_test` | Send a test Telegram message |
+| POST | `/admin/server/upload_backup` | Upload & restore a backup `.zip` |
 | GET | `/admin/server/pull` | Git pull |
 | GET/POST | `/admin/createadmin` | Create admin |
 | GET | `/admin/players` | Player list (sortable) |
@@ -242,12 +257,14 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | GET | `/admin/players/<uuid>/game` | Game data viewer |
 | POST | `/admin/players/<uuid>/game/edit` | Overwrite raw data |
 | POST | `/admin/players/<uuid>/edit` | Edit resources (incl. `MultiplayerName` to rename player) |
-| POST | `/admin/players/<uuid>/add_creature` | Add creature |
+| POST | `/admin/players/<uuid>/add_creature` | Add creatures (1–10 at once) |
 | POST | `/admin/players/<uuid>/delete_creature/<idx>` | Delete creature |
 | POST | `/admin/players/<uuid>/delete_all_creatures` | Delete all creatures |
 | POST | `/admin/players/<uuid>/delete_creatures_bulk` | Multi-delete selected creatures |
 | POST | `/admin/players/<uuid>/max_creature/<idx>` | Max single creature to 5★ |
-| POST | `/admin/players/<uuid>/add_card` | Add action card |
+| POST | `/admin/players/<uuid>/downgrade_creature/<idx>` | Reset a maxed creature to 1★ |
+| POST | `/admin/players/<uuid>/add_card` | Add action card copies (1–10) |
+| POST | `/admin/players/<uuid>/add_card_copy/<idx>` | Duplicate a single action card copy |
 | POST | `/admin/players/<uuid>/delete_card/<idx>` | Delete action card |
 | POST | `/admin/players/<uuid>/delete_all_cards` | Delete all action cards |
 | POST | `/admin/players/<uuid>/delete_cards_bulk` | Multi-delete selected action cards |
@@ -325,6 +342,18 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | `NormalizeLeaders(leaders)` | `app/utils.py` | Fold skin entries into their base hero's `OwnedSkins` |
 | `InvalidUsername(username)` | `app/utils.py` | Validate username |
 | `IPFromRequest(request)` | `app/utils.py` | Extract client IP |
+| `LoadSettings()` / `SaveSettings(d)` | `app/utils.py` | Read/write `data/persist/settings.json` (backup interval, Telegram toggle) |
+| `GetBackupIntervalHours()` | `app/utils.py` | Effective backup interval (setting → `BACKUP_INTERVAL_HOURS` → 4) |
+| `SendTelegramDocument(path, caption)` | `app/utils.py` | Send a file to the admin Telegram chat via bot |
+| `SendBackupToTelegram(zip_path)` | `app/utils.py` | Send a (latest) backup archive to Telegram |
+| `RunScheduledBackup()` | `app/utils.py` | Run a backup when the configured interval elapsed |
+
+## Configuration & Assets
+
+- **`.env`** (gitignored, copy `.env.example`): `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_ID`, optional `BACKUP_INTERVAL_HOURS`
+- **Runtime settings**: `data/persist/settings.json` — `backup_interval_hours`, `backup_to_telegram`, `last_backup`
+- **Auto-backup**: scheduler thread checks every minute in `app/__init__.py::run_scheduler` → `RunScheduledBackup()`; backups go to `backup/*.zip` and optionally Telegram
+- **Restore**: `POST /admin/server/upload_backup` extracts a backup zip (db + `persist/`) after taking a safety snapshot
 
 ## Anti-Cheat / Security
 
@@ -347,6 +376,8 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 - **Admin access**: All admin routes check `@login_required` + `isAdmin(current_user)`
 - **Blueprints**: All routes use Flask Blueprints registered in `app/routes/__init__.py`
 - **File paths**: Always use `ROOT_DIR` for file access (defined in each route file)
+- **Confirm dialogs**: Use SweetAlert2 via `cwkConfirm(message)` / `cwkAlert(message)` (defined in `admin_base.html`); never native `confirm()`/`alert()`. Inline `onclick="return confirm('...')"` is auto-upgraded to a `data-confirm` attribute at load
+- **Leader skins**: Add skins via `/admin/players/<uuid>/add_leader` (a skin ID attaches to its base hero's `OwnedSkins`); the player page has a per-hero "Add Skin" picker
 
 ## Running
 
