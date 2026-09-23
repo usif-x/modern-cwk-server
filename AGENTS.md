@@ -51,7 +51,7 @@ cwk-server/
 │   ├── admin_player_game.html      # Game data viewer
 │   ├── admin_players.html          # Player list
 │   ├── admin_creatures.html        # Creature book (searchable reference)
-│   ├── admin_cards.html            # Action card book (searchable reference)
+│   ├── admin_cards.html            # Auguments book (searchable reference)
 │   ├── admin_leaders.html          # Leader book (searchable reference)
 │   ├── admin_top_pvp.html          # Top PVP players (by Multiplayer Level)
 │   ├── admin_redeemcodes.html      # Redeem codes CRUD
@@ -149,8 +149,8 @@ cwk-server/
 | --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `code`          | String(128), PK | Redeem code (uppercase)                                                                                                                          |
 | `reward_type`   | String(128)     | Currency or item type (`SoftCurrency`, `HardCurrency`, `FreeHardCurrency`, `PvpCurrency`, `EvolutionShards`, `Creature`, `ActionCard`, `Leader`) |
-| `reward_amount` | Integer         | Amount (or Star Rating for Creature, Copies for Action Card)                                                                                     |
-| `reward_item`   | String(128)     | Creature ID, Action Card ID, or Leader ID (for item rewards)                                                                                     |
+| `reward_amount` | Integer         | Amount (or Star Rating for Creature, Copies for Auguments)                                                                                       |
+| `reward_item`   | String(128)     | Creature ID, Auguments ID, or Leader ID (for item rewards)                                                                                       |
 | `enabled`       | Boolean         | Active status                                                                                                                                    |
 | `created_by`    | String(128)     | Admin who created                                                                                                                                |
 
@@ -171,7 +171,7 @@ username=<uuid>&data=<base64(gzip(json))>
 Each item in `Inventory` has a `_T` type discriminator:
 
 - `"CR"` — Creature (has `ID`, `Xp`, `StarRating`, `UniqueID`, `Favorite`, `Passive`)
-- `"CA"` — Action Card (has `ID`, `CreatureUID`, `CreatureSlot`)
+- `"CA"` — Auguments (has `ID`, `CreatureUID`, `CreatureSlot`)
 - `"XP"` — XP Material (has `ID`)
 
 ### CardCollection Items
@@ -271,9 +271,9 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | POST     | `/admin/players/<uuid>/delete_creatures_bulk`    | Multi-delete selected creatures                                                  |
 | POST     | `/admin/players/<uuid>/max_creature/<idx>`       | Max single creature to 5★                                                        |
 | POST     | `/admin/players/<uuid>/downgrade_creature/<idx>` | Reset a maxed creature to 1★                                                     |
-| POST     | `/admin/players/<uuid>/add_card`                 | Add action card copies (1–10)                                                    |
-| POST     | `/admin/players/<uuid>/add_card_copy/<idx>`      | Duplicate a single action card copy                                              |
-| POST     | `/admin/players/<uuid>/delete_card/<idx>`        | Delete action card                                                               |
+| POST     | `/admin/players/<uuid>/add_card`                 | Add Auguments copies (1–10)                                                      |
+| POST     | `/admin/players/<uuid>/add_card_copy/<idx>`      | Duplicate a single Auguments copy                                                |
+| POST     | `/admin/players/<uuid>/delete_card/<idx>`        | Delete Auguments                                                                 |
 | POST     | `/admin/players/<uuid>/delete_all_cards`         | Delete all Auguments                                                             |
 | POST     | `/admin/players/<uuid>/delete_cards_bulk`        | Multi-delete selected Auguments                                                  |
 | POST     | `/admin/players/<uuid>/add_all_creatures`        | Add all 625 collectible creatures (skips `TutorialOnly`)                         |
@@ -316,7 +316,7 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | POST     | `/admin/redeemcodes/delete/<code>`               | Delete redeem code                                                               |
 | POST     | `/admin/redeemcodes/toggle/<code>`               | Toggle redeem code                                                               |
 | GET      | `/admin/creatures`                               | Creature book (searchable)                                                       |
-| GET      | `/admin/cards`                                   | Action card book (searchable)                                                    |
+| GET      | `/admin/cards`                                   | Auguments book (searchable)                                                      |
 | GET      | `/admin/leaders`                                 | Leader book (searchable)                                                         |
 
 ## Key Functions

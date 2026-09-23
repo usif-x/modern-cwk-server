@@ -1,4 +1,5 @@
 import base64
+import bisect
 import copy
 import gzip
 import hashlib
@@ -10,12 +11,10 @@ import time as _time
 from datetime import datetime
 from io import BytesIO
 
-import bisect
-
 import discord_webhook
 from flask import Request
 
-from app import db, badcharaters
+from app import badcharaters, db
 from app.models import Admin, AdminActivity, Bans, Player
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -67,7 +66,7 @@ def DecryptGameData(game):
             return json.loads(input_str)
         except Exception:
             return None
-    encoded_data = input_str[index + 6:]
+    encoded_data = input_str[index + 6 :]
     array = base64.b64decode(encoded_data)
     try:
         with gzip.GzipFile(fileobj=BytesIO(array), mode="rb") as gz:
@@ -89,7 +88,7 @@ def DecryptGameData(game):
 
     json_end = decoded_data.rfind("}")
     if json_end >= 0 and json_end < len(decoded_data) - 1:
-        decoded_data = decoded_data[:json_end + 1]
+        decoded_data = decoded_data[: json_end + 1]
 
     try:
         return json.loads(decoded_data)
@@ -222,10 +221,9 @@ def GetTutorialOnlyCreatureIds():
         try:
             with open(path, "r", encoding="utf-8") as f:
                 for creature in json.load(f):
-                    if (
-                        str(creature.get("TutorialOnly", "")).lower() == "true"
-                        and creature.get("ID")
-                    ):
+                    if str(
+                        creature.get("TutorialOnly", "")
+                    ).lower() == "true" and creature.get("ID"):
                         ids.add(creature["ID"])
         except Exception as e:
             Log("admin", f"Failed to load db_Creatures.json: {e}")
@@ -352,7 +350,6 @@ def GetRankForXP(xp: int) -> int:
     if idx < 0:
         return 1
     return ranks[idx]
-
 
 
 def GetNameFromSave(save):
@@ -513,7 +510,7 @@ _CONTAINER_FIELDS = {
     key for key, value in SAVE_FIELD_DEFAULTS.items() if isinstance(value, (list, dict))
 }
 
-# Valid inventory item discriminators: creature, action card, XP material and
+# Valid inventory item discriminators: creature, Auguments, XP material and
 # evolution material.
 INVENTORY_ITEM_TYPES = ("CR", "CA", "XP", "EV")
 
@@ -554,14 +551,18 @@ def FindBrokenSaveIssues(game):
             item_type = item.get("_T")
             if item_type not in INVENTORY_ITEM_TYPES:
                 issues.append(
-                    "Inventory item #" + str(index) + " has an invalid or missing type (_T)."
+                    "Inventory item #"
+                    + str(index)
+                    + " has an invalid or missing type (_T)."
                 )
             if not item.get("ID"):
                 issues.append("Inventory item #" + str(index) + " is missing its ID.")
             if item_type == "CR":
                 if "UniqueID" not in item:
                     issues.append(
-                        "Creature '" + str(item.get("ID")) + "' is missing its UniqueID."
+                        "Creature '"
+                        + str(item.get("ID"))
+                        + "' is missing its UniqueID."
                     )
                 else:
                     uid = item.get("UniqueID")
@@ -577,12 +578,18 @@ def FindBrokenSaveIssues(game):
                 for field in ("Xp", "StarRating"):
                     if field not in item:
                         issues.append(
-                            "Creature '" + str(item.get("ID")) + "' is missing " + field + "."
+                            "Creature '"
+                            + str(item.get("ID"))
+                            + "' is missing "
+                            + field
+                            + "."
                         )
             elif item_type == "CA":
                 if "UniqueID" not in item:
                     issues.append(
-                        "Action card '" + str(item.get("ID")) + "' is missing its UniqueID."
+                        "Auguments '"
+                        + str(item.get("ID"))
+                        + "' is missing its UniqueID."
                     )
 
     leaders = game.get("Leaders")
@@ -609,7 +616,9 @@ def FindBrokenSaveIssues(game):
                     + "'.OwnedSkins)."
                 )
             if "OwnedSkins" in entry and not isinstance(entry["OwnedSkins"], list):
-                issues.append("Leader '" + str(leader_id) + "' has an invalid OwnedSkins value.")
+                issues.append(
+                    "Leader '" + str(leader_id) + "' has an invalid OwnedSkins value."
+                )
     elif leaders is not None:
         issues.append("Field 'Leaders' should be a list.")
 
@@ -693,7 +702,9 @@ def RepairGameData(game, username="", fallback_name=""):
                 item_type = "CA"
             elif "Xp" in item or "StarRating" in item or "Passive" in item:
                 item_type = "CR"
-            elif item.get("ID", "").startswith("AWK_MAT_") or item.get("ID", "").startswith("EVMAT_"):
+            elif item.get("ID", "").startswith("AWK_MAT_") or item.get(
+                "ID", ""
+            ).startswith("EVMAT_"):
                 item_type = "EV"
             else:
                 item_type = "CR"
@@ -721,11 +732,15 @@ def RepairGameData(game, username="", fallback_name=""):
         if item_type == "CR":
             if "Xp" not in item:
                 item["Xp"] = 0
-                repairs.append("Added missing Xp for creature '" + str(item.get("ID")) + "'.")
+                repairs.append(
+                    "Added missing Xp for creature '" + str(item.get("ID")) + "'."
+                )
             if "StarRating" not in item:
                 item["StarRating"] = 1
                 repairs.append(
-                    "Added missing StarRating for creature '" + str(item.get("ID")) + "'."
+                    "Added missing StarRating for creature '"
+                    + str(item.get("ID"))
+                    + "'."
                 )
             item.setdefault("Favorite", 0)
             item.setdefault("Passive", 1)
@@ -776,9 +791,7 @@ def BuildTransferredGame(source_game, target_game, target_username, target_name=
 
     new_game["PlayerName"] = target_username
     new_game["MultiplayerPlayerName"] = (
-        target_name
-        or target_game.get("MultiplayerPlayerName")
-        or target_username
+        target_name or target_game.get("MultiplayerPlayerName") or target_username
     )
 
     new_game, _ = RepairGameData(
@@ -798,6 +811,7 @@ def IPFromRequest(request: Request):
 
 def PlayerLog(ip, player, message):
     from app.models import Logs
+
     db_log = Logs(
         date=datetime.now().strftime("%Y-%m-%d"),
         time=datetime.now().strftime("%H:%M:%S"),
@@ -957,9 +971,19 @@ def GetAllyInfo(player_id, isally):
 def Backup():
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     os.makedirs(os.path.join(ROOT_DIR, "backup/" + now), exist_ok=True)
-    shutil.copy(os.path.join(ROOT_DIR, "instance/cardwarskingdom.db"), os.path.join(ROOT_DIR, f"backup/{now}/cardwarskingdom.db"))
-    shutil.copytree(os.path.join(ROOT_DIR, "data/persist"), os.path.join(ROOT_DIR, f"backup/{now}/persist"))
-    shutil.make_archive(os.path.join(ROOT_DIR, "backup/" + now), "zip", os.path.join(ROOT_DIR, "backup/" + now))
+    shutil.copy(
+        os.path.join(ROOT_DIR, "instance/cardwarskingdom.db"),
+        os.path.join(ROOT_DIR, f"backup/{now}/cardwarskingdom.db"),
+    )
+    shutil.copytree(
+        os.path.join(ROOT_DIR, "data/persist"),
+        os.path.join(ROOT_DIR, f"backup/{now}/persist"),
+    )
+    shutil.make_archive(
+        os.path.join(ROOT_DIR, "backup/" + now),
+        "zip",
+        os.path.join(ROOT_DIR, "backup/" + now),
+    )
     shutil.rmtree(os.path.join(ROOT_DIR, "backup/" + now))
     zip_path = os.path.join(ROOT_DIR, "backup/" + now + ".zip")
     Log("admin", "Backed up")
@@ -1023,7 +1047,7 @@ def GetBackupIntervalHours():
 
 # --- Telegram -------------------------------------------------------------
 def SendTelegramMessage(text):
-    from app.config import TelegramBotToken, TelegramAdminId
+    from app.config import TelegramAdminId, TelegramBotToken
 
     token = TelegramBotToken()
     chat_id = TelegramAdminId()
@@ -1044,7 +1068,7 @@ def SendTelegramMessage(text):
 
 
 def SendTelegramDocument(file_path, caption=""):
-    from app.config import TelegramBotToken, TelegramAdminId
+    from app.config import TelegramAdminId, TelegramBotToken
 
     token = TelegramBotToken()
     chat_id = TelegramAdminId()
@@ -1063,7 +1087,10 @@ def SendTelegramDocument(file_path, caption=""):
                 timeout=300,
             )
         if not resp.ok:
-            Log("admin", f"Telegram sendDocument failed: {resp.status_code} {resp.text[:200]}")
+            Log(
+                "admin",
+                f"Telegram sendDocument failed: {resp.status_code} {resp.text[:200]}",
+            )
         return resp.ok
     except Exception as e:
         Log("admin", f"Failed to send Telegram document: {e}")
@@ -1156,7 +1183,9 @@ def GetPlayerWins(player_id):
     if game["Zxcvbnm"]:
         return None
     currentSeason = ""
-    with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_PVPSeasons.json")) as f:
+    with open(
+        os.path.join(ROOT_DIR, "data/persist/Blueprints/db_PVPSeasons.json")
+    ) as f:
         seasons = json.load(f)
         seasons = list(filter(lambda x: "EndDate" in x, seasons))
         for season in seasons:
@@ -1207,4 +1236,3 @@ def SavePvpBanlist(data):
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
     return True
-

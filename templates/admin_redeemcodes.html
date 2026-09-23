@@ -98,7 +98,7 @@ endblock %} {% block breadcrumb %}Redeem Codes{% endblock %} {% block content %}
             <option value="Creature" data-category="creature">
               Creature (5★ or Custom)
             </option>
-            <option value="ActionCard" data-category="card">Action Card</option>
+            <option value="ActionCard" data-category="card">Auguments</option>
             <option value="Leader" data-category="leader">Hero / Leader</option>
           </optgroup>
         </select>
@@ -216,7 +216,7 @@ endblock %} {% block breadcrumb %}Redeem Codes{% endblock %} {% block content %}
               <span
                 class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
               >
-                <i data-lucide="layers" class="w-3 h-3"></i> Action Card
+                <i data-lucide="layers" class="w-3 h-3"></i> Auguments
               </span>
               {% elif c.reward_type in ["Leader", "Hero"] %}
               <span
@@ -406,7 +406,7 @@ endblock %} {% block breadcrumb %}Redeem Codes{% endblock %} {% block content %}
       input.disabled = false;
       input.required = true;
       input.setAttribute("list", "cards_list");
-      input.placeholder = "Search action card (e.g. Card_Corn_01)...";
+      input.placeholder = "Search Auguments (e.g. Card_Corn_01)...";
       label.innerHTML =
         '<i data-lucide="layers" class="w-3.5 h-3.5 text-primary"></i> Select Card';
       amountLabel.innerHTML =

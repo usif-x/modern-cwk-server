@@ -15,7 +15,7 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
 - **Interactive Player Event Logs** — Audit trail with smart classification badges, compact single-line previews, and a full-featured modal dialog with structured parameter cards, syntax-highlighted JSON viewer, and instant clipboard copy
 - **Admin Panel** — Modern, responsive grid admin panel inspired by shadcn/ui (light/dark mode, Tailwind CSS, Lucide icons):
   - Player management (view, edit resources, rank sync, ban/unban, JSON save export/import)
-  - Creature, action card, and leader tools (bulk multi-select deletion, delete all, max to 5★, add all 625 collectible creatures, 695 cards, and 32 base heroes)
+  - Creature, Auguments, and leader tools (bulk multi-select deletion, delete all, max to 5★, add all 625 collectible creatures, 695 cards, and 32 base heroes)
   - Heroes and skins are handled separately: "Add All Heroes" adds only base leaders, and "Add All Skins" attaches skins to owned heroes via `OwnedSkins` (never as independent heroes)
   - Tutorial-only creatures are automatically skipped so granting them can't trigger the client's `Zxcvbnm` PVP-ban flag; a cleanup button removes any already present and clears the flag
   - Interactive reference books for all creatures, Auguments, and leaders
@@ -148,10 +148,10 @@ cwk-server/
 | `/admin/players/<uuid>/game`                     | Structured game save viewer and raw editor                                          |
 | `/admin/players/<uuid>/fix_save`                 | Detect & repair broken save fields (no data deleted)                                |
 | `/admin/players/<uuid>/transfer_progress`        | Copy progress to another account (keeps target name/currencies)                     |
-| `/admin/players/<uuid>/add_card_copy/<idx>`      | Duplicate an action card                                                            |
+| `/admin/players/<uuid>/add_card_copy/<idx>`      | Duplicate an Auguments                                                              |
 | `/admin/players/<uuid>/downgrade_creature/<idx>` | Reset a maxed creature to 1★                                                        |
 | `/admin/creatures`                               | Searchable Creature Book with PVP ban toggles                                       |
-| `/admin/cards`                                   | Searchable Action Card Book                                                         |
+| `/admin/cards`                                   | Searchable Auguments Book                                                           |
 | `/admin/leaders`                                 | Searchable Leader / Hero Book                                                       |
 | `/admin/redeemcodes`                             | Redeem codes CRUD with autocomplete item picker                                     |
 | `/admin/pvp_banlist`                             | Manage PVP banned creatures, leaders & raw JSON                                     |
@@ -188,7 +188,7 @@ username=<uuid>&data=<base64(gzip(json))>
 | `Zxcvbnm`              | PVP ban flag (0 = active, 1 = banned)                      |
 | `UsedRedeemCodes`      | Array of previously redeemed promotional code strings      |
 | `Inventory`            | Inventory items array (`CR`, `CA`, `XP`)                   |
-| `CardCollection`       | Action card collection dictionary                          |
+| `CardCollection`       | Auguments collection dictionary                            |
 | `Leaders`              | Owned leaders and unlocked skins                           |
 | `BattleHistory`        | PVP battle logs                                            |
 
@@ -197,7 +197,7 @@ username=<uuid>&data=<base64(gzip(json))>
 | `_T` | Type        | Fields                                                                      |
 | ---- | ----------- | --------------------------------------------------------------------------- |
 | `CR` | Creature    | `ID`, `Xp`, `StarRating`, `UniqueID`, `Favorite`, `Passive`, `PassiveFeeds` |
-| `CA` | Action Card | `ID`, `UniqueID`, `CreatureUID`, `CreatureSlot`, `Favorite`                 |
+| `CA` | Auguments   | `ID`, `UniqueID`, `CreatureUID`, `CreatureSlot`, `Favorite`                 |
 | `XP` | XP Material | `ID`                                                                        |
 
 ## Database

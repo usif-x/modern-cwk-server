@@ -1,14 +1,24 @@
-import json, time
+import json
+import time
 from urllib.parse import parse_qs
+
 from flask import Blueprint, jsonify, make_response, request
 from flask_login import current_user
 
 from app import db
 from app.models import Player, RedeemCode
 from app.utils import (
-    DecryptGameData, EncryptGameData, IPFromRequest, InvalidUsername,
-    IsUserBanned, Log, PlayerLog, SystemBan, DiscordWebhookMessage,
-    safe_int, GetRankForXP,
+    DecryptGameData,
+    DiscordWebhookMessage,
+    EncryptGameData,
+    GetRankForXP,
+    InvalidUsername,
+    IPFromRequest,
+    IsUserBanned,
+    Log,
+    PlayerLog,
+    SystemBan,
+    safe_int,
 )
 
 multiplayer_bp = Blueprint("multiplayer_bp", __name__)
@@ -36,15 +46,27 @@ def MultiplayerNewPlayer():
 
     try:
         client_game = DecryptGameData(db_user.game)
-        admin_lvl = safe_int(client_game.get("AdminLeaderLevel", 0)) if client_game else 0
-        saved_lvl = safe_int(client_game.get("PlayersLastSavedLevel", 0)) if client_game else 0
-        xp_lvl = GetRankForXP(safe_int(client_game.get("RankXP", 0))) if client_game else 0
+        admin_lvl = (
+            safe_int(client_game.get("AdminLeaderLevel", 0)) if client_game else 0
+        )
+        saved_lvl = (
+            safe_int(client_game.get("PlayersLastSavedLevel", 0)) if client_game else 0
+        )
+        xp_lvl = (
+            GetRankForXP(safe_int(client_game.get("RankXP", 0))) if client_game else 0
+        )
         c_level = safe_int(clientData.get("leader_level", 0))
-        db_user.leader_level = max(db_user.leader_level or 0, admin_lvl, saved_lvl, xp_lvl, c_level)
+        db_user.leader_level = max(
+            db_user.leader_level or 0, admin_lvl, saved_lvl, xp_lvl, c_level
+        )
     except Exception:
-        db_user.leader_level = safe_int(clientData.get("leader_level", 0), db_user.leader_level or 0)
+        db_user.leader_level = safe_int(
+            clientData.get("leader_level", 0), db_user.leader_level or 0
+        )
 
-    db_user.allyboxspace = safe_int(clientData.get("allyboxspace", db_user.allyboxspace or 0))
+    db_user.allyboxspace = safe_int(
+        clientData.get("allyboxspace", db_user.allyboxspace or 0)
+    )
     db_user.level = max(safe_int(clientData.get("level", 0)), db_user.level or 0)
     db.session.commit()
 
@@ -92,13 +114,19 @@ def MultiplayerUpdateDeckName():
         pass
 
     admin_lvl = safe_int(client_game.get("AdminLeaderLevel", 0)) if client_game else 0
-    saved_lvl = safe_int(client_game.get("PlayersLastSavedLevel", 0)) if client_game else 0
+    saved_lvl = (
+        safe_int(client_game.get("PlayersLastSavedLevel", 0)) if client_game else 0
+    )
     xp_lvl = GetRankForXP(safe_int(client_game.get("RankXP", 0))) if client_game else 0
     authorized_rank = max(db_user.leader_level or 0, admin_lvl, saved_lvl, xp_lvl)
     client_leader_level = safe_int(clientData.get("leader_level", 0))
 
     # Anti-cheat check: only ban if client reports a level far exceeding any authorized level
-    if (db_user.leader_level is None or db_user.leader_level == 0) and authorized_rank <= 1 and client_leader_level > 5:
+    if (
+        (db_user.leader_level is None or db_user.leader_level == 0)
+        and authorized_rank <= 1
+        and client_leader_level > 5
+    ):
         DiscordWebhookMessage(
             f"{clientData['player_id']} attempted to set leader level to a {clientData['leader_level']} on a fresh account! IP: "
             + IPFromRequest(request)
@@ -113,7 +141,9 @@ def MultiplayerUpdateDeckName():
 
     # Safely update leader level: never downgrade below authorized rank
     db_user.leader_level = max(authorized_rank, client_leader_level)
-    db_user.allyboxspace = safe_int(clientData.get("allyboxspace", db_user.allyboxspace or 0))
+    db_user.allyboxspace = safe_int(
+        clientData.get("allyboxspace", db_user.allyboxspace or 0)
+    )
     db.session.commit()
 
     PlayerLog(
@@ -191,25 +221,41 @@ def RedeemCodeAPI():
         reward_desc = f"{reward_amount} Evolution Shards"
     elif reward_type == "Creature":
         if not reward_item:
-            return jsonify({"success": False, "message": "No creature specified for this code"})
+            return jsonify(
+                {"success": False, "message": "No creature specified for this code"}
+            )
         if game.get("Inventory") is None:
             game["Inventory"] = []
-        next_uid = max([item.get("UniqueID", 0) for item in game["Inventory"] if item.get("_T") == "CR"], default=0) + 1
+        next_uid = (
+            max(
+                [
+                    item.get("UniqueID", 0)
+                    for item in game["Inventory"]
+                    if item.get("_T") == "CR"
+                ],
+                default=0,
+            )
+            + 1
+        )
         stars = min(max(reward_amount, 1), 5) if reward_amount else 1
-        game["Inventory"].append({
-            "_T": "CR",
-            "ID": reward_item,
-            "UniqueID": next_uid,
-            "Xp": 0,
-            "StarRating": stars,
-            "Favorite": 0,
-            "Passive": 1,
-            "PassiveFeeds": 0,
-        })
+        game["Inventory"].append(
+            {
+                "_T": "CR",
+                "ID": reward_item,
+                "UniqueID": next_uid,
+                "Xp": 0,
+                "StarRating": stars,
+                "Favorite": 0,
+                "Passive": 1,
+                "PassiveFeeds": 0,
+            }
+        )
         reward_desc = f"{stars}★ {reward_item} Creature"
     elif reward_type in ("ActionCard", "Card"):
         if not reward_item:
-            return jsonify({"success": False, "message": "No action card specified for this code"})
+            return jsonify(
+                {"success": False, "message": "No Auguments specified for this code"}
+            )
         if game.get("CardCollection") is None:
             game["CardCollection"] = []
         if not any(c.get("ID") == reward_item for c in game["CardCollection"]):
@@ -219,35 +265,50 @@ def RedeemCodeAPI():
             game["Inventory"] = []
         count = max(1, reward_amount)
         for _ in range(count):
-            next_uid = max([item.get("UniqueID", 0) for item in game["Inventory"]], default=0) + 1
-            game["Inventory"].append({
-                "_T": "CA",
-                "ID": reward_item,
-                "UniqueID": next_uid,
-                "Favorite": 0,
-                "CreatureUID": -1,
-                "CreatureSlot": 0,
-            })
-        reward_desc = f"{count}x {reward_item} Action Card"
+            next_uid = (
+                max([item.get("UniqueID", 0) for item in game["Inventory"]], default=0)
+                + 1
+            )
+            game["Inventory"].append(
+                {
+                    "_T": "CA",
+                    "ID": reward_item,
+                    "UniqueID": next_uid,
+                    "Favorite": 0,
+                    "CreatureUID": -1,
+                    "CreatureSlot": 0,
+                }
+            )
+        reward_desc = f"{count}x {reward_item} Auguments"
     elif reward_type in ("Leader", "Hero"):
         if not reward_item:
-            return jsonify({"success": False, "message": "No leader specified for this code"})
+            return jsonify(
+                {"success": False, "message": "No leader specified for this code"}
+            )
         leaders = game.get("Leaders", [])
         if not any(l.get("ID") == reward_item for l in leaders):
             leaders.append({"ID": reward_item, "Skin": reward_item, "OwnedSkins": []})
             game["Leaders"] = leaders
         reward_desc = f"Leader {reward_item}"
     else:
-        return jsonify({"success": False, "message": f"Unsupported reward type: {reward_type}"})
+        return jsonify(
+            {"success": False, "message": f"Unsupported reward type: {reward_type}"}
+        )
 
     used_codes.append(code_upper)
 
     db_user.game = EncryptGameData(game, player_id)
     db.session.commit()
 
-    PlayerLog(IPFromRequest(request), player_id, f"Redeemed code: {code_upper} - {reward_type} {reward_item or ''} (+{reward_amount})")
+    PlayerLog(
+        IPFromRequest(request),
+        player_id,
+        f"Redeemed code: {code_upper} - {reward_type} {reward_item or ''} (+{reward_amount})",
+    )
 
-    return jsonify({
-        "success": True,
-        "message": f"Redeemed {code_upper} for {reward_desc}",
-    })
+    return jsonify(
+        {
+            "success": True,
+            "message": f"Redeemed {code_upper} for {reward_desc}",
+        }
+    )
