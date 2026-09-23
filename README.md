@@ -59,6 +59,21 @@ python app.py --debug
 
 > **Note**: The first admin account is auto-created on first login if no admin exists. Check the terminal output for the generated password.
 
+## Deploy to Heroku
+
+Install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli), log in, and run these commands from the project root:
+
+```bash
+heroku login
+heroku create your-app-name
+heroku config:set SECRET_KEY="$(openssl rand -hex 32)"
+heroku config:set TELEGRAM_BOT_TOKEN="your-token" TELEGRAM_ADMIN_ID="your-chat-id"
+git push heroku main
+heroku open
+```
+
+The `Procfile` starts the app with Gunicorn and binds it to Heroku's `$PORT`. Telegram variables are optional. Heroku's filesystem is ephemeral, so this app's SQLite database, logs, backups, and runtime settings can be lost when the dyno restarts. Use an external persistent database and storage service before relying on the deployment for production data.
+
 ## Project Structure
 
 ```
@@ -86,107 +101,109 @@ cwk-server/
 
 ### Game API
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Health check |
-| GET/PUT | `/persist/game` | Game save (by `Player-Id` header) |
-| GET/PUT | `/persist/<uuid>/game` | Game save (by UUID) |
-| GET | `/static/version.txt` | Version string + maintenance status |
-| GET | `/persist/static/manifest.json` | Client asset manifest |
-| GET | `/persist/static/blueprints` | All blueprints bundle (v1.18.0+) |
-| GET | `/persist/static/Blueprints/<file>` | Blueprint data file |
-| GET/POST | `/persist/static/pvp_banlist` | Active PVP season & banned creatures/leaders |
-| POST | `/account/gcAuth/` | Game Center authentication |
-| POST | `/persist/user_action2/` | User tracking action |
+| Method   | Endpoint                            | Description                                  |
+| -------- | ----------------------------------- | -------------------------------------------- |
+| GET      | `/`                                 | Health check                                 |
+| GET/PUT  | `/persist/game`                     | Game save (by `Player-Id` header)            |
+| GET/PUT  | `/persist/<uuid>/game`              | Game save (by UUID)                          |
+| GET      | `/static/version.txt`               | Version string + maintenance status          |
+| GET      | `/persist/static/manifest.json`     | Client asset manifest                        |
+| GET      | `/persist/static/blueprints`        | All blueprints bundle (v1.18.0+)             |
+| GET      | `/persist/static/Blueprints/<file>` | Blueprint data file                          |
+| GET/POST | `/persist/static/pvp_banlist`       | Active PVP season & banned creatures/leaders |
+| POST     | `/account/gcAuth/`                  | Game Center authentication                   |
+| POST     | `/persist/user_action2/`            | User tracking action                         |
 
 ### Friend System
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/persist/friends/<uuid>` | Get friend list |
-| POST | `/persist/friends_find_candidatesDW/` | Search for friends |
-| POST | `/persist/friends_request_withmyinfoDW/` | Send friend request |
-| POST | `/persist/friends_confirm_request_withmyinfoDW/` | Accept request |
-| GET | `/persist/friends_deny_request/<uuid>/<invite_id>` | Deny request |
-| GET | `/persist/friends_remove/<uuid>/<invite_id>` | Remove friend |
-| POST | `/persist/friends_use_friendDW/` | Use ally helper (increment help) |
-| POST | `/persist/friends_use_playerDW/` | Use anonymous helper |
+| Method | Endpoint                                           | Description                      |
+| ------ | -------------------------------------------------- | -------------------------------- |
+| GET    | `/persist/friends/<uuid>`                          | Get friend list                  |
+| POST   | `/persist/friends_find_candidatesDW/`              | Search for friends               |
+| POST   | `/persist/friends_request_withmyinfoDW/`           | Send friend request              |
+| POST   | `/persist/friends_confirm_request_withmyinfoDW/`   | Accept request                   |
+| GET    | `/persist/friends_deny_request/<uuid>/<invite_id>` | Deny request                     |
+| GET    | `/persist/friends_remove/<uuid>/<invite_id>`       | Remove friend                    |
+| POST   | `/persist/friends_use_friendDW/`                   | Use ally helper (increment help) |
+| POST   | `/persist/friends_use_playerDW/`                   | Use anonymous helper             |
 
 ### Multiplayer & Redeem Codes
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/multiplayer/new_player/` | Set multiplayer profile |
-| POST | `/multiplayer/update_deck_name/` | Update deck/profile & anti-cheat check |
-| POST | `/multiplayer/redeemcodeDW/` | Redeem code for currencies, creatures, cards, or heroes |
-| POST | `/dw_leaderboard/fetchentries/` | PVP leaderboard entries |
+| Method | Endpoint                         | Description                                             |
+| ------ | -------------------------------- | ------------------------------------------------------- |
+| POST   | `/multiplayer/new_player/`       | Set multiplayer profile                                 |
+| POST   | `/multiplayer/update_deck_name/` | Update deck/profile & anti-cheat check                  |
+| POST   | `/multiplayer/redeemcodeDW/`     | Redeem code for currencies, creatures, cards, or heroes |
+| POST   | `/dw_leaderboard/fetchentries/`  | PVP leaderboard entries                                 |
 
 ### Admin Panel
 
-| Endpoint | Description |
-|----------|-------------|
-| `/admin` | Login & first-time setup |
-| `/admin/home` | System dashboard with stats & recent activity |
-| `/admin/players` | Sortable player list with bulk ban/unban/delete |
-| `/admin/top_pvp` | Top PVP Players ranked by Multiplayer Level (1 = best) |
-| `/admin/players/<uuid>` | Player details, resource editor, multi-item actions (incl. change multiplayer name) |
-| `/admin/players/<uuid>/game` | Structured game save viewer and raw editor |
-| `/admin/players/<uuid>/fix_save` | Detect & repair broken save fields (no data deleted) |
-| `/admin/players/<uuid>/transfer_progress` | Copy progress to another account (keeps target name/currencies) |
-| `/admin/players/<uuid>/add_card_copy/<idx>` | Duplicate an action card |
-| `/admin/players/<uuid>/downgrade_creature/<idx>` | Reset a maxed creature to 1★ |
-| `/admin/creatures` | Searchable Creature Book with PVP ban toggles |
-| `/admin/cards` | Searchable Action Card Book |
-| `/admin/leaders` | Searchable Leader / Hero Book |
-| `/admin/redeemcodes` | Redeem codes CRUD with autocomplete item picker |
-| `/admin/pvp_banlist` | Manage PVP banned creatures, leaders & raw JSON |
-| `/admin/logs` | Audit log with interactive structured detail modal |
-| `/admin/bannedplayers` | Banned players list |
-| `/admin/bannedips` | Banned IP addresses list |
-| `/admin/profile` | Secret Profile: email, password, 6-digit passkey |
-| `/admin/passkey` | Passwordless login using only a 6-digit passkey |
-| `/admin/server` | Manual backups, interval/Telegram settings, upload & restore, git pull |
-| `/admin/versions` | Client version and maintenance toggles |
+| Endpoint                                         | Description                                                                         |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `/admin`                                         | Login & first-time setup                                                            |
+| `/admin/home`                                    | System dashboard with stats & recent activity                                       |
+| `/admin/players`                                 | Sortable player list with bulk ban/unban/delete                                     |
+| `/admin/top_pvp`                                 | Top PVP Players ranked by Multiplayer Level (1 = best)                              |
+| `/admin/players/<uuid>`                          | Player details, resource editor, multi-item actions (incl. change multiplayer name) |
+| `/admin/players/<uuid>/game`                     | Structured game save viewer and raw editor                                          |
+| `/admin/players/<uuid>/fix_save`                 | Detect & repair broken save fields (no data deleted)                                |
+| `/admin/players/<uuid>/transfer_progress`        | Copy progress to another account (keeps target name/currencies)                     |
+| `/admin/players/<uuid>/add_card_copy/<idx>`      | Duplicate an action card                                                            |
+| `/admin/players/<uuid>/downgrade_creature/<idx>` | Reset a maxed creature to 1★                                                        |
+| `/admin/creatures`                               | Searchable Creature Book with PVP ban toggles                                       |
+| `/admin/cards`                                   | Searchable Action Card Book                                                         |
+| `/admin/leaders`                                 | Searchable Leader / Hero Book                                                       |
+| `/admin/redeemcodes`                             | Redeem codes CRUD with autocomplete item picker                                     |
+| `/admin/pvp_banlist`                             | Manage PVP banned creatures, leaders & raw JSON                                     |
+| `/admin/logs`                                    | Audit log with interactive structured detail modal                                  |
+| `/admin/bannedplayers`                           | Banned players list                                                                 |
+| `/admin/bannedips`                               | Banned IP addresses list                                                            |
+| `/admin/profile`                                 | Secret Profile: email, password, 6-digit passkey                                    |
+| `/admin/passkey`                                 | Passwordless login using only a 6-digit passkey                                     |
+| `/admin/server`                                  | Manual backups, interval/Telegram settings, upload & restore, git pull              |
+| `/admin/versions`                                | Client version and maintenance toggles                                              |
 
 ## Game Data Format
 
 Player saves are stored in `Player.game` as:
+
 ```
 username=<uuid>&data=<base64(gzip(json))>
 ```
 
 ### Key JSON Fields
 
-| Field | Description |
-|-------|-------------|
-| `SoftCurrency` | Coins |
-| `HardCurrency` | Gems (total) |
-| `PaidHardCurrency` | Purchased gems |
-| `FreeHardCurrency` | Earned gems |
-| `PvpCurrency` | PVP Wishbones |
-| `EvolutionShards` | Evolution shards |
-| `InventorySpace` | Inventory capacity |
-| `MultiplayerLevel` | PVP league level (1 = Super Amadeus best, 25 = Dweeb) |
+| Field                  | Description                                                |
+| ---------------------- | ---------------------------------------------------------- |
+| `SoftCurrency`         | Coins                                                      |
+| `HardCurrency`         | Gems (total)                                               |
+| `PaidHardCurrency`     | Purchased gems                                             |
+| `FreeHardCurrency`     | Earned gems                                                |
+| `PvpCurrency`          | PVP Wishbones                                              |
+| `EvolutionShards`      | Evolution shards                                           |
+| `InventorySpace`       | Inventory capacity                                         |
+| `MultiplayerLevel`     | PVP league level (1 = Super Amadeus best, 25 = Dweeb)      |
 | `BestMultiplayerLevel` | Best PVP league reached (kept equal to `MultiplayerLevel`) |
-| `RankXP` | Cumulative rank experience |
-| `Zxcvbnm` | PVP ban flag (0 = active, 1 = banned) |
-| `UsedRedeemCodes` | Array of previously redeemed promotional code strings |
-| `Inventory` | Inventory items array (`CR`, `CA`, `XP`) |
-| `CardCollection` | Action card collection dictionary |
-| `Leaders` | Owned leaders and unlocked skins |
-| `BattleHistory` | PVP battle logs |
+| `RankXP`               | Cumulative rank experience                                 |
+| `Zxcvbnm`              | PVP ban flag (0 = active, 1 = banned)                      |
+| `UsedRedeemCodes`      | Array of previously redeemed promotional code strings      |
+| `Inventory`            | Inventory items array (`CR`, `CA`, `XP`)                   |
+| `CardCollection`       | Action card collection dictionary                          |
+| `Leaders`              | Owned leaders and unlocked skins                           |
+| `BattleHistory`        | PVP battle logs                                            |
 
 ### Inventory Types
 
-| `_T` | Type | Fields |
-|------|------|--------|
-| `CR` | Creature | `ID`, `Xp`, `StarRating`, `UniqueID`, `Favorite`, `Passive`, `PassiveFeeds` |
-| `CA` | Action Card | `ID`, `UniqueID`, `CreatureUID`, `CreatureSlot`, `Favorite` |
-| `XP` | XP Material | `ID` |
+| `_T` | Type        | Fields                                                                      |
+| ---- | ----------- | --------------------------------------------------------------------------- |
+| `CR` | Creature    | `ID`, `Xp`, `StarRating`, `UniqueID`, `Favorite`, `Passive`, `PassiveFeeds` |
+| `CA` | Action Card | `ID`, `UniqueID`, `CreatureUID`, `CreatureSlot`, `Favorite`                 |
+| `XP` | XP Material | `ID`                                                                        |
 
 ## Database
 
 SQLite database located at `instance/cardwarskingdom.db` with models:
+
 - `player` — Player accounts, profiles, and encrypted saves
 - `admin` — Admin credentials, rank, `email`, and optional `passkey` / `passkey_enabled`
 - `bans` — UUID and IP ban entries (`expires` = unix timestamp, `0`/NULL = permanent)

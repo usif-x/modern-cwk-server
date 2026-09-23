@@ -6,3 +6,4 @@ schedule
 discord-webhook
 python-dotenv
 requests
+gunicorn
