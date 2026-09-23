@@ -70,82 +70,89 @@ cwk-server/
 ## Database Models
 
 ### Player
-| Field | Type | Description |
-|-------|------|-------------|
-| `username` | String(80), PK | Player UUID |
-| `game` | Text | Encrypted game save (base64+gzip JSON) |
-| `multiplayer_name` | String(128) | Display name |
-| `icon` | String(128) | Player icon |
-| `deck` | String(1024) | Deck data |
-| `deck_rank` | String(16) | Deck rank |
-| `landscapes` | String(1024) | Landscape data |
-| `helper_creature` | String(1024) | Helper creature (JSON) |
-| `leader` | String(128) | Leader character |
-| `leader_level` | Integer | Rank/level |
-| `allyboxspace` | Integer | Ally box capacity |
-| `level` | Integer | Player level |
-| `friends` | Text, default="[]" | JSON array of friend UUIDs |
-| `friend_requests` | String(8192), default="[]" | JSON array of pending request UUIDs |
-| `last_online` | Integer | Unix timestamp |
-| `helpcount` | Integer | Help count |
-| `anonymoushelpcount` | Integer | Anonymous help count |
-| `devicename` | String(128) | Bound device name |
+
+| Field                | Type                       | Description                            |
+| -------------------- | -------------------------- | -------------------------------------- |
+| `username`           | String(80), PK             | Player UUID                            |
+| `game`               | Text                       | Encrypted game save (base64+gzip JSON) |
+| `multiplayer_name`   | String(128)                | Display name                           |
+| `icon`               | String(128)                | Player icon                            |
+| `deck`               | String(1024)               | Deck data                              |
+| `deck_rank`          | String(16)                 | Deck rank                              |
+| `landscapes`         | String(1024)               | Landscape data                         |
+| `helper_creature`    | String(1024)               | Helper creature (JSON)                 |
+| `leader`             | String(128)                | Leader character                       |
+| `leader_level`       | Integer                    | Rank/level                             |
+| `allyboxspace`       | Integer                    | Ally box capacity                      |
+| `level`              | Integer                    | Player level                           |
+| `friends`            | Text, default="[]"         | JSON array of friend UUIDs             |
+| `friend_requests`    | String(8192), default="[]" | JSON array of pending request UUIDs    |
+| `last_online`        | Integer                    | Unix timestamp                         |
+| `helpcount`          | Integer                    | Help count                             |
+| `anonymoushelpcount` | Integer                    | Anonymous help count                   |
+| `devicename`         | String(128)                | Bound device name                      |
 
 ### Admin
-| Field | Type | Description |
-|-------|------|-------------|
-| `username` | String(80), PK | Admin username |
-| `password` | String(80) | Bcrypt password hash |
-| `rank` | Integer | 0 = superadmin |
-| `email` | String(255) | Optional recovery email |
-| `passkey` | String(80) | Bcrypt hash of the 6-digit passkey (optional) |
-| `passkey_enabled` | Boolean | Allow passwordless passkey login |
+
+| Field             | Type           | Description                                   |
+| ----------------- | -------------- | --------------------------------------------- |
+| `username`        | String(80), PK | Admin username                                |
+| `password`        | String(80)     | Bcrypt password hash                          |
+| `rank`            | Integer        | 0 = superadmin                                |
+| `email`           | String(255)    | Optional recovery email                       |
+| `passkey`         | String(80)     | Bcrypt hash of the 6-digit passkey (optional) |
+| `passkey_enabled` | Boolean        | Allow passwordless passkey login              |
 
 ### Bans
-| Field | Type | Description |
-|-------|------|-------------|
-| `username` | String(80), PK | Player UUID or IP address |
-| `bantype` | String(80) | `"userid"` or `"ip"` |
-| `author` | String(80) | Admin username or `"SYSTEM"` |
-| `time` | Integer | Unix timestamp |
-| `expires` | Integer | Unix expiry timestamp; `0`/NULL = permanent |
+
+| Field      | Type           | Description                                 |
+| ---------- | -------------- | ------------------------------------------- |
+| `username` | String(80), PK | Player UUID or IP address                   |
+| `bantype`  | String(80)     | `"userid"` or `"ip"`                        |
+| `author`   | String(80)     | Admin username or `"SYSTEM"`                |
+| `time`     | Integer        | Unix timestamp                              |
+| `expires`  | Integer        | Unix expiry timestamp; `0`/NULL = permanent |
 
 ### Logs
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | Integer, PK | Auto-increment |
-| `date` | String(80) | `"YYYY-MM-DD"` |
-| `time` | String(80) | `"HH:MM:SS"` |
-| `player` | String(80) | Player UUID |
-| `ip` | String(80) | Client IP |
-| `message` | String(8192) | Log message |
+
+| Field     | Type         | Description    |
+| --------- | ------------ | -------------- |
+| `id`      | Integer, PK  | Auto-increment |
+| `date`    | String(80)   | `"YYYY-MM-DD"` |
+| `time`    | String(80)   | `"HH:MM:SS"`   |
+| `player`  | String(80)   | Player UUID    |
+| `ip`      | String(80)   | Client IP      |
+| `message` | String(8192) | Log message    |
 
 ### UpsightLogs
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | Integer, PK | Auto-increment |
-| `player_id` | String(80) | Player UUID |
-| `time` | Integer | Unix timestamp |
-| `event` | String(80) | Event type |
-| `action` | String(80) | Event action |
-| `message` | String(1024) | Event data |
+
+| Field       | Type         | Description    |
+| ----------- | ------------ | -------------- |
+| `id`        | Integer, PK  | Auto-increment |
+| `player_id` | String(80)   | Player UUID    |
+| `time`      | Integer      | Unix timestamp |
+| `event`     | String(80)   | Event type     |
+| `action`    | String(80)   | Event action   |
+| `message`   | String(1024) | Event data     |
 
 ### AdminActivity
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | Integer, PK | Auto-increment |
-| `time` | Integer | Unix timestamp |
+
+| Field     | Type         | Description          |
+| --------- | ------------ | -------------------- |
+| `id`      | Integer, PK  | Auto-increment       |
+| `time`    | Integer      | Unix timestamp       |
 | `message` | String(8192) | Activity description |
 
 ### RedeemCode
-| Field | Type | Description |
-|-------|------|-------------|
-| `code` | String(128), PK | Redeem code (uppercase) |
-| `reward_type` | String(128) | Currency or item type (`SoftCurrency`, `HardCurrency`, `FreeHardCurrency`, `PvpCurrency`, `EvolutionShards`, `Creature`, `ActionCard`, `Leader`) |
-| `reward_amount` | Integer | Amount (or Star Rating for Creature, Copies for Action Card) |
-| `reward_item` | String(128) | Creature ID, Action Card ID, or Leader ID (for item rewards) |
-| `enabled` | Boolean | Active status |
-| `created_by` | String(128) | Admin who created |
+
+| Field           | Type            | Description                                                                                                                                      |
+| --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `code`          | String(128), PK | Redeem code (uppercase)                                                                                                                          |
+| `reward_type`   | String(128)     | Currency or item type (`SoftCurrency`, `HardCurrency`, `FreeHardCurrency`, `PvpCurrency`, `EvolutionShards`, `Creature`, `ActionCard`, `Leader`) |
+| `reward_amount` | Integer         | Amount (or Star Rating for Creature, Copies for Action Card)                                                                                     |
+| `reward_item`   | String(128)     | Creature ID, Action Card ID, or Leader ID (for item rewards)                                                                                     |
+| `enabled`       | Boolean         | Active status                                                                                                                                    |
+| `created_by`    | String(128)     | Admin who created                                                                                                                                |
 
 ## Game Data Format
 
@@ -162,6 +169,7 @@ username=<uuid>&data=<base64(gzip(json))>
 ### Inventory Items
 
 Each item in `Inventory` has a `_T` type discriminator:
+
 - `"CR"` — Creature (has `ID`, `Xp`, `StarRating`, `UniqueID`, `Favorite`, `Passive`)
 - `"CA"` — Action Card (has `ID`, `CreatureUID`, `CreatureSlot`)
 - `"XP"` — XP Material (has `ID`)
@@ -180,173 +188,173 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 
 ### Game API Routes (`app/routes/game.py`)
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/` | Health check |
-| GET | `/time/` | Server time |
-| GET | `/static/version.txt` | Version info + maintenance status |
-| GET | `/persist/static/manifest.json` | Client manifest |
-| GET | `/persist/static/blueprints` | All blueprints (v1.18.0+) |
-| GET | `/persist/static/Blueprints/<file>` | Individual blueprint |
-| GET | `/persist/static/monthly_store` | Monthly store configuration |
-| GET/POST | `/persist/static/pvp_banlist` | PVP ban list & active bans |
-| GET/PUT | `/persist/game` | Game save (uses `Player-Id` header) |
-| GET/PUT | `/persist/<uuid>/game` | Game save by UUID |
-| GET | `/persist/messages_received_ids` | Message IDs |
-| GET | `/persist/messages_get/<message>` | Get message |
-| GET | `/persist/getcc/` | Country code |
-| POST | `/account/preAuth/` | Pre-auth nonce |
-| POST | `/account/gcAuth/` | Game Center auth |
-| POST | `/persist/user_action2/` | User action tracking |
+| Method   | Route                               | Description                         |
+| -------- | ----------------------------------- | ----------------------------------- |
+| GET      | `/`                                 | Health check                        |
+| GET      | `/time/`                            | Server time                         |
+| GET      | `/static/version.txt`               | Version info + maintenance status   |
+| GET      | `/persist/static/manifest.json`     | Client manifest                     |
+| GET      | `/persist/static/blueprints`        | All blueprints (v1.18.0+)           |
+| GET      | `/persist/static/Blueprints/<file>` | Individual blueprint                |
+| GET      | `/persist/static/monthly_store`     | Monthly store configuration         |
+| GET/POST | `/persist/static/pvp_banlist`       | PVP ban list & active bans          |
+| GET/PUT  | `/persist/game`                     | Game save (uses `Player-Id` header) |
+| GET/PUT  | `/persist/<uuid>/game`              | Game save by UUID                   |
+| GET      | `/persist/messages_received_ids`    | Message IDs                         |
+| GET      | `/persist/messages_get/<message>`   | Get message                         |
+| GET      | `/persist/getcc/`                   | Country code                        |
+| POST     | `/account/preAuth/`                 | Pre-auth nonce                      |
+| POST     | `/account/gcAuth/`                  | Game Center auth                    |
+| POST     | `/persist/user_action2/`            | User action tracking                |
 
 ### Friend Routes (`app/routes/friends.py`)
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/persist/friends/<uuid>` | Friend list |
-| POST | `/persist/friends_informationDW/` | Friend info |
-| POST | `/persist/friends_find_candidatesDW/` | Find friend candidates |
-| POST | `/persist/friends_request_withmyinfoDW/` | Send friend request |
-| POST | `/persist/friends_confirm_request_withmyinfoDW/` | Accept friend request |
-| GET | `/persist/friends_deny_request/<uuid>/<invite_id>` | Deny friend request |
-| GET | `/persist/friends_remove/<uuid>/<invite_id>` | Remove friend |
-| GET | `/persist/friends_all_requests_received/<uuid>` | Pending requests |
-| POST | `/persist/friends_use_friendDW/` | Use ally (increment help) |
-| POST | `/persist/friends_use_playerDW/` | Use anonymous helper |
+| Method | Route                                              | Description               |
+| ------ | -------------------------------------------------- | ------------------------- |
+| GET    | `/persist/friends/<uuid>`                          | Friend list               |
+| POST   | `/persist/friends_informationDW/`                  | Friend info               |
+| POST   | `/persist/friends_find_candidatesDW/`              | Find friend candidates    |
+| POST   | `/persist/friends_request_withmyinfoDW/`           | Send friend request       |
+| POST   | `/persist/friends_confirm_request_withmyinfoDW/`   | Accept friend request     |
+| GET    | `/persist/friends_deny_request/<uuid>/<invite_id>` | Deny friend request       |
+| GET    | `/persist/friends_remove/<uuid>/<invite_id>`       | Remove friend             |
+| GET    | `/persist/friends_all_requests_received/<uuid>`    | Pending requests          |
+| POST   | `/persist/friends_use_friendDW/`                   | Use ally (increment help) |
+| POST   | `/persist/friends_use_playerDW/`                   | Use anonymous helper      |
 
 ### Multiplayer Routes (`app/routes/multiplayer.py`)
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| POST | `/multiplayer/new_player/` | Set multiplayer profile |
-| POST | `/multiplayer/update_deck_name/` | Update deck/profile |
-| POST | `/multiplayer/redeemcodeDW/` | Redeem code API |
+| Method | Route                            | Description             |
+| ------ | -------------------------------- | ----------------------- |
+| POST   | `/multiplayer/new_player/`       | Set multiplayer profile |
+| POST   | `/multiplayer/update_deck_name/` | Update deck/profile     |
+| POST   | `/multiplayer/redeemcodeDW/`     | Redeem code API         |
 
 ### Analytics Routes (`app/routes/analytics.py`)
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| POST | `/analytics/upsight` | Analytics receiver |
-| POST | `/analytics/pvpmatch` | PVP match data |
-| POST | `/dw_leaderboard/fetchentries/` | PVP leaderboard |
+| Method | Route                           | Description        |
+| ------ | ------------------------------- | ------------------ |
+| POST   | `/analytics/upsight`            | Analytics receiver |
+| POST   | `/analytics/pvpmatch`           | PVP match data     |
+| POST   | `/dw_leaderboard/fetchentries/` | PVP leaderboard    |
 
 ### Admin Routes (`app/routes/admin.py`)
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET/POST | `/admin` | Login (auto-creates first admin) |
-| POST | `/admin/passkey` | Passwordless login with a 6-digit passkey only |
-| GET | `/admin/home` | Dashboard |
-| GET | `/admin/profile` | Secret profile (email, password, passkey) |
-| POST | `/admin/profile/email` | Update admin email |
-| POST | `/admin/profile/password` | Change admin password |
-| POST | `/admin/profile/passkey` | Set/replace 6-digit passkey |
-| POST | `/admin/profile/passkey/disable` | Disable passkey login |
-| GET | `/admin/logout` | Logout |
-| GET/POST | `/admin/versions` | Version management |
-| GET | `/admin/server` | Server/backups + interval & Telegram settings |
-| GET | `/admin/server/backup` | Trigger backup (and send to Telegram) |
-| POST | `/admin/server/settings` | Save backup interval / Telegram toggle |
-| POST | `/admin/server/telegram_test` | Send a test Telegram message |
-| POST | `/admin/server/upload_backup` | Upload & restore a backup `.zip` |
-| GET | `/admin/server/pull` | Git pull |
-| GET/POST | `/admin/createadmin` | Create admin |
-| GET | `/admin/players` | Player list (sortable) |
-| GET | `/admin/top_pvp` | Top PVP players ranked by Multiplayer Level (1 = Super Amadeus best, 25 = Dweeb) |
-| GET | `/admin/players/<uuid>` | Player detail |
-| GET | `/admin/players/<uuid>/game` | Game data viewer |
-| POST | `/admin/players/<uuid>/game/edit` | Overwrite raw data |
-| POST | `/admin/players/<uuid>/edit` | Edit resources (incl. `MultiplayerName` to rename player) |
-| POST | `/admin/players/<uuid>/add_creature` | Add creatures (1–10 at once) |
-| POST | `/admin/players/<uuid>/delete_creature/<idx>` | Delete creature |
-| POST | `/admin/players/<uuid>/delete_all_creatures` | Delete all creatures |
-| POST | `/admin/players/<uuid>/delete_creatures_bulk` | Multi-delete selected creatures |
-| POST | `/admin/players/<uuid>/max_creature/<idx>` | Max single creature to 5★ |
-| POST | `/admin/players/<uuid>/downgrade_creature/<idx>` | Reset a maxed creature to 1★ |
-| POST | `/admin/players/<uuid>/add_card` | Add action card copies (1–10) |
-| POST | `/admin/players/<uuid>/add_card_copy/<idx>` | Duplicate a single action card copy |
-| POST | `/admin/players/<uuid>/delete_card/<idx>` | Delete action card |
-| POST | `/admin/players/<uuid>/delete_all_cards` | Delete all action cards |
-| POST | `/admin/players/<uuid>/delete_cards_bulk` | Multi-delete selected action cards |
-| POST | `/admin/players/<uuid>/add_all_creatures` | Add all 625 collectible creatures (skips `TutorialOnly`) |
-| POST | `/admin/players/<uuid>/remove_invalid_creatures` | Remove tutorial-only creatures & clear `Zxcvbnm` PVP ban flag |
-| POST | `/admin/players/<uuid>/max_all_creatures` | Max all creatures to 5★ |
-| POST | `/admin/players/<uuid>/add_max_creature` | Add single max creature |
-| POST | `/admin/players/<uuid>/add_all_cards` | Add all 695 action cards |
-| POST | `/admin/players/<uuid>/add_all_leaders` | Add all 32 base heroes (skips skins) |
-| POST | `/admin/players/<uuid>/add_leader` | Add single hero; a skin ID is attached to its base hero's `OwnedSkins` |
-| POST | `/admin/players/<uuid>/delete_leader/<idx>` | Delete single leader |
-| POST | `/admin/players/<uuid>/delete_all_leaders` | Delete all leaders |
-| POST | `/admin/players/<uuid>/delete_leaders_bulk` | Multi-delete selected leaders |
-| POST | `/admin/players/<uuid>/add_all_skins` | Attach all skins to the player's owned heroes via `OwnedSkins` |
-| POST | `/admin/players/<uuid>/max_resources` | Max all currencies preset |
-| GET | `/admin/players/<uuid>/export_save` | Download save as JSON |
-| POST | `/admin/players/<uuid>/import_save` | Upload & replace save JSON |
-| POST | `/admin/players/<uuid>/fix_save` | Detect & repair broken save fields / duplicate creature IDs (deletes nothing) |
-| POST | `/admin/players/<uuid>/transfer_progress` | Copy progress to target UUID (keeps target name & currencies; source untouched) |
-| POST | `/admin/players/<uuid>/reset_save` | Reset save to starter values |
-| POST | `/admin/players/<uuid>/delete` | Delete player account |
-| POST | `/admin/players/bulk_action` | Bulk ban, unban, or delete players |
-| GET | `/admin/players/<uuid>/ban` | Ban player |
-| GET | `/admin/players/<uuid>/unban` | Unban player |
-| GET | `/admin/bannedplayers` | Banned players list |
-| GET | `/admin/bannedips` | Banned IPs list |
-| POST | `/admin/ipban` | Ban IP |
-| GET | `/admin/ipban/<ip>/unban` | Unban IP |
-| GET | `/admin/pvp_banlist` | PVP creature & leader ban list manager |
-| POST | `/admin/pvp_banlist/add_creature` | Add creature to PVP ban list |
-| POST | `/admin/pvp_banlist/remove_creature/<id>` | Remove creature from PVP ban list |
-| POST | `/admin/pvp_banlist/add_leader` | Add leader to PVP ban list |
-| POST | `/admin/pvp_banlist/remove_leader/<id>` | Remove leader from PVP ban list |
-| POST | `/admin/pvp_banlist/edit_raw` | Save raw JSON for PVP ban list |
-| GET | `/admin/maintenance` | Maintenance toggle |
-| GET | `/admin/logs` | Player logs (paginated) |
-| GET | `/admin/upsight` | Analytics logs (paginated) |
-| GET | `/admin/misc` | Misc tools |
-| GET | `/admin/redeemcodes` | Redeem codes list |
-| POST | `/admin/redeemcodes/add` | Add/update redeem code |
-| POST | `/admin/redeemcodes/delete/<code>` | Delete redeem code |
-| POST | `/admin/redeemcodes/toggle/<code>` | Toggle redeem code |
-| GET | `/admin/creatures` | Creature book (searchable) |
-| GET | `/admin/cards` | Action card book (searchable) |
-| GET | `/admin/leaders` | Leader book (searchable) |
+| Method   | Route                                            | Description                                                                      |
+| -------- | ------------------------------------------------ | -------------------------------------------------------------------------------- |
+| GET/POST | `/admin`                                         | Login (auto-creates first admin)                                                 |
+| POST     | `/admin/passkey`                                 | Passwordless login with a 6-digit passkey only                                   |
+| GET      | `/admin/home`                                    | Dashboard                                                                        |
+| GET      | `/admin/profile`                                 | Secret profile (email, password, passkey)                                        |
+| POST     | `/admin/profile/email`                           | Update admin email                                                               |
+| POST     | `/admin/profile/password`                        | Change admin password                                                            |
+| POST     | `/admin/profile/passkey`                         | Set/replace 6-digit passkey                                                      |
+| POST     | `/admin/profile/passkey/disable`                 | Disable passkey login                                                            |
+| GET      | `/admin/logout`                                  | Logout                                                                           |
+| GET/POST | `/admin/versions`                                | Version management                                                               |
+| GET      | `/admin/server`                                  | Server/backups + interval & Telegram settings                                    |
+| GET      | `/admin/server/backup`                           | Trigger backup (and send to Telegram)                                            |
+| POST     | `/admin/server/settings`                         | Save backup interval / Telegram toggle                                           |
+| POST     | `/admin/server/telegram_test`                    | Send a test Telegram message                                                     |
+| POST     | `/admin/server/upload_backup`                    | Upload & restore a backup `.zip`                                                 |
+| GET      | `/admin/server/pull`                             | Git pull                                                                         |
+| GET/POST | `/admin/createadmin`                             | Create admin                                                                     |
+| GET      | `/admin/players`                                 | Player list (sortable)                                                           |
+| GET      | `/admin/top_pvp`                                 | Top PVP players ranked by Multiplayer Level (1 = Super Amadeus best, 25 = Dweeb) |
+| GET      | `/admin/players/<uuid>`                          | Player detail                                                                    |
+| GET      | `/admin/players/<uuid>/game`                     | Game data viewer                                                                 |
+| POST     | `/admin/players/<uuid>/game/edit`                | Overwrite raw data                                                               |
+| POST     | `/admin/players/<uuid>/edit`                     | Edit resources (incl. `MultiplayerName` to rename player)                        |
+| POST     | `/admin/players/<uuid>/add_creature`             | Add creatures (1–10 at once)                                                     |
+| POST     | `/admin/players/<uuid>/delete_creature/<idx>`    | Delete creature                                                                  |
+| POST     | `/admin/players/<uuid>/delete_all_creatures`     | Delete all creatures                                                             |
+| POST     | `/admin/players/<uuid>/delete_creatures_bulk`    | Multi-delete selected creatures                                                  |
+| POST     | `/admin/players/<uuid>/max_creature/<idx>`       | Max single creature to 5★                                                        |
+| POST     | `/admin/players/<uuid>/downgrade_creature/<idx>` | Reset a maxed creature to 1★                                                     |
+| POST     | `/admin/players/<uuid>/add_card`                 | Add action card copies (1–10)                                                    |
+| POST     | `/admin/players/<uuid>/add_card_copy/<idx>`      | Duplicate a single action card copy                                              |
+| POST     | `/admin/players/<uuid>/delete_card/<idx>`        | Delete action card                                                               |
+| POST     | `/admin/players/<uuid>/delete_all_cards`         | Delete all Auguments                                                             |
+| POST     | `/admin/players/<uuid>/delete_cards_bulk`        | Multi-delete selected Auguments                                                  |
+| POST     | `/admin/players/<uuid>/add_all_creatures`        | Add all 625 collectible creatures (skips `TutorialOnly`)                         |
+| POST     | `/admin/players/<uuid>/remove_invalid_creatures` | Remove tutorial-only creatures & clear `Zxcvbnm` PVP ban flag                    |
+| POST     | `/admin/players/<uuid>/max_all_creatures`        | Max all creatures to 5★                                                          |
+| POST     | `/admin/players/<uuid>/add_max_creature`         | Add single max creature                                                          |
+| POST     | `/admin/players/<uuid>/add_all_cards`            | Add all 695 Auguments                                                            |
+| POST     | `/admin/players/<uuid>/add_all_leaders`          | Add all 32 base heroes (skips skins)                                             |
+| POST     | `/admin/players/<uuid>/add_leader`               | Add single hero; a skin ID is attached to its base hero's `OwnedSkins`           |
+| POST     | `/admin/players/<uuid>/delete_leader/<idx>`      | Delete single leader                                                             |
+| POST     | `/admin/players/<uuid>/delete_all_leaders`       | Delete all leaders                                                               |
+| POST     | `/admin/players/<uuid>/delete_leaders_bulk`      | Multi-delete selected leaders                                                    |
+| POST     | `/admin/players/<uuid>/add_all_skins`            | Attach all skins to the player's owned heroes via `OwnedSkins`                   |
+| POST     | `/admin/players/<uuid>/max_resources`            | Max all currencies preset                                                        |
+| GET      | `/admin/players/<uuid>/export_save`              | Download save as JSON                                                            |
+| POST     | `/admin/players/<uuid>/import_save`              | Upload & replace save JSON                                                       |
+| POST     | `/admin/players/<uuid>/fix_save`                 | Detect & repair broken save fields / duplicate creature IDs (deletes nothing)    |
+| POST     | `/admin/players/<uuid>/transfer_progress`        | Copy progress to target UUID (keeps target name & currencies; source untouched)  |
+| POST     | `/admin/players/<uuid>/reset_save`               | Reset save to starter values                                                     |
+| POST     | `/admin/players/<uuid>/delete`                   | Delete player account                                                            |
+| POST     | `/admin/players/bulk_action`                     | Bulk ban, unban, or delete players                                               |
+| GET      | `/admin/players/<uuid>/ban`                      | Ban player                                                                       |
+| GET      | `/admin/players/<uuid>/unban`                    | Unban player                                                                     |
+| GET      | `/admin/bannedplayers`                           | Banned players list                                                              |
+| GET      | `/admin/bannedips`                               | Banned IPs list                                                                  |
+| POST     | `/admin/ipban`                                   | Ban IP                                                                           |
+| GET      | `/admin/ipban/<ip>/unban`                        | Unban IP                                                                         |
+| GET      | `/admin/pvp_banlist`                             | PVP creature & leader ban list manager                                           |
+| POST     | `/admin/pvp_banlist/add_creature`                | Add creature to PVP ban list                                                     |
+| POST     | `/admin/pvp_banlist/remove_creature/<id>`        | Remove creature from PVP ban list                                                |
+| POST     | `/admin/pvp_banlist/add_leader`                  | Add leader to PVP ban list                                                       |
+| POST     | `/admin/pvp_banlist/remove_leader/<id>`          | Remove leader from PVP ban list                                                  |
+| POST     | `/admin/pvp_banlist/edit_raw`                    | Save raw JSON for PVP ban list                                                   |
+| GET      | `/admin/maintenance`                             | Maintenance toggle                                                               |
+| GET      | `/admin/logs`                                    | Player logs (paginated)                                                          |
+| GET      | `/admin/upsight`                                 | Analytics logs (paginated)                                                       |
+| GET      | `/admin/misc`                                    | Misc tools                                                                       |
+| GET      | `/admin/redeemcodes`                             | Redeem codes list                                                                |
+| POST     | `/admin/redeemcodes/add`                         | Add/update redeem code                                                           |
+| POST     | `/admin/redeemcodes/delete/<code>`               | Delete redeem code                                                               |
+| POST     | `/admin/redeemcodes/toggle/<code>`               | Toggle redeem code                                                               |
+| GET      | `/admin/creatures`                               | Creature book (searchable)                                                       |
+| GET      | `/admin/cards`                                   | Action card book (searchable)                                                    |
+| GET      | `/admin/leaders`                                 | Leader book (searchable)                                                         |
 
 ## Key Functions
 
-| Function | Location | Description |
-|----------|----------|-------------|
-| `DecryptGameData(game)` | `app/utils.py` | Decode base64+gzip game save to dict |
-| `EncryptGameData(game, username)` | `app/utils.py` | Encode dict to base64+gzip game save |
-| `Backup()` | `app/utils.py` | Zip DB + persist folder to `backup/` |
-| `Log(category, message)` | `app/utils.py` | Write to daily log file |
-| `PlayerLog(ip, player, message)` | `app/utils.py` | Create Logs DB entry |
-| `DiscordWebhookMessage(message)` | `app/utils.py` | Send Discord webhook + log to AdminActivity |
-| `IsUserBanned(username, ip)` | `app/utils.py` | Check active (non-expired) ban list |
-| `SystemBan(username)` | `app/utils.py` | Auto-ban (anti-cheat), permanent |
-| `GetBanExpiry(duration, amount, unit)` | `app/utils.py` | Resolve a ban duration to a unix expiry (0 = permanent) |
-| `FormatBanExpiry(expires)` | `app/utils.py` | Human-readable ban expiry (`"Permanent"` when 0/NULL) |
-| `FindBrokenSaveIssues(game)` | `app/utils.py` | Return list of missing/invalid save fields & duplicate creature IDs |
-| `RepairGameData(game, username, fallback_name)` | `app/utils.py` | Fill missing fields / fix duplicate IDs without deleting data |
-| `BuildTransferredGame(source, target, username, name)` | `app/utils.py` | Copy progress to a target save keeping target name & currencies |
-| `UpdateLastOnline(player_id)` | `app/utils.py` | Update last_online timestamp |
-| `GetAllyInfo(player_id, isally)` | `app/utils.py` | Build ally info dict |
-| `GetPlayerWins(player_id)` | `app/utils.py` | Count PVP wins this season |
-| `GetXPForRank(rank)` | `app/utils.py` | Get required cumulative RankXP for a given player rank |
-| `GetRankForXP(xp)` | `app/utils.py` | Calculate player rank from cumulative RankXP |
-| `GetRankXPTable()` | `app/utils.py` | Return full level -> XP dictionary from blueprints |
-| `GetPvpRankName(level)` | `app/utils.py` | PVP league name for a MultiplayerLevel (1 = Super Amadeus) |
-| `GetTutorialOnlyCreatureIds()` | `app/utils.py` | Set of `TutorialOnly` creature IDs (non-collectible) |
-| `IsTutorialOnlyCreature(id)` | `app/utils.py` | True if a creature is tutorial-only |
-| `GetLeaderSkinBase(id)` | `app/utils.py` | Base hero ID if the ID is a skin, else `None` |
-| `GetLeaderSkins(base_id)` | `app/utils.py` | Skin IDs belonging to a base hero |
-| `NormalizeLeaders(leaders)` | `app/utils.py` | Fold skin entries into their base hero's `OwnedSkins` |
-| `InvalidUsername(username)` | `app/utils.py` | Validate username |
-| `IPFromRequest(request)` | `app/utils.py` | Extract client IP |
-| `LoadSettings()` / `SaveSettings(d)` | `app/utils.py` | Read/write `data/persist/settings.json` (backup interval, Telegram toggle) |
-| `GetBackupIntervalHours()` | `app/utils.py` | Effective backup interval (setting → `BACKUP_INTERVAL_HOURS` → 4) |
-| `SendTelegramDocument(path, caption)` | `app/utils.py` | Send a file to the admin Telegram chat via bot |
-| `SendBackupToTelegram(zip_path)` | `app/utils.py` | Send a (latest) backup archive to Telegram |
-| `RunScheduledBackup()` | `app/utils.py` | Run a backup when the configured interval elapsed |
+| Function                                               | Location       | Description                                                                |
+| ------------------------------------------------------ | -------------- | -------------------------------------------------------------------------- |
+| `DecryptGameData(game)`                                | `app/utils.py` | Decode base64+gzip game save to dict                                       |
+| `EncryptGameData(game, username)`                      | `app/utils.py` | Encode dict to base64+gzip game save                                       |
+| `Backup()`                                             | `app/utils.py` | Zip DB + persist folder to `backup/`                                       |
+| `Log(category, message)`                               | `app/utils.py` | Write to daily log file                                                    |
+| `PlayerLog(ip, player, message)`                       | `app/utils.py` | Create Logs DB entry                                                       |
+| `DiscordWebhookMessage(message)`                       | `app/utils.py` | Send Discord webhook + log to AdminActivity                                |
+| `IsUserBanned(username, ip)`                           | `app/utils.py` | Check active (non-expired) ban list                                        |
+| `SystemBan(username)`                                  | `app/utils.py` | Auto-ban (anti-cheat), permanent                                           |
+| `GetBanExpiry(duration, amount, unit)`                 | `app/utils.py` | Resolve a ban duration to a unix expiry (0 = permanent)                    |
+| `FormatBanExpiry(expires)`                             | `app/utils.py` | Human-readable ban expiry (`"Permanent"` when 0/NULL)                      |
+| `FindBrokenSaveIssues(game)`                           | `app/utils.py` | Return list of missing/invalid save fields & duplicate creature IDs        |
+| `RepairGameData(game, username, fallback_name)`        | `app/utils.py` | Fill missing fields / fix duplicate IDs without deleting data              |
+| `BuildTransferredGame(source, target, username, name)` | `app/utils.py` | Copy progress to a target save keeping target name & currencies            |
+| `UpdateLastOnline(player_id)`                          | `app/utils.py` | Update last_online timestamp                                               |
+| `GetAllyInfo(player_id, isally)`                       | `app/utils.py` | Build ally info dict                                                       |
+| `GetPlayerWins(player_id)`                             | `app/utils.py` | Count PVP wins this season                                                 |
+| `GetXPForRank(rank)`                                   | `app/utils.py` | Get required cumulative RankXP for a given player rank                     |
+| `GetRankForXP(xp)`                                     | `app/utils.py` | Calculate player rank from cumulative RankXP                               |
+| `GetRankXPTable()`                                     | `app/utils.py` | Return full level -> XP dictionary from blueprints                         |
+| `GetPvpRankName(level)`                                | `app/utils.py` | PVP league name for a MultiplayerLevel (1 = Super Amadeus)                 |
+| `GetTutorialOnlyCreatureIds()`                         | `app/utils.py` | Set of `TutorialOnly` creature IDs (non-collectible)                       |
+| `IsTutorialOnlyCreature(id)`                           | `app/utils.py` | True if a creature is tutorial-only                                        |
+| `GetLeaderSkinBase(id)`                                | `app/utils.py` | Base hero ID if the ID is a skin, else `None`                              |
+| `GetLeaderSkins(base_id)`                              | `app/utils.py` | Skin IDs belonging to a base hero                                          |
+| `NormalizeLeaders(leaders)`                            | `app/utils.py` | Fold skin entries into their base hero's `OwnedSkins`                      |
+| `InvalidUsername(username)`                            | `app/utils.py` | Validate username                                                          |
+| `IPFromRequest(request)`                               | `app/utils.py` | Extract client IP                                                          |
+| `LoadSettings()` / `SaveSettings(d)`                   | `app/utils.py` | Read/write `data/persist/settings.json` (backup interval, Telegram toggle) |
+| `GetBackupIntervalHours()`                             | `app/utils.py` | Effective backup interval (setting → `BACKUP_INTERVAL_HOURS` → 4)          |
+| `SendTelegramDocument(path, caption)`                  | `app/utils.py` | Send a file to the admin Telegram chat via bot                             |
+| `SendBackupToTelegram(zip_path)`                       | `app/utils.py` | Send a (latest) backup archive to Telegram                                 |
+| `RunScheduledBackup()`                                 | `app/utils.py` | Run a backup when the configured interval elapsed                          |
 
 ## Configuration & Assets
 

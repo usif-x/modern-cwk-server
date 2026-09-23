@@ -1,307 +1,455 @@
-{% extends "admin_base.html" %}
-{% block title %}Redeem Codes - CWK Admin{% endblock %}
-{% block breadcrumb %}Redeem Codes{% endblock %}
-
-{% block content %}
+{% extends "admin_base.html" %} {% block title %}Redeem Codes - CWK Admin{%
+endblock %} {% block breadcrumb %}Redeem Codes{% endblock %} {% block content %}
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Redeem Codes</h1>
-            <p class="text-sm text-muted-foreground mt-1">Generate and manage promotional gift codes for currencies, creatures, action cards, and heroes</p>
-        </div>
+  <!-- Header -->
+  <div
+    class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+  >
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+        Redeem Codes
+      </h1>
+      <p class="text-sm text-muted-foreground mt-1">
+        Generate and manage promotional gift codes for currencies, creatures,
+        Auguments, and heroes
+      </p>
+    </div>
+  </div>
+
+  <!-- Create Code Card -->
+  <div
+    class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6"
+  >
+    <div
+      class="border-b border-border pb-3 mb-4 flex items-center justify-between"
+    >
+      <div>
+        <h2 class="text-base font-semibold tracking-tight">
+          Add / Update Redeem Code
+        </h2>
+        <p class="text-xs text-muted-foreground mt-0.5">
+          Codes are uppercase strings. Existing codes with the same name will be
+          overwritten with new rewards.
+        </p>
+      </div>
+      <span
+        class="inline-flex items-center gap-1.5 rounded-md bg-primary/10 text-primary px-2.5 py-1 text-xs font-medium"
+      >
+        <i data-lucide="gift" class="w-3.5 h-3.5"></i> Multi-Reward Support
+      </span>
     </div>
 
-    <!-- Create Code Card -->
-    <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6">
-        <div class="border-b border-border pb-3 mb-4 flex items-center justify-between">
-            <div>
-                <h2 class="text-base font-semibold tracking-tight">Add / Update Redeem Code</h2>
-                <p class="text-xs text-muted-foreground mt-0.5">Codes are uppercase strings. Existing codes with the same name will be overwritten with new rewards.</p>
-            </div>
-            <span class="inline-flex items-center gap-1.5 rounded-md bg-primary/10 text-primary px-2.5 py-1 text-xs font-medium">
-                <i data-lucide="gift" class="w-3.5 h-3.5"></i> Multi-Reward Support
-            </span>
-        </div>
+    <form
+      action="/admin/redeemcodes/add"
+      method="POST"
+      id="redeemForm"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end"
+    >
+      <!-- Code String -->
+      <div class="space-y-1.5">
+        <label
+          class="text-xs font-medium text-foreground flex items-center gap-1.5"
+        >
+          <i data-lucide="tag" class="w-3.5 h-3.5 text-muted-foreground"></i>
+          Code String
+        </label>
+        <input
+          type="text"
+          name="code"
+          placeholder="e.g. KINGDOM2026"
+          required
+          class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring uppercase"
+        />
+      </div>
 
-        <form action="/admin/redeemcodes/add" method="POST" id="redeemForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-            <!-- Code String -->
-            <div class="space-y-1.5">
-                <label class="text-xs font-medium text-foreground flex items-center gap-1.5">
-                    <i data-lucide="tag" class="w-3.5 h-3.5 text-muted-foreground"></i> Code String
-                </label>
-                <input type="text" name="code" placeholder="e.g. KINGDOM2026" required
-                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring uppercase">
-            </div>
+      <!-- Reward Type -->
+      <div class="space-y-1.5">
+        <label
+          class="text-xs font-medium text-foreground flex items-center gap-1.5"
+        >
+          <i data-lucide="box" class="w-3.5 h-3.5 text-muted-foreground"></i>
+          Reward Type
+        </label>
+        <select
+          name="reward_type"
+          id="reward_type_select"
+          onchange="handleRewardTypeChange()"
+          required
+          class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <optgroup label="Currencies">
+            <option value="SoftCurrency" data-category="currency">
+              Soft Currency (Coins)
+            </option>
+            <option value="HardCurrency" data-category="currency">
+              Hard Currency (Gems)
+            </option>
+            <option value="FreeHardCurrency" data-category="currency">
+              Free Hard Currency
+            </option>
+            <option value="PvpCurrency" data-category="currency">
+              PVP Currency (Wishbones)
+            </option>
+            <option value="EvolutionShards" data-category="currency">
+              Evolution Shards
+            </option>
+          </optgroup>
+          <optgroup label="Game Items">
+            <option value="Creature" data-category="creature">
+              Creature (5★ or Custom)
+            </option>
+            <option value="ActionCard" data-category="card">Action Card</option>
+            <option value="Leader" data-category="leader">Hero / Leader</option>
+          </optgroup>
+        </select>
+      </div>
 
-            <!-- Reward Type -->
-            <div class="space-y-1.5">
-                <label class="text-xs font-medium text-foreground flex items-center gap-1.5">
-                    <i data-lucide="box" class="w-3.5 h-3.5 text-muted-foreground"></i> Reward Type
-                </label>
-                <select name="reward_type" id="reward_type_select" onchange="handleRewardTypeChange()" required
-                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                    <optgroup label="Currencies">
-                        <option value="SoftCurrency" data-category="currency">Soft Currency (Coins)</option>
-                        <option value="HardCurrency" data-category="currency">Hard Currency (Gems)</option>
-                        <option value="FreeHardCurrency" data-category="currency">Free Hard Currency</option>
-                        <option value="PvpCurrency" data-category="currency">PVP Currency (Wishbones)</option>
-                        <option value="EvolutionShards" data-category="currency">Evolution Shards</option>
-                    </optgroup>
-                    <optgroup label="Game Items">
-                        <option value="Creature" data-category="creature">Creature (5★ or Custom)</option>
-                        <option value="ActionCard" data-category="card">Action Card</option>
-                        <option value="Leader" data-category="leader">Hero / Leader</option>
-                    </optgroup>
-                </select>
-            </div>
+      <!-- Reward Item (Dynamic) -->
+      <div
+        id="reward_item_container"
+        class="space-y-1.5 opacity-50 pointer-events-none transition-opacity"
+      >
+        <label
+          id="reward_item_label"
+          class="text-xs font-medium text-foreground flex items-center gap-1.5"
+        >
+          <i
+            data-lucide="sparkles"
+            class="w-3.5 h-3.5 text-muted-foreground"
+          ></i>
+          Item Identifier
+        </label>
+        <input
+          type="text"
+          name="reward_item"
+          id="reward_item_input"
+          placeholder="Select item..."
+          disabled
+          class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        />
+      </div>
 
-            <!-- Reward Item (Dynamic) -->
-            <div id="reward_item_container" class="space-y-1.5 opacity-50 pointer-events-none transition-opacity">
-                <label id="reward_item_label" class="text-xs font-medium text-foreground flex items-center gap-1.5">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-muted-foreground"></i> Item Identifier
-                </label>
-                <input type="text" name="reward_item" id="reward_item_input" placeholder="Select item..." disabled
-                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-            </div>
+      <!-- Reward Amount / Stars / Copies -->
+      <div class="space-y-1.5">
+        <label
+          id="reward_amount_label"
+          class="text-xs font-medium text-foreground flex items-center gap-1.5"
+        >
+          <i data-lucide="hash" class="w-3.5 h-3.5 text-muted-foreground"></i>
+          Amount
+        </label>
+        <input
+          type="number"
+          name="reward_amount"
+          id="reward_amount_input"
+          min="1"
+          value="100"
+          required
+          class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        />
+      </div>
 
-            <!-- Reward Amount / Stars / Copies -->
-            <div class="space-y-1.5">
-                <label id="reward_amount_label" class="text-xs font-medium text-foreground flex items-center gap-1.5">
-                    <i data-lucide="hash" class="w-3.5 h-3.5 text-muted-foreground"></i> Amount
-                </label>
-                <input type="number" name="reward_amount" id="reward_amount_input" min="1" value="100" required
-                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-            </div>
+      <!-- Submit Button -->
+      <div>
+        <button
+          type="submit"
+          class="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary text-primary-foreground h-9 px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors w-full"
+        >
+          <i data-lucide="plus-circle" class="w-4 h-4"></i>
+          <span>Save Code</span>
+        </button>
+      </div>
+    </form>
+  </div>
 
-            <!-- Submit Button -->
-            <div>
-                <button type="submit" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary text-primary-foreground h-9 px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors w-full">
-                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                    <span>Save Code</span>
-                </button>
-            </div>
-        </form>
+  <!-- Codes Datatable Card -->
+  <div
+    class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden"
+  >
+    <div class="p-6 border-b border-border flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <h2 class="text-base font-semibold tracking-tight">Active Codes</h2>
+        <span
+          class="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-muted-foreground bg-muted"
+        >
+          {{ codes|length }} total
+        </span>
+      </div>
     </div>
 
-    <!-- Codes Datatable Card -->
-    <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden">
-        <div class="p-6 border-b border-border flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <h2 class="text-base font-semibold tracking-tight">Active Codes</h2>
-                <span class="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-muted-foreground bg-muted">
-                    {{ codes|length }} total
+    <div class="relative w-full overflow-auto">
+      <table class="w-full caption-bottom text-sm">
+        <thead
+          class="[&_tr]:border-b border-border bg-muted/40 text-xs text-muted-foreground"
+        >
+          <tr class="text-left">
+            <th class="h-10 px-6 font-medium">Code</th>
+            <th class="h-10 px-6 font-medium">Category / Type</th>
+            <th class="h-10 px-6 font-medium">Reward Content</th>
+            <th class="h-10 px-6 font-medium">Status</th>
+            <th class="h-10 px-6 font-medium">Created By</th>
+            <th class="h-10 px-6 text-right font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+          {% for c in codes %}
+          <tr class="hover:bg-muted/30 transition-colors">
+            <td class="px-6 py-3 font-mono font-bold text-foreground text-xs">
+              <span
+                class="inline-flex items-center gap-1.5 bg-muted/60 border border-border px-2.5 py-1 rounded-md tracking-wider"
+              >
+                <i
+                  data-lucide="key"
+                  class="w-3.5 h-3.5 text-muted-foreground"
+                ></i>
+                {{ c.code }}
+              </span>
+            </td>
+            <td class="px-6 py-3">
+              {% if c.reward_type == "Creature" %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20"
+              >
+                <i data-lucide="bot" class="w-3 h-3"></i> Creature
+              </span>
+              {% elif c.reward_type in ["ActionCard", "Card"] %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
+              >
+                <i data-lucide="layers" class="w-3 h-3"></i> Action Card
+              </span>
+              {% elif c.reward_type in ["Leader", "Hero"] %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+              >
+                <i data-lucide="crown" class="w-3 h-3"></i> Hero / Leader
+              </span>
+              {% elif c.reward_type == "SoftCurrency" %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+              >
+                <i data-lucide="coins" class="w-3 h-3"></i> Soft Currency
+              </span>
+              {% elif c.reward_type in ["HardCurrency", "FreeHardCurrency"] %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20"
+              >
+                <i data-lucide="gem" class="w-3 h-3"></i> Gems
+              </span>
+              {% elif c.reward_type == "PvpCurrency" %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20"
+              >
+                <i data-lucide="swords" class="w-3 h-3"></i> PVP Wishbones
+              </span>
+              {% elif c.reward_type == "EvolutionShards" %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+              >
+                <i data-lucide="sparkles" class="w-3 h-3"></i> Evolution Shards
+              </span>
+              {% else %}
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-muted text-muted-foreground border border-border"
+              >
+                {{ c.reward_type }}
+              </span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-3">
+              {% if c.reward_type == "Creature" %}
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-bold text-foreground"
+                  >{{ c.reward_item }}</span
+                >
+                <span
+                  class="inline-flex items-center gap-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-1.5 py-0.5 text-[11px] font-bold"
+                >
+                  <i data-lucide="star" class="w-3 h-3 fill-amber-500"></i> {{
+                  c.reward_amount }}★
                 </span>
-            </div>
-        </div>
-
-        <div class="relative w-full overflow-auto">
-            <table class="w-full caption-bottom text-sm">
-                <thead class="[&_tr]:border-b border-border bg-muted/40 text-xs text-muted-foreground">
-                    <tr class="text-left">
-                        <th class="h-10 px-6 font-medium">Code</th>
-                        <th class="h-10 px-6 font-medium">Category / Type</th>
-                        <th class="h-10 px-6 font-medium">Reward Content</th>
-                        <th class="h-10 px-6 font-medium">Status</th>
-                        <th class="h-10 px-6 font-medium">Created By</th>
-                        <th class="h-10 px-6 text-right font-medium">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
-                    {% for c in codes %}
-                    <tr class="hover:bg-muted/30 transition-colors">
-                        <td class="px-6 py-3 font-mono font-bold text-foreground text-xs">
-                            <span class="inline-flex items-center gap-1.5 bg-muted/60 border border-border px-2.5 py-1 rounded-md tracking-wider">
-                                <i data-lucide="key" class="w-3.5 h-3.5 text-muted-foreground"></i>
-                                {{ c.code }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-3">
-                            {% if c.reward_type == "Creature" %}
-                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                                    <i data-lucide="bot" class="w-3 h-3"></i> Creature
-                                </span>
-                            {% elif c.reward_type in ["ActionCard", "Card"] %}
-                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                                    <i data-lucide="layers" class="w-3 h-3"></i> Action Card
-                                </span>
-                            {% elif c.reward_type in ["Leader", "Hero"] %}
-                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                                    <i data-lucide="crown" class="w-3 h-3"></i> Hero / Leader
-                                </span>
-                            {% elif c.reward_type == "SoftCurrency" %}
-                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                    <i data-lucide="coins" class="w-3 h-3"></i> Soft Currency
-                                </span>
-                            {% elif c.reward_type in ["HardCurrency", "FreeHardCurrency"] %}
-                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
-                                    <i data-lucide="gem" class="w-3 h-3"></i> Gems
-                                </span>
-                            {% elif c.reward_type == "PvpCurrency" %}
-                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                                    <i data-lucide="swords" class="w-3 h-3"></i> PVP Wishbones
-                                </span>
-                            {% elif c.reward_type == "EvolutionShards" %}
-                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                    <i data-lucide="sparkles" class="w-3 h-3"></i> Evolution Shards
-                                </span>
-                            {% else %}
-                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-muted text-muted-foreground border border-border">
-                                    {{ c.reward_type }}
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-3">
-                            {% if c.reward_type == "Creature" %}
-                                <div class="flex items-center gap-2">
-                                    <span class="font-mono text-xs font-bold text-foreground">{{ c.reward_item }}</span>
-                                    <span class="inline-flex items-center gap-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-1.5 py-0.5 text-[11px] font-bold">
-                                        <i data-lucide="star" class="w-3 h-3 fill-amber-500"></i> {{ c.reward_amount }}★
-                                    </span>
-                                </div>
-                            {% elif c.reward_type in ["ActionCard", "Card"] %}
-                                <div class="flex items-center gap-2">
-                                    <span class="font-mono text-xs font-bold text-foreground">{{ c.reward_item }}</span>
-                                    <span class="inline-flex items-center rounded bg-muted text-muted-foreground border border-border px-1.5 py-0.5 text-[11px] font-mono">
-                                        x{{ c.reward_amount }}
-                                    </span>
-                                </div>
-                            {% elif c.reward_type in ["Leader", "Hero"] %}
-                                <div class="flex items-center gap-1.5">
-                                    <span class="font-mono text-xs font-bold text-foreground">{{ c.reward_item }}</span>
-                                </div>
-                            {% else %}
-                                <span class="font-mono font-bold text-foreground text-xs">
-                                    +{{ "{:,}".format(c.reward_amount) }}
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-3">
-                            {% if c.enabled %}
-                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
-                                </span>
-                            {% else %}
-                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground border border-border">
-                                    Disabled
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-3 font-mono text-xs text-muted-foreground">
-                            {{ c.created_by or "—" }}
-                        </td>
-                        <td class="px-6 py-3 text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                <form action="/admin/redeemcodes/toggle/{{ c.code }}" method="POST" class="inline">
-                                    <button type="submit" class="inline-flex items-center rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
-                                        Toggle
-                                    </button>
-                                </form>
-                                <form action="/admin/redeemcodes/delete/{{ c.code }}" method="POST" class="inline">
-                                    <button type="submit" class="inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Delete Code" onclick="return confirm('Delete code {{ c.code }}?')">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% if not codes %}
-                    <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-muted-foreground text-sm">
-                            No redeem codes created yet.
-                        </td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
+              </div>
+              {% elif c.reward_type in ["ActionCard", "Card"] %}
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-bold text-foreground"
+                  >{{ c.reward_item }}</span
+                >
+                <span
+                  class="inline-flex items-center rounded bg-muted text-muted-foreground border border-border px-1.5 py-0.5 text-[11px] font-mono"
+                >
+                  x{{ c.reward_amount }}
+                </span>
+              </div>
+              {% elif c.reward_type in ["Leader", "Hero"] %}
+              <div class="flex items-center gap-1.5">
+                <span class="font-mono text-xs font-bold text-foreground"
+                  >{{ c.reward_item }}</span
+                >
+              </div>
+              {% else %}
+              <span class="font-mono font-bold text-foreground text-xs">
+                +{{ "{:,}".format(c.reward_amount) }}
+              </span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-3">
+              {% if c.enabled %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+              >
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                Active
+              </span>
+              {% else %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground border border-border"
+              >
+                Disabled
+              </span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-3 font-mono text-xs text-muted-foreground">
+              {{ c.created_by or "—" }}
+            </td>
+            <td class="px-6 py-3 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <form
+                  action="/admin/redeemcodes/toggle/{{ c.code }}"
+                  method="POST"
+                  class="inline"
+                >
+                  <button
+                    type="submit"
+                    class="inline-flex items-center rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    Toggle
+                  </button>
+                </form>
+                <form
+                  action="/admin/redeemcodes/delete/{{ c.code }}"
+                  method="POST"
+                  class="inline"
+                >
+                  <button
+                    type="submit"
+                    class="inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    title="Delete Code"
+                    onclick="return confirm('Delete code {{ c.code }}?')"
+                  >
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %} {% if not codes %}
+          <tr>
+            <td
+              colspan="6"
+              class="px-6 py-12 text-center text-muted-foreground text-sm"
+            >
+              No redeem codes created yet.
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
     </div>
+  </div>
 </div>
 
 <!-- Autocomplete Datalists -->
 <datalist id="creatures_list">
-    {% for c in creatures %}
-    <option value="{{ c.id }}">{{ c.name }}</option>
-    {% endfor %}
+  {% for c in creatures %}
+  <option value="{{ c.id }}">{{ c.name }}</option>
+  {% endfor %}
 </datalist>
 
 <datalist id="cards_list">
-    {% for ac in cards %}
-    <option value="{{ ac.id }}">{{ ac.name }}</option>
-    {% endfor %}
+  {% for ac in cards %}
+  <option value="{{ ac.id }}">{{ ac.name }}</option>
+  {% endfor %}
 </datalist>
 
 <datalist id="leaders_list">
-    {% for l in leaders %}
-    <option value="{{ l.id }}">{{ l.name }}</option>
-    {% endfor %}
+  {% for l in leaders %}
+  <option value="{{ l.id }}">{{ l.name }}</option>
+  {% endfor %}
 </datalist>
 
 <script>
-function handleRewardTypeChange() {
-    const sel = document.getElementById('reward_type_select');
+  function handleRewardTypeChange() {
+    const sel = document.getElementById("reward_type_select");
     const val = sel.value;
-    const container = document.getElementById('reward_item_container');
-    const input = document.getElementById('reward_item_input');
-    const label = document.getElementById('reward_item_label');
-    const amountLabel = document.getElementById('reward_amount_label');
-    const amountInput = document.getElementById('reward_amount_input');
+    const container = document.getElementById("reward_item_container");
+    const input = document.getElementById("reward_item_input");
+    const label = document.getElementById("reward_item_label");
+    const amountLabel = document.getElementById("reward_amount_label");
+    const amountInput = document.getElementById("reward_amount_input");
 
-    if (val === 'Creature') {
-        container.classList.remove('opacity-50', 'pointer-events-none');
-        input.disabled = false;
-        input.required = true;
-        input.setAttribute('list', 'creatures_list');
-        input.placeholder = 'Search creature (e.g. CornBall)...';
-        label.innerHTML = '<i data-lucide="bot" class="w-3.5 h-3.5 text-primary"></i> Select Creature';
-        amountLabel.innerHTML = '<i data-lucide="star" class="w-3.5 h-3.5 text-amber-500"></i> Star Rating (1-5)';
-        amountInput.min = '1';
-        amountInput.max = '5';
-        if (amountInput.value > 5 || amountInput.value < 1) amountInput.value = '5';
-    } else if (val === 'ActionCard') {
-        container.classList.remove('opacity-50', 'pointer-events-none');
-        input.disabled = false;
-        input.required = true;
-        input.setAttribute('list', 'cards_list');
-        input.placeholder = 'Search action card (e.g. Card_Corn_01)...';
-        label.innerHTML = '<i data-lucide="layers" class="w-3.5 h-3.5 text-primary"></i> Select Card';
-        amountLabel.innerHTML = '<i data-lucide="hash" class="w-3.5 h-3.5 text-muted-foreground"></i> Quantity (Copies)';
-        amountInput.min = '1';
-        amountInput.removeAttribute('max');
-        if (amountInput.value < 1) amountInput.value = '1';
-    } else if (val === 'Leader') {
-        container.classList.remove('opacity-50', 'pointer-events-none');
-        input.disabled = false;
-        input.required = true;
-        input.setAttribute('list', 'leaders_list');
-        input.placeholder = 'Search hero (e.g. Leader_Finn)...';
-        label.innerHTML = '<i data-lucide="crown" class="w-3.5 h-3.5 text-primary"></i> Select Hero';
-        amountLabel.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-muted-foreground"></i> Count (1)';
-        amountInput.min = '1';
-        amountInput.max = '1';
-        amountInput.value = '1';
+    if (val === "Creature") {
+      container.classList.remove("opacity-50", "pointer-events-none");
+      input.disabled = false;
+      input.required = true;
+      input.setAttribute("list", "creatures_list");
+      input.placeholder = "Search creature (e.g. CornBall)...";
+      label.innerHTML =
+        '<i data-lucide="bot" class="w-3.5 h-3.5 text-primary"></i> Select Creature';
+      amountLabel.innerHTML =
+        '<i data-lucide="star" class="w-3.5 h-3.5 text-amber-500"></i> Star Rating (1-5)';
+      amountInput.min = "1";
+      amountInput.max = "5";
+      if (amountInput.value > 5 || amountInput.value < 1)
+        amountInput.value = "5";
+    } else if (val === "ActionCard") {
+      container.classList.remove("opacity-50", "pointer-events-none");
+      input.disabled = false;
+      input.required = true;
+      input.setAttribute("list", "cards_list");
+      input.placeholder = "Search action card (e.g. Card_Corn_01)...";
+      label.innerHTML =
+        '<i data-lucide="layers" class="w-3.5 h-3.5 text-primary"></i> Select Card';
+      amountLabel.innerHTML =
+        '<i data-lucide="hash" class="w-3.5 h-3.5 text-muted-foreground"></i> Quantity (Copies)';
+      amountInput.min = "1";
+      amountInput.removeAttribute("max");
+      if (amountInput.value < 1) amountInput.value = "1";
+    } else if (val === "Leader") {
+      container.classList.remove("opacity-50", "pointer-events-none");
+      input.disabled = false;
+      input.required = true;
+      input.setAttribute("list", "leaders_list");
+      input.placeholder = "Search hero (e.g. Leader_Finn)...";
+      label.innerHTML =
+        '<i data-lucide="crown" class="w-3.5 h-3.5 text-primary"></i> Select Hero';
+      amountLabel.innerHTML =
+        '<i data-lucide="check" class="w-3.5 h-3.5 text-muted-foreground"></i> Count (1)';
+      amountInput.min = "1";
+      amountInput.max = "1";
+      amountInput.value = "1";
     } else {
-        // Currency
-        container.classList.add('opacity-50', 'pointer-events-none');
-        input.disabled = true;
-        input.required = false;
-        input.value = '';
-        input.removeAttribute('list');
-        input.placeholder = 'N/A for currency';
-        label.innerHTML = '<i data-lucide="sparkles" class="w-3.5 h-3.5 text-muted-foreground"></i> Item Identifier';
-        amountLabel.innerHTML = '<i data-lucide="hash" class="w-3.5 h-3.5 text-muted-foreground"></i> Reward Amount';
-        amountInput.min = '1';
-        amountInput.removeAttribute('max');
-        if (amountInput.value <= 5) amountInput.value = '100';
+      // Currency
+      container.classList.add("opacity-50", "pointer-events-none");
+      input.disabled = true;
+      input.required = false;
+      input.value = "";
+      input.removeAttribute("list");
+      input.placeholder = "N/A for currency";
+      label.innerHTML =
+        '<i data-lucide="sparkles" class="w-3.5 h-3.5 text-muted-foreground"></i> Item Identifier';
+      amountLabel.innerHTML =
+        '<i data-lucide="hash" class="w-3.5 h-3.5 text-muted-foreground"></i> Reward Amount';
+      amountInput.min = "1";
+      amountInput.removeAttribute("max");
+      if (amountInput.value <= 5) amountInput.value = "100";
     }
     if (window.lucide) {
-        lucide.createIcons();
+      lucide.createIcons();
     }
-}
+  }
 
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener("DOMContentLoaded", function () {
     handleRewardTypeChange();
-});
+  });
 </script>
 {% endblock %}

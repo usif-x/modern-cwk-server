@@ -243,11 +243,17 @@ def AdminHome():
     # reverse list
     adminActivity.reverse()
 
-    total_players = Player.query.filter(Player.game.isnot(None), Player.leader_level.isnot(None)).count()
+    total_players = Player.query.filter(
+        Player.game.isnot(None), Player.leader_level.isnot(None)
+    ).count()
     total_banned = Bans.query.filter_by(bantype="userid").count()
     total_banned_ips = Bans.query.filter_by(bantype="ip").count()
     cutoff = int(time.time()) - 86400
-    active_24h = Player.query.filter(Player.last_online >= cutoff, Player.game.isnot(None), Player.leader_level.isnot(None)).count()
+    active_24h = Player.query.filter(
+        Player.last_online >= cutoff,
+        Player.game.isnot(None),
+        Player.leader_level.isnot(None),
+    ).count()
 
     return render_template(
         "admin_home.html",
@@ -663,7 +669,9 @@ def AdminPlayerEdit(player):
         return make_response("No game data found!", 400)
 
     if "SoftCurrency" in request.form:
-        game["SoftCurrency"] = safe_int(request.form["SoftCurrency"], game.get("SoftCurrency", 0))
+        game["SoftCurrency"] = safe_int(
+            request.form["SoftCurrency"], game.get("SoftCurrency", 0)
+        )
     if "HardCurrency" in request.form:
         val = safe_int(request.form["HardCurrency"], 0)
         paid = int(game.get("PaidHardCurrency", 0))
@@ -674,20 +682,30 @@ def AdminPlayerEdit(player):
         else:
             game["FreeHardCurrency"] = free
     if "PvpCurrency" in request.form:
-        game["PvpCurrency"] = safe_int(request.form["PvpCurrency"], game.get("PvpCurrency", 0))
+        game["PvpCurrency"] = safe_int(
+            request.form["PvpCurrency"], game.get("PvpCurrency", 0)
+        )
     if "InventorySpace" in request.form:
-        game["InventorySpace"] = safe_int(request.form["InventorySpace"], game.get("InventorySpace", 0))
+        game["InventorySpace"] = safe_int(
+            request.form["InventorySpace"], game.get("InventorySpace", 0)
+        )
     if "MultiplayerLevel" in request.form:
-        new_rank = safe_int(request.form["MultiplayerLevel"], game.get("MultiplayerLevel", 0))
+        new_rank = safe_int(
+            request.form["MultiplayerLevel"], game.get("MultiplayerLevel", 0)
+        )
         game["MultiplayerLevel"] = new_rank
     if "leader_level" in request.form:
-        db_player.leader_level = safe_int(request.form["leader_level"], db_player.leader_level or 0)
+        db_player.leader_level = safe_int(
+            request.form["leader_level"], db_player.leader_level or 0
+        )
         game["AdminLeaderLevel"] = db_player.leader_level
     if "level" in request.form:
         db_player.level = safe_int(request.form["level"], db_player.level or 0)
         game["AdminPlayerLevel"] = db_player.level
     if "EvolutionShards" in request.form:
-        game["EvolutionShards"] = safe_int(request.form["EvolutionShards"], game.get("EvolutionShards", 0))
+        game["EvolutionShards"] = safe_int(
+            request.form["EvolutionShards"], game.get("EvolutionShards", 0)
+        )
     if "RankXP" in request.form:
         game["RankXP"] = safe_int(request.form["RankXP"], game.get("RankXP", 0))
     if "Zxcvbnm" in request.form:
@@ -737,7 +755,14 @@ def AdminPlayerAddCreature(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + " added creature " + creature_id + " to player: " + player)
+    Log(
+        "admin",
+        current_user.username
+        + " added creature "
+        + creature_id
+        + " to player: "
+        + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -796,20 +821,25 @@ def AdminPlayerAddCard(player):
 
     inventory = game.get("Inventory", [])
     next_uid = max([item.get("UniqueID", 0) for item in inventory], default=0) + 1
-    inventory.append({
-        "_T": "CA",
-        "ID": card_id,
-        "UniqueID": next_uid,
-        "Favorite": 0,
-        "CreatureUID": -1,
-        "CreatureSlot": 0,
-    })
+    inventory.append(
+        {
+            "_T": "CA",
+            "ID": card_id,
+            "UniqueID": next_uid,
+            "Favorite": 0,
+            "CreatureUID": -1,
+            "CreatureSlot": 0,
+        }
+    )
     game["Inventory"] = inventory
 
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + " added card " + card_id + " to player: " + player)
+    Log(
+        "admin",
+        current_user.username + " added card " + card_id + " to player: " + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -863,7 +893,13 @@ def AdminPlayerAddAllCreatures(player):
         if item.get("_T") == "CR":
             existing_ids.add(item.get("ID"))
 
-    next_uid = max([item.get("UniqueID", 0) for item in inventory if item.get("_T") == "CR"], default=0) + 1
+    next_uid = (
+        max(
+            [item.get("UniqueID", 0) for item in inventory if item.get("_T") == "CR"],
+            default=0,
+        )
+        + 1
+    )
     added = 0
     for creature in all_creatures:
         cid = creature["ID"]
@@ -876,17 +912,19 @@ def AdminPlayerAddAllCreatures(player):
                     default_cards.append(ac)
             default_cards = default_cards[:card_slots]
 
-            inventory.append({
-                "_T": "CR",
-                "ID": cid,
-                "UniqueID": next_uid,
-                "Xp": 0,
-                "Favorite": 0,
-                "Passive": 1,
-                "PassiveFeeds": 0,
-                "StarRating": 1,
-                "Cards": default_cards,
-            })
+            inventory.append(
+                {
+                    "_T": "CR",
+                    "ID": cid,
+                    "UniqueID": next_uid,
+                    "Xp": 0,
+                    "Favorite": 0,
+                    "Passive": 1,
+                    "PassiveFeeds": 0,
+                    "StarRating": 1,
+                    "Cards": default_cards,
+                }
+            )
             next_uid += 1
             added += 1
 
@@ -894,7 +932,10 @@ def AdminPlayerAddAllCreatures(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" added {added} creatures to player: " + player)
+    Log(
+        "admin",
+        current_user.username + f" added {added} creatures to player: " + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -937,7 +978,10 @@ def AdminPlayerMaxAllCreatures(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" maxed {count} creatures for player: " + player)
+    Log(
+        "admin",
+        current_user.username + f" maxed {count} creatures for player: " + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -960,24 +1004,37 @@ def AdminPlayerAddMaxCreature(player):
         return make_response("Creature ID is required!", 400)
 
     inventory = game.get("Inventory", [])
-    next_uid = max([item.get("UniqueID", 0) for item in inventory if item.get("_T") == "CR"], default=0) + 1
+    next_uid = (
+        max(
+            [item.get("UniqueID", 0) for item in inventory if item.get("_T") == "CR"],
+            default=0,
+        )
+        + 1
+    )
 
-    inventory.append({
-        "_T": "CR",
-        "ID": creature_id,
-        "UniqueID": next_uid,
-        "Xp": 70325,
-        "Favorite": 0,
-        "Passive": 1,
-        "PassiveFeeds": 0,
-        "StarRating": 5,
-    })
+    inventory.append(
+        {
+            "_T": "CR",
+            "ID": creature_id,
+            "UniqueID": next_uid,
+            "Xp": 70325,
+            "Favorite": 0,
+            "Passive": 1,
+            "PassiveFeeds": 0,
+            "StarRating": 5,
+        }
+    )
 
     game["Inventory"] = inventory
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" added max creature {creature_id} to player: " + player)
+    Log(
+        "admin",
+        current_user.username
+        + f" added max creature {creature_id} to player: "
+        + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1016,14 +1073,16 @@ def AdminPlayerAddAllCards(player):
         if cid not in existing_ids:
             cards.append({"ID": cid, "Stat": 1})
         if cid not in existing_inv_ids:
-            inventory.append({
-                "_T": "CA",
-                "ID": cid,
-                "UniqueID": next_uid,
-                "Favorite": 0,
-                "CreatureUID": -1,
-                "CreatureSlot": 0,
-            })
+            inventory.append(
+                {
+                    "_T": "CA",
+                    "ID": cid,
+                    "UniqueID": next_uid,
+                    "Favorite": 0,
+                    "CreatureUID": -1,
+                    "CreatureSlot": 0,
+                }
+            )
             next_uid += 1
             added += 1
 
@@ -1032,7 +1091,10 @@ def AdminPlayerAddAllCards(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" added {added} action cards to player: " + player)
+    Log(
+        "admin",
+        current_user.username + f" added {added} Auguments to player: " + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1099,7 +1161,10 @@ def AdminPlayerAddLeader(player):
         game["Leaders"] = leaders
         db_player.game = EncryptGameData(game, player)
         db.session.commit()
-        Log("admin", current_user.username + f" added leader {leader_id} to player: " + player)
+        Log(
+            "admin",
+            current_user.username + f" added leader {leader_id} to player: " + player,
+        )
 
     return redirect("/admin/players/" + player)
 
@@ -1611,11 +1676,13 @@ def BlueprintFile(filename):
 
 @app.route("/persist/static/monthly_store", methods=["GET"])
 def MonthlyStore():
-    return jsonify({
-        "StoreItems": [],
-        "FeaturedItems": [],
-        "ResetTime": 0,
-    })
+    return jsonify(
+        {
+            "StoreItems": [],
+            "FeaturedItems": [],
+            "ResetTime": 0,
+        }
+    )
 
 
 @app.route("/persist/messages_received_ids")
@@ -1851,12 +1918,18 @@ def RedeemCodeAPI():
     db_user.game = EncryptGameData(game, player_id)
     db.session.commit()
 
-    PlayerLog(IPFromRequest(request), player_id, f"Redeemed code: {code_upper} - {reward_type} +{reward_amount}")
+    PlayerLog(
+        IPFromRequest(request),
+        player_id,
+        f"Redeemed code: {code_upper} - {reward_type} +{reward_amount}",
+    )
 
-    return jsonify({
-        "success": True,
-        "message": f"Redeemed {code_upper} for {reward_amount} {reward_type}",
-    })
+    return jsonify(
+        {
+            "success": True,
+            "message": f"Redeemed {code_upper} for {reward_amount} {reward_type}",
+        }
+    )
 
 
 def get_hash_string(source_value, key):
@@ -2000,11 +2073,23 @@ def PersistGame(player_id=None):
         devicename = request.headers["X-Nick-Description"]
 
         # check if player's devicename is empty, if so, set it to X-Nick-Description
-        if DeviceNameUser.devicename is None or DeviceNameUser.devicename == b"" or DeviceNameUser.devicename == "":
+        if (
+            DeviceNameUser.devicename is None
+            or DeviceNameUser.devicename == b""
+            or DeviceNameUser.devicename == ""
+        ):
             DeviceNameUser.devicename = devicename
             db.session.commit()
         elif DeviceNameUser.devicename != devicename:
-            Log("persist", username + " device name mismatch: expected '" + str(DeviceNameUser.devicename) + "' got '" + devicename + "'")
+            Log(
+                "persist",
+                username
+                + " device name mismatch: expected '"
+                + str(DeviceNameUser.devicename)
+                + "' got '"
+                + devicename
+                + "'",
+            )
 
     UpdateLastOnline(username)
 
@@ -2056,26 +2141,53 @@ def PersistGame(player_id=None):
             if client_game:
                 server_game = DecryptGameData(db_user.game)
                 if server_game:
-                    client_cards = {c.get("ID") for c in client_game.get("CardCollection", [])}
+                    client_cards = {
+                        c.get("ID") for c in client_game.get("CardCollection", [])
+                    }
                     for card in server_game.get("CardCollection", []):
                         if card.get("ID") not in client_cards:
                             client_game.setdefault("CardCollection", []).append(card)
 
-                    client_creatures = {i.get("UniqueID") for i in client_game.get("Inventory", []) if i.get("_T") == "CR"}
+                    client_creatures = {
+                        i.get("UniqueID")
+                        for i in client_game.get("Inventory", [])
+                        if i.get("_T") == "CR"
+                    }
                     for item in server_game.get("Inventory", []):
-                        if item.get("_T") == "CR" and item.get("UniqueID") not in client_creatures:
+                        if (
+                            item.get("_T") == "CR"
+                            and item.get("UniqueID") not in client_creatures
+                        ):
                             client_game.setdefault("Inventory", []).append(item)
 
-                    client_ca_ids = {i.get("ID") for i in client_game.get("Inventory", []) if i.get("_T") == "CA"}
-                    next_uid = max([i.get("UniqueID", 0) for i in client_game.get("Inventory", [])], default=0) + 1
+                    client_ca_ids = {
+                        i.get("ID")
+                        for i in client_game.get("Inventory", [])
+                        if i.get("_T") == "CA"
+                    }
+                    next_uid = (
+                        max(
+                            [
+                                i.get("UniqueID", 0)
+                                for i in client_game.get("Inventory", [])
+                            ],
+                            default=0,
+                        )
+                        + 1
+                    )
                     for item in server_game.get("Inventory", []):
-                        if item.get("_T") == "CA" and item.get("ID") not in client_ca_ids:
+                        if (
+                            item.get("_T") == "CA"
+                            and item.get("ID") not in client_ca_ids
+                        ):
                             new_item = dict(item)
                             new_item["UniqueID"] = next_uid
                             next_uid += 1
                             client_game.setdefault("Inventory", []).append(new_item)
 
-                    client_leaders = {l.get("ID") for l in client_game.get("Leaders", [])}
+                    client_leaders = {
+                        l.get("ID") for l in client_game.get("Leaders", [])
+                    }
                     for leader in server_game.get("Leaders", []):
                         if leader.get("ID") not in client_leaders:
                             client_game.setdefault("Leaders", []).append(leader)
@@ -2427,7 +2539,11 @@ def PersistFriendsInformationDW():
         clientData = parse_qs(request.get_data().decode("utf-8"))
         clientData = {k: v[0] if len(v) == 1 else v for k, v in clientData.items()}
 
-    player_id = clientData.get("player_id") or clientData.get("user_id") or clientData.get("userId")
+    player_id = (
+        clientData.get("player_id")
+        or clientData.get("user_id")
+        or clientData.get("userId")
+    )
     if not player_id:
         return make_response("Missing player_id", 400)
 

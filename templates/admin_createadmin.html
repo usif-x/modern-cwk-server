@@ -1,45 +1,169 @@
-{% extends "admin_base.html" %}
-{% block title %}Create Admin - CWK Admin{% endblock %}
-{% block breadcrumb %}Create Admin{% endblock %}
-
-{% block content %}
+{% extends "admin_base.html" %} {% block title %}Create Admin - CWK Admin{%
+endblock %} {% block breadcrumb %}Create Admin{% endblock %} {% block content %}
 <div class="space-y-6">
-    <!-- Header -->
-    <div>
-        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Create Administrator</h1>
-        <p class="text-sm text-muted-foreground mt-1">Provision a new administrator account for staff and moderators</p>
-    </div>
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+      Create Administrator
+    </h1>
+    <p class="text-sm text-muted-foreground mt-1">
+      Provision a new administrator account for staff and moderators
+    </p>
+  </div>
 
-    <!-- Form Card -->
-    <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6 max-w-lg">
-        <div class="border-b border-border pb-3 mb-6">
-            <h2 class="text-base font-semibold tracking-tight">New Account Details</h2>
-            <p class="text-xs text-muted-foreground mt-0.5">Password will be randomly generated and printed to the server terminal</p>
+  {% if created_admin %}
+  <div
+    class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-5 max-w-2xl"
+  >
+    <div class="flex items-start gap-3">
+      <div
+        class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+      >
+        <i data-lucide="circle-check" class="h-5 w-5"></i>
+      </div>
+      <div class="min-w-0 flex-1">
+        <h2 class="font-semibold text-foreground">
+          Administrator created successfully
+        </h2>
+        <p class="mt-1 text-sm text-muted-foreground">
+          Save these credentials now. The password will not be shown again.
+        </p>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          <div class="rounded-lg border border-border bg-card p-3">
+            <div
+              class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              Username
+            </div>
+            <div class="mt-1 flex items-center gap-2">
+              <code
+                id="created-admin-username"
+                class="min-w-0 flex-1 truncate font-mono text-sm text-foreground"
+                >{{ created_admin.username }}</code
+              >
+              <button
+                type="button"
+                onclick="copyCreatedCredential('created-admin-username', this)"
+                aria-label="Copy username"
+                class="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                title="Copy username"
+              >
+                <i data-lucide="copy" class="h-4 w-4"></i>
+              </button>
+            </div>
+          </div>
+          <div class="rounded-lg border border-border bg-card p-3">
+            <div
+              class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              Temporary password
+            </div>
+            <div class="mt-1 flex items-center gap-2">
+              <code
+                id="created-admin-password"
+                class="min-w-0 flex-1 truncate font-mono text-sm text-foreground"
+                >{{ created_admin.password }}</code
+              >
+              <button
+                type="button"
+                onclick="copyCreatedCredential('created-admin-password', this)"
+                aria-label="Copy password"
+                class="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                title="Copy password"
+              >
+                <i data-lucide="copy" class="h-4 w-4"></i>
+              </button>
+            </div>
+          </div>
         </div>
-
-        <form method="post" class="space-y-4">
-            <div class="space-y-1.5">
-                <label class="text-xs font-medium text-foreground">Admin Username</label>
-                <input type="text" name="username" placeholder="e.g. moderator_finn" required
-                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-            </div>
-
-            <div class="space-y-1.5">
-                <label class="text-xs font-medium text-foreground">Role / Privilege Level</label>
-                <select name="rank" required
-                    class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                    <option value="1">Admin (Standard management & moderation)</option>
-                    <option value="0">Superadmin (Full access including server & maintenance)</option>
-                </select>
-            </div>
-
-            <div class="pt-2">
-                <button type="submit" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors w-full">
-                    <i data-lucide="user-plus" class="w-4 h-4"></i>
-                    <span>Create Account</span>
-                </button>
-            </div>
-        </form>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <a
+            href="/admin/home"
+            class="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
+            Go to dashboard
+          </a>
+          <a
+            href="/admin/players"
+            class="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+          >
+            <i data-lucide="users" class="h-4 w-4"></i>
+            View players
+          </a>
+        </div>
+      </div>
     </div>
+  </div>
+  {% endif %}
+
+  <!-- Form Card -->
+  <div
+    class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6 max-w-lg"
+  >
+    <div class="border-b border-border pb-3 mb-6">
+      <h2 class="text-base font-semibold tracking-tight">
+        New Account Details
+      </h2>
+      <p class="text-xs text-muted-foreground mt-0.5">
+        Password will be randomly generated and printed to the server terminal
+      </p>
+    </div>
+
+    <form method="post" class="space-y-4">
+      <div class="space-y-1.5">
+        <label class="text-xs font-medium text-foreground"
+          >Admin Username</label
+        >
+        <input
+          type="text"
+          name="username"
+          placeholder="e.g. moderator_finn"
+          required
+          class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        />
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-xs font-medium text-foreground"
+          >Role / Privilege Level</label
+        >
+        <select
+          name="rank"
+          required
+          class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <option value="1">Admin (Standard management & moderation)</option>
+          <option value="0">
+            Superadmin (Full access including server & maintenance)
+          </option>
+        </select>
+      </div>
+
+      <div class="pt-2">
+        <button
+          type="submit"
+          class="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors w-full"
+        >
+          <i data-lucide="user-plus" class="w-4 h-4"></i>
+          <span>Create Account</span>
+        </button>
+      </div>
+    </form>
+  </div>
+  <script>
+    function copyCreatedCredential(elementId, button) {
+      const value = document.getElementById(elementId).textContent.trim();
+      navigator.clipboard.writeText(value).then(() => {
+        const icon = button.querySelector("[data-lucide]");
+        icon.setAttribute("data-lucide", "check");
+        lucide.createIcons();
+        setTimeout(() => {
+          icon.setAttribute("data-lucide", "copy");
+          lucide.createIcons();
+        }, 1400);
+      });
+    }
+  </script>
 </div>
 {% endblock %}

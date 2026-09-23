@@ -1,23 +1,69 @@
-import json, os, random, re, secrets, shutil, string, subprocess, tempfile, time, zipfile
+import json
+import os
+import random
+import re
+import secrets
+import shutil
+import string
+import subprocess
+import tempfile
+import time
+import zipfile
 from datetime import datetime, timezone
-from flask import Blueprint, Response, abort, jsonify, make_response, redirect, render_template, request
+
+from flask import (
+    Blueprint,
+    Response,
+    abort,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    request,
+)
 from flask_login import current_user, login_required, login_user, logout_user
 
-from app import db, bcrypt, maintenance, badcharaters, app as flask_app
+from app import app as flask_app
+from app import badcharaters, bcrypt, db, maintenance
 from app.models import Admin, AdminActivity, Bans, Logs, Player, RedeemCode, UpsightLogs
-
 from app.utils import (
-    DecryptGameData, EncryptGameData, DiscordWebhookMessage, GetNameFromSave,
-    GetPlayerWins, IPFromRequest, InvalidUsername, IsUserBanned, Log,
-    PlayerLog, safe_int, time_ago_string, isAdmin, Backup, UpdateLastOnline,
-    GetXPForRank, GetRankForXP, GetRankXPTable, GetPvpBanlist, SavePvpBanlist,
-    FindBrokenSaveIssues, RepairGameData, GetBanExpiry, FormatBanExpiry,
-    BuildTransferredGame, GetPvpRankName, GetTutorialOnlyCreatureIds,
-    IsTutorialOnlyCreature, GetLeaderSkinBase, GetLeaderSkins,
-    LoadSettings, SaveSettings, SendBackupToTelegram, GetBackupIntervalHours,
+    Backup,
+    BuildTransferredGame,
+    DecryptGameData,
+    DiscordWebhookMessage,
+    EncryptGameData,
+    FindBrokenSaveIssues,
+    FormatBanExpiry,
+    GetBackupIntervalHours,
+    GetBanExpiry,
+    GetLeaderSkinBase,
+    GetLeaderSkins,
+    GetNameFromSave,
+    GetPlayerWins,
+    GetPvpBanlist,
+    GetPvpRankName,
+    GetRankForXP,
+    GetRankXPTable,
+    GetTutorialOnlyCreatureIds,
+    GetXPForRank,
+    InvalidUsername,
+    IPFromRequest,
+    IsTutorialOnlyCreature,
+    IsUserBanned,
+    LoadSettings,
+    Log,
+    PlayerLog,
+    RepairGameData,
+    SavePvpBanlist,
+    SaveSettings,
+    SendBackupToTelegram,
+    UpdateLastOnline,
+    isAdmin,
+    safe_int,
+    time_ago_string,
 )
 
-admin_bp = Blueprint('admin_bp', __name__)
+admin_bp = Blueprint("admin_bp", __name__)
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -79,11 +125,17 @@ def AdminHome():
     # reverse list
     adminActivity.reverse()
 
-    total_players = Player.query.filter(Player.game.isnot(None), Player.leader_level.isnot(None)).count()
+    total_players = Player.query.filter(
+        Player.game.isnot(None), Player.leader_level.isnot(None)
+    ).count()
     total_banned = Bans.query.filter_by(bantype="userid").count()
     total_banned_ips = Bans.query.filter_by(bantype="ip").count()
     cutoff = int(time.time()) - 86400
-    active_24h = Player.query.filter(Player.last_online >= cutoff, Player.game.isnot(None), Player.leader_level.isnot(None)).count()
+    active_24h = Player.query.filter(
+        Player.last_online >= cutoff,
+        Player.game.isnot(None),
+        Player.leader_level.isnot(None),
+    ).count()
 
     return render_template(
         "admin_home.html",
@@ -105,8 +157,12 @@ def AdminVersions():
 
         return render_template(
             "admin_versions.html",
-            pc_version=open(os.path.join(ROOT_DIR, "data/persist/version.txt"), "r").read(),
-            android_version=open(os.path.join(ROOT_DIR, "data/persist/android_version.txt"), "r").read(),
+            pc_version=open(
+                os.path.join(ROOT_DIR, "data/persist/version.txt"), "r"
+            ).read(),
+            android_version=open(
+                os.path.join(ROOT_DIR, "data/persist/android_version.txt"), "r"
+            ).read(),
         )
     elif request.method == "POST":
         form = request.form
@@ -220,10 +276,14 @@ def AdminServerTelegramTest():
     from app.utils import SendTelegramMessage
 
     if not TelegramConfigured():
-        return make_response("Telegram bot token / admin id not configured in .env", 400)
+        return make_response(
+            "Telegram bot token / admin id not configured in .env", 400
+        )
     ok = SendTelegramMessage("CWK Admin: Telegram notifications are working.")
     if not ok:
-        return make_response("Failed to send Telegram message. Check the bot token and chat id.", 400)
+        return make_response(
+            "Failed to send Telegram message. Check the bot token and chat id.", 400
+        )
     return redirect("/admin/server")
 
 
@@ -253,7 +313,9 @@ def AdminServerUploadBackup():
             # guard against zip-slip
             real_extract = os.path.realpath(extract_dir)
             for member in archive.namelist():
-                if not os.path.realpath(os.path.join(extract_dir, member)).startswith(real_extract):
+                if not os.path.realpath(os.path.join(extract_dir, member)).startswith(
+                    real_extract
+                ):
                     return make_response("Invalid archive: unsafe path detected.", 400)
             archive.extractall(extract_dir)
 
@@ -265,7 +327,9 @@ def AdminServerUploadBackup():
             if persist_src is None and "persist" in dirs:
                 persist_src = os.path.join(root, "persist")
         if db_src is None:
-            return make_response("Invalid backup: database file not found inside archive.", 400)
+            return make_response(
+                "Invalid backup: database file not found inside archive.", 400
+            )
 
         # Snapshot the current state first so a bad restore can be undone.
         Backup()
@@ -280,7 +344,10 @@ def AdminServerUploadBackup():
         db.session.remove()
         db.engine.dispose()
 
-        Log("admin", current_user.username + " restored the server from an uploaded backup")
+        Log(
+            "admin",
+            current_user.username + " restored the server from an uploaded backup",
+        )
         DiscordWebhookMessage(
             current_user.username + " restored the server from an uploaded backup"
         )
@@ -337,7 +404,10 @@ def AdminCreateAdmin():
             + " with rank: "
             + rank,
         )
-        return "Admin created! Username: " + username + " Password: " + password
+        return render_template(
+            "admin_createadmin.html",
+            created_admin={"username": username, "password": password, "rank": rank},
+        )
 
 
 @admin_bp.route("/admin/passkey", methods=["POST"])
@@ -516,7 +586,11 @@ def AdminTopPvp():
         if not isinstance(game, dict):
             continue
 
-        name = player.multiplayer_name or game.get("MultiplayerPlayerName") or "Unnamed Player"
+        name = (
+            player.multiplayer_name
+            or game.get("MultiplayerPlayerName")
+            or "Unnamed Player"
+        )
         last_online = player.last_online
         if last_online is not None:
             try:
@@ -542,7 +616,9 @@ def AdminTopPvp():
         )
 
     # Lower MultiplayerLevel = better PVP rank (1 = Super Amadeus, 25 = Dweeb).
-    entries.sort(key=lambda e: (e["multiplayer_level"] if e["multiplayer_level"] > 0 else 999))
+    entries.sort(
+        key=lambda e: (e["multiplayer_level"] if e["multiplayer_level"] > 0 else 999)
+    )
     for index, entry in enumerate(entries):
         entry["ranking"] = index + 1
 
@@ -587,7 +663,9 @@ def AdminPlayer(player):
             "admin_player.html",
             player=player,
             is_banned=IsUserBanned(player["username"]),
-            save_issues=["Game save could not be decrypted. Use Import JSON to restore it."],
+            save_issues=[
+                "Game save could not be decrypted. Use Import JSON to restore it."
+            ],
             SoftCurrency=0,
             HardCurrency=0,
             PvpCurrency=0,
@@ -635,8 +713,16 @@ def AdminPlayer(player):
         raw_inventory = []
 
     # creatures vs individual action-card copies
-    Inventory = [item for item in raw_inventory if isinstance(item, dict) and item.get("_T") == "CR"]
-    CardInventory = [item for item in raw_inventory if isinstance(item, dict) and item.get("_T") == "CA"]
+    Inventory = [
+        item
+        for item in raw_inventory
+        if isinstance(item, dict) and item.get("_T") == "CR"
+    ]
+    CardInventory = [
+        item
+        for item in raw_inventory
+        if isinstance(item, dict) and item.get("_T") == "CA"
+    ]
 
     tutorial_creature_ids = GetTutorialOnlyCreatureIds()
     invalid_creature_count = sum(
@@ -655,7 +741,9 @@ def AdminPlayer(player):
     game_saved_lvl = safe_int(game.get("PlayersLastSavedLevel", 0))
     game_xp_lvl = GetRankForXP(game.get("RankXP", 0))
     admin_lvl = safe_int(game.get("AdminLeaderLevel", 0))
-    effective_rank = max(player.get("leader_level") or 0, game_saved_lvl, game_xp_lvl, admin_lvl)
+    effective_rank = max(
+        player.get("leader_level") or 0, game_saved_lvl, game_xp_lvl, admin_lvl
+    )
     if effective_rank > (player.get("leader_level") or 0):
         player["leader_level"] = effective_rank
 
@@ -687,7 +775,8 @@ def AdminPlayer(player):
         is_banned=IsUserBanned(player["username"]),
         save_issues=save_issues,
         SoftCurrency=game.get("SoftCurrency", 0),
-        HardCurrency=int(game.get("PaidHardCurrency", 0)) + int(game.get("FreeHardCurrency", 0)),
+        HardCurrency=int(game.get("PaidHardCurrency", 0))
+        + int(game.get("FreeHardCurrency", 0)),
         PvpCurrency=game.get("PvpCurrency", 0),
         EvolutionShards=game.get("EvolutionShards", 0),
         InstalledDate=datetime.fromtimestamp(
@@ -756,7 +845,7 @@ def AdminPlayerGameEdit(player):
         db_rank = max(
             safe_int(game_json.get("PlayersLastSavedLevel", 0)),
             GetRankForXP(safe_int(game_json.get("RankXP", 0))),
-            safe_int(game_json.get("AdminLeaderLevel", 0))
+            safe_int(game_json.get("AdminLeaderLevel", 0)),
         )
         if db_rank > 0:
             player.leader_level = db_rank
@@ -794,7 +883,9 @@ def AdminPlayerEdit(player):
         return make_response("No game data found!", 400)
 
     if "SoftCurrency" in request.form:
-        game["SoftCurrency"] = safe_int(request.form["SoftCurrency"], game.get("SoftCurrency", 0))
+        game["SoftCurrency"] = safe_int(
+            request.form["SoftCurrency"], game.get("SoftCurrency", 0)
+        )
     if "HardCurrency" in request.form:
         val = safe_int(request.form["HardCurrency"], 0)
         paid = int(game.get("PaidHardCurrency", 0))
@@ -805,9 +896,13 @@ def AdminPlayerEdit(player):
         else:
             game["FreeHardCurrency"] = free
     if "PvpCurrency" in request.form:
-        game["PvpCurrency"] = safe_int(request.form["PvpCurrency"], game.get("PvpCurrency", 0))
+        game["PvpCurrency"] = safe_int(
+            request.form["PvpCurrency"], game.get("PvpCurrency", 0)
+        )
     if "InventorySpace" in request.form:
-        game["InventorySpace"] = safe_int(request.form["InventorySpace"], game.get("InventorySpace", 0))
+        game["InventorySpace"] = safe_int(
+            request.form["InventorySpace"], game.get("InventorySpace", 0)
+        )
     # PVP rank: MultiplayerLevel and BestMultiplayerLevel are always kept equal
     # (1 = Super Amadeus best, 25 = Dweeb worst).
     if "MultiplayerLevel" in request.form or "BestMultiplayerLevel" in request.form:
@@ -819,7 +914,8 @@ def AdminPlayerEdit(player):
         game["BestMultiplayerLevel"] = new_pvp_rank
     if "PointsInMultiplayerLevel" in request.form:
         game["PointsInMultiplayerLevel"] = safe_int(
-            request.form["PointsInMultiplayerLevel"], game.get("PointsInMultiplayerLevel", 0)
+            request.form["PointsInMultiplayerLevel"],
+            game.get("PointsInMultiplayerLevel", 0),
         )
     if "MultiplayerName" in request.form:
         new_name = request.form["MultiplayerName"].strip()
@@ -832,9 +928,21 @@ def AdminPlayerEdit(player):
     old_level = safe_int(db_player.level, 0)
     old_rank_xp = safe_int(game.get("RankXP", 0))
 
-    new_leader_level = safe_int(request.form.get("leader_level"), old_leader_level) if "leader_level" in request.form else old_leader_level
-    new_level = safe_int(request.form.get("level"), old_level) if "level" in request.form else old_level
-    submitted_rank_xp = safe_int(request.form.get("RankXP"), old_rank_xp) if "RankXP" in request.form else old_rank_xp
+    new_leader_level = (
+        safe_int(request.form.get("leader_level"), old_leader_level)
+        if "leader_level" in request.form
+        else old_leader_level
+    )
+    new_level = (
+        safe_int(request.form.get("level"), old_level)
+        if "level" in request.form
+        else old_level
+    )
+    submitted_rank_xp = (
+        safe_int(request.form.get("RankXP"), old_rank_xp)
+        if "RankXP" in request.form
+        else old_rank_xp
+    )
 
     # Determine desired target rank and XP
     if new_leader_level != old_leader_level:
@@ -843,7 +951,10 @@ def AdminPlayerEdit(player):
         required_xp = GetXPForRank(target_rank)
         if target_rank < old_leader_level:
             # Demotion: reset XP to the required XP for the lower rank unless submitted XP is valid for it
-            if submitted_rank_xp >= GetXPForRank(target_rank + 1) or submitted_rank_xp < required_xp:
+            if (
+                submitted_rank_xp >= GetXPForRank(target_rank + 1)
+                or submitted_rank_xp < required_xp
+            ):
                 final_xp = required_xp
             else:
                 final_xp = submitted_rank_xp
@@ -873,7 +984,9 @@ def AdminPlayerEdit(player):
     game["RankXP"] = final_xp
 
     if "EvolutionShards" in request.form:
-        game["EvolutionShards"] = safe_int(request.form["EvolutionShards"], game.get("EvolutionShards", 0))
+        game["EvolutionShards"] = safe_int(
+            request.form["EvolutionShards"], game.get("EvolutionShards", 0)
+        )
     if "Zxcvbnm" in request.form:
         game["Zxcvbnm"] = 1
     else:
@@ -909,27 +1022,38 @@ def AdminPlayerAddCreature(player):
     if not creature_id:
         return make_response("Creature ID is required!", 400)
     if IsTutorialOnlyCreature(creature_id):
-        return make_response("This is a tutorial-only creature and cannot be added to a player.", 400)
+        return make_response(
+            "This is a tutorial-only creature and cannot be added to a player.", 400
+        )
 
     inventory = game.get("Inventory")
     if not isinstance(inventory, list):
         inventory = []
-    next_uid = max(
-        [i.get("UniqueID", 0) for i in inventory if isinstance(i, dict) and i.get("_T") == "CR"],
-        default=0,
-    ) + 1
+    next_uid = (
+        max(
+            [
+                i.get("UniqueID", 0)
+                for i in inventory
+                if isinstance(i, dict) and i.get("_T") == "CR"
+            ],
+            default=0,
+        )
+        + 1
+    )
 
     for _ in range(count):
-        inventory.append({
-            "_T": "CR",
-            "ID": creature_id,
-            "UniqueID": next_uid,
-            "Xp": creature_xp,
-            "Favorite": 0,
-            "Passive": 1,
-            "PassiveFeeds": 0,
-            "StarRating": creature_stars,
-        })
+        inventory.append(
+            {
+                "_T": "CR",
+                "ID": creature_id,
+                "UniqueID": next_uid,
+                "Xp": creature_xp,
+                "Favorite": 0,
+                "Passive": 1,
+                "PassiveFeeds": 0,
+                "StarRating": creature_stars,
+            }
+        )
         next_uid += 1
 
     game["Inventory"] = inventory
@@ -937,7 +1061,10 @@ def AdminPlayerAddCreature(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" added {count} x {creature_id} to player: " + player)
+    Log(
+        "admin",
+        current_user.username + f" added {count} x {creature_id} to player: " + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -992,7 +1119,12 @@ def AdminPlayerDeleteAllCreatures(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" deleted all ({initial_count}) creatures from player: " + player)
+    Log(
+        "admin",
+        current_user.username
+        + f" deleted all ({initial_count}) creatures from player: "
+        + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1030,7 +1162,12 @@ def AdminPlayerDeleteCreaturesBulk(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" bulk deleted {len(to_delete)} creatures from player: " + player)
+    Log(
+        "admin",
+        current_user.username
+        + f" bulk deleted {len(to_delete)} creatures from player: "
+        + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1053,18 +1190,27 @@ def AdminPlayerMaxCreature(player, index):
 
     if 0 <= index < len(creatures):
         if IsTutorialOnlyCreature(creatures[index].get("ID")):
-            return make_response("This is a tutorial-only creature and cannot be modified.", 400)
+            return make_response(
+                "This is a tutorial-only creature and cannot be modified.", 400
+            )
         creatures[index]["StarRating"] = 5
         creatures[index]["Xp"] = 70325
         db_player.game = EncryptGameData(game, player)
         db.session.commit()
-        Log("admin", current_user.username + f" maxed creature index {index} for player: " + player)
+        Log(
+            "admin",
+            current_user.username
+            + f" maxed creature index {index} for player: "
+            + player,
+        )
 
     return redirect("/admin/players/" + player)
 
 
 @login_required
-@admin_bp.route("/admin/players/<player>/downgrade_creature/<int:index>", methods=["POST"])
+@admin_bp.route(
+    "/admin/players/<player>/downgrade_creature/<int:index>", methods=["POST"]
+)
 def AdminPlayerDowngradeCreature(player, index):
     if not isAdmin(current_user):
         return abort(404)
@@ -1085,7 +1231,12 @@ def AdminPlayerDowngradeCreature(player, index):
         creatures[index]["Xp"] = 0
         db_player.game = EncryptGameData(game, player)
         db.session.commit()
-        Log("admin", current_user.username + f" downgraded creature index {index} for player: " + player)
+        Log(
+            "admin",
+            current_user.username
+            + f" downgraded creature index {index} for player: "
+            + player,
+        )
 
     return redirect("/admin/players/" + player)
 
@@ -1119,17 +1270,25 @@ def AdminPlayerAddCard(player):
     inventory = game.get("Inventory")
     if not isinstance(inventory, list):
         inventory = []
-    next_uid = max([item.get("UniqueID", 0) for item in inventory if isinstance(item, dict)], default=0) + 1
+    next_uid = (
+        max(
+            [item.get("UniqueID", 0) for item in inventory if isinstance(item, dict)],
+            default=0,
+        )
+        + 1
+    )
 
     for _ in range(count):
-        inventory.append({
-            "_T": "CA",
-            "ID": card_id,
-            "UniqueID": next_uid,
-            "Favorite": 0,
-            "CreatureUID": -1,
-            "CreatureSlot": 0,
-        })
+        inventory.append(
+            {
+                "_T": "CA",
+                "ID": card_id,
+                "UniqueID": next_uid,
+                "Favorite": 0,
+                "CreatureUID": -1,
+                "CreatureSlot": 0,
+            }
+        )
         next_uid += 1
 
     game["CardCollection"] = card_collection
@@ -1138,7 +1297,10 @@ def AdminPlayerAddCard(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" added {count} x card {card_id} to player: " + player)
+    Log(
+        "admin",
+        current_user.username + f" added {count} x card {card_id} to player: " + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1159,7 +1321,9 @@ def AdminPlayerAddCardCopy(player, index):
     inventory = game.get("Inventory", [])
     if not isinstance(inventory, list):
         inventory = []
-    cards = [item for item in inventory if isinstance(item, dict) and item.get("_T") == "CA"]
+    cards = [
+        item for item in inventory if isinstance(item, dict) and item.get("_T") == "CA"
+    ]
 
     if not (0 <= index < len(cards)):
         return redirect("/admin/players/" + player)
@@ -1175,21 +1339,34 @@ def AdminPlayerAddCardCopy(player, index):
         card_collection.append({"ID": card_id, "Stat": 1})
     game["CardCollection"] = card_collection
 
-    next_uid = max([item.get("UniqueID", 0) for item in inventory if isinstance(item, dict)], default=0) + 1
-    inventory.append({
-        "_T": "CA",
-        "ID": card_id,
-        "UniqueID": next_uid,
-        "Favorite": 0,
-        "CreatureUID": -1,
-        "CreatureSlot": 0,
-    })
+    next_uid = (
+        max(
+            [item.get("UniqueID", 0) for item in inventory if isinstance(item, dict)],
+            default=0,
+        )
+        + 1
+    )
+    inventory.append(
+        {
+            "_T": "CA",
+            "ID": card_id,
+            "UniqueID": next_uid,
+            "Favorite": 0,
+            "CreatureUID": -1,
+            "CreatureSlot": 0,
+        }
+    )
     game["Inventory"] = inventory
 
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" added a copy of card {card_id} for player: " + player)
+    Log(
+        "admin",
+        current_user.username
+        + f" added a copy of card {card_id} for player: "
+        + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1236,14 +1413,19 @@ def AdminPlayerDeleteAllCards(player):
 
     initial_count = len(game.get("CardCollection", []))
     game["CardCollection"] = []
-    # Also remove action cards from inventory
+    # Also remove Auguments from inventory
     inventory = game.get("Inventory", [])
     game["Inventory"] = [item for item in inventory if item.get("_T") != "CA"]
 
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" deleted all ({initial_count}) action cards from player: " + player)
+    Log(
+        "admin",
+        current_user.username
+        + f" deleted all ({initial_count}) Auguments from player: "
+        + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1277,12 +1459,21 @@ def AdminPlayerDeleteCardsBulk(player):
 
     # Clean inventory
     inventory = game.get("Inventory", [])
-    game["Inventory"] = [item for item in inventory if not (item.get("_T") == "CA" and item.get("ID") in deleted_ids)]
+    game["Inventory"] = [
+        item
+        for item in inventory
+        if not (item.get("_T") == "CA" and item.get("ID") in deleted_ids)
+    ]
 
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" bulk deleted {len(to_delete)} cards from player: " + player)
+    Log(
+        "admin",
+        current_user.username
+        + f" bulk deleted {len(to_delete)} cards from player: "
+        + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1300,7 +1491,9 @@ def AdminPlayerAddAllCreatures(player):
     if game is None:
         return make_response("No game data found!", 400)
 
-    with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r") as f:
+    with open(
+        os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r"
+    ) as f:
         all_creatures = json.load(f)
 
     tutorial_ids = GetTutorialOnlyCreatureIds()
@@ -1311,7 +1504,13 @@ def AdminPlayerAddAllCreatures(player):
         if item.get("_T") == "CR":
             existing_ids.add(item.get("ID"))
 
-    next_uid = max([item.get("UniqueID", 0) for item in inventory if item.get("_T") == "CR"], default=0) + 1
+    next_uid = (
+        max(
+            [item.get("UniqueID", 0) for item in inventory if item.get("_T") == "CR"],
+            default=0,
+        )
+        + 1
+    )
     added = 0
     for creature in all_creatures:
         cid = creature["ID"]
@@ -1331,9 +1530,7 @@ def AdminPlayerAddAllCreatures(player):
                 "StarRating": 1,
             }
             card_slots = int(creature.get("CardSlots", 1))
-            default_cards = [
-                creature.get(f"ActionCard{i}", "") for i in range(1, 6)
-            ]
+            default_cards = [creature.get(f"ActionCard{i}", "") for i in range(1, 6)]
             default_cards = [c for c in default_cards if c][:card_slots]
             if default_cards:
                 new_creature["Cards"] = default_cards
@@ -1346,7 +1543,10 @@ def AdminPlayerAddAllCreatures(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" added {added} creatures to player: " + player)
+    Log(
+        "admin",
+        current_user.username + f" added {added} creatures to player: " + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1364,7 +1564,9 @@ def AdminPlayerMaxAllCreatures(player):
     if game is None:
         return make_response("No game data found!", 400)
 
-    with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r") as f:
+    with open(
+        os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r"
+    ) as f:
         all_creatures = json.load(f)
     creature_blueprint_map = {c["ID"]: c for c in all_creatures}
 
@@ -1396,7 +1598,10 @@ def AdminPlayerMaxAllCreatures(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" maxed {count} creatures for player: " + player)
+    Log(
+        "admin",
+        current_user.username + f" maxed {count} creatures for player: " + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1468,27 +1673,42 @@ def AdminPlayerAddMaxCreature(player):
     if not creature_id:
         return make_response("Creature ID is required!", 400)
     if IsTutorialOnlyCreature(creature_id):
-        return make_response("This is a tutorial-only creature and cannot be added to a player.", 400)
+        return make_response(
+            "This is a tutorial-only creature and cannot be added to a player.", 400
+        )
 
     inventory = game.get("Inventory", [])
-    next_uid = max([item.get("UniqueID", 0) for item in inventory if item.get("_T") == "CR"], default=0) + 1
+    next_uid = (
+        max(
+            [item.get("UniqueID", 0) for item in inventory if item.get("_T") == "CR"],
+            default=0,
+        )
+        + 1
+    )
 
-    inventory.append({
-        "_T": "CR",
-        "ID": creature_id,
-        "UniqueID": next_uid,
-        "Xp": 70325,
-        "Favorite": 0,
-        "Passive": 1,
-        "PassiveFeeds": 0,
-        "StarRating": 5,
-    })
+    inventory.append(
+        {
+            "_T": "CR",
+            "ID": creature_id,
+            "UniqueID": next_uid,
+            "Xp": 70325,
+            "Favorite": 0,
+            "Passive": 1,
+            "PassiveFeeds": 0,
+            "StarRating": 5,
+        }
+    )
 
     game["Inventory"] = inventory
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" added max creature {creature_id} to player: " + player)
+    Log(
+        "admin",
+        current_user.username
+        + f" added max creature {creature_id} to player: "
+        + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1506,7 +1726,9 @@ def AdminPlayerAddAllCards(player):
     if game is None:
         return make_response("No game data found!", 400)
 
-    with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_ActionCards.json"), "r") as f:
+    with open(
+        os.path.join(ROOT_DIR, "data/persist/Blueprints/db_ActionCards.json"), "r"
+    ) as f:
         all_cards = json.load(f)
 
     existing_ids = set()
@@ -1527,14 +1749,16 @@ def AdminPlayerAddAllCards(player):
         if cid not in existing_ids:
             cards.append({"ID": cid, "Stat": 1})
         if cid not in existing_inv_ids:
-            inventory.append({
-                "_T": "CA",
-                "ID": cid,
-                "UniqueID": next_uid,
-                "Favorite": 0,
-                "CreatureUID": -1,
-                "CreatureSlot": 0,
-            })
+            inventory.append(
+                {
+                    "_T": "CA",
+                    "ID": cid,
+                    "UniqueID": next_uid,
+                    "Favorite": 0,
+                    "CreatureUID": -1,
+                    "CreatureSlot": 0,
+                }
+            )
             next_uid += 1
             added += 1
 
@@ -1543,7 +1767,10 @@ def AdminPlayerAddAllCards(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" added {added} action cards to player: " + player)
+    Log(
+        "admin",
+        current_user.username + f" added {added} Auguments to player: " + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1561,7 +1788,9 @@ def AdminPlayerAddAllLeaders(player):
     if game is None:
         return make_response("No game data found!", 400)
 
-    with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r") as f:
+    with open(
+        os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r"
+    ) as f:
         all_leaders = json.load(f)
 
     leaders = game.get("Leaders", [])
@@ -1638,7 +1867,10 @@ def AdminPlayerAddLeader(player):
         game["Leaders"] = leaders
         db_player.game = EncryptGameData(game, player)
         db.session.commit()
-        Log("admin", current_user.username + f" added leader {leader_id} to player: " + player)
+        Log(
+            "admin",
+            current_user.username + f" added leader {leader_id} to player: " + player,
+        )
 
     return redirect("/admin/players/" + player)
 
@@ -1657,7 +1889,9 @@ def AdminPlayerAddAllSkins(player):
     if game is None:
         return make_response("No game data found!", 400)
 
-    with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r") as f:
+    with open(
+        os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r"
+    ) as f:
         all_leaders = json.load(f)
 
     leaders = game.get("Leaders", [])
@@ -1712,7 +1946,12 @@ def AdminPlayerDeleteLeader(player, index):
         game["Leaders"] = leaders
         db_player.game = EncryptGameData(game, player)
         db.session.commit()
-        Log("admin", current_user.username + f" deleted leader {removed.get('ID')} from player: " + player)
+        Log(
+            "admin",
+            current_user.username
+            + f" deleted leader {removed.get('ID')} from player: "
+            + player,
+        )
 
     return redirect("/admin/players/" + player)
 
@@ -1737,7 +1976,12 @@ def AdminPlayerDeleteAllLeaders(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" deleted all ({initial_count}) leaders from player: " + player)
+    Log(
+        "admin",
+        current_user.username
+        + f" deleted all ({initial_count}) leaders from player: "
+        + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1771,7 +2015,12 @@ def AdminPlayerDeleteLeadersBulk(player):
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + f" bulk deleted {len(to_delete)} leaders from player: " + player)
+    Log(
+        "admin",
+        current_user.username
+        + f" bulk deleted {len(to_delete)} leaders from player: "
+        + player,
+    )
     return redirect("/admin/players/" + player)
 
 
@@ -1832,7 +2081,9 @@ def AdminPlayerExportSave(player):
     response = Response(
         json.dumps(game, indent=2),
         mimetype="application/json",
-        headers={"Content-Disposition": f"attachment;filename=player_{player}_save.json"}
+        headers={
+            "Content-Disposition": f"attachment;filename=player_{player}_save.json"
+        },
     )
     return response
 
@@ -1860,7 +2111,7 @@ def AdminPlayerImportSave(player):
     imported_rank = max(
         safe_int(parsed.get("PlayersLastSavedLevel", 0)),
         GetRankForXP(safe_int(parsed.get("RankXP", 0))),
-        safe_int(parsed.get("AdminLeaderLevel", 0))
+        safe_int(parsed.get("AdminLeaderLevel", 0)),
     )
     if imported_rank > 0:
         db_player.leader_level = imported_rank
@@ -1987,10 +2238,18 @@ def AdminPlayerTransferProgress(player):
 
     Log(
         "admin",
-        current_user.username + " transferred progress from " + player + " to " + target_uuid,
+        current_user.username
+        + " transferred progress from "
+        + player
+        + " to "
+        + target_uuid,
     )
     DiscordWebhookMessage(
-        current_user.username + " transferred progress from " + player + " to " + target_uuid
+        current_user.username
+        + " transferred progress from "
+        + player
+        + " to "
+        + target_uuid
     )
     return redirect("/admin/players/" + target.username)
 
@@ -2108,7 +2367,9 @@ def AdminPlayersBulkAction():
         for pid in player_ids:
             Bans.query.filter_by(username=pid, bantype="userid").delete()
         db.session.commit()
-        Log("admin", current_user.username + f" bulk unbanned {len(player_ids)} players")
+        Log(
+            "admin", current_user.username + f" bulk unbanned {len(player_ids)} players"
+        )
     elif action == "delete":
         for pid in player_ids:
             Player.query.filter_by(username=pid).delete()
@@ -2211,7 +2472,10 @@ def AdminBannedPlayers():
     # purge bans that have already expired
     now = int(time.time())
     Bans.query.filter(
-        Bans.bantype == "userid", Bans.expires.isnot(None), Bans.expires != 0, Bans.expires <= now
+        Bans.bantype == "userid",
+        Bans.expires.isnot(None),
+        Bans.expires != 0,
+        Bans.expires <= now,
     ).delete(synchronize_session=False)
     db.session.commit()
 
@@ -2221,7 +2485,9 @@ def AdminBannedPlayers():
     # get player name
     for ban in bans:
         player = Player.query.filter_by(username=ban["username"]).first()
-        ban["multiplayer_name"] = player.multiplayer_name if player else "Unnamed Player"
+        ban["multiplayer_name"] = (
+            player.multiplayer_name if player else "Unnamed Player"
+        )
         if ban["multiplayer_name"] is None and player is not None:
             ban["multiplayer_name"] = GetNameFromSave(player.game)
         if ban["time"] is not None:
@@ -2306,23 +2572,50 @@ def AdminRedeemCodes():
     cards = []
     leaders = []
     try:
-        with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r") as f:
+        with open(
+            os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r"
+        ) as f:
             c_data = json.load(f)
-            creatures = sorted([{"id": c.get("ID", ""), "name": c.get("Name", c.get("ID", ""))} for c in c_data if c.get("ID")], key=lambda x: x["name"])
+            creatures = sorted(
+                [
+                    {"id": c.get("ID", ""), "name": c.get("Name", c.get("ID", ""))}
+                    for c in c_data
+                    if c.get("ID")
+                ],
+                key=lambda x: x["name"],
+            )
     except Exception:
         pass
 
     try:
-        with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_ActionCards.json"), "r") as f:
+        with open(
+            os.path.join(ROOT_DIR, "data/persist/Blueprints/db_ActionCards.json"), "r"
+        ) as f:
             ac_data = json.load(f)
-            cards = sorted([{"id": c.get("ID", ""), "name": c.get("Name", c.get("ID", ""))} for c in ac_data if c.get("ID")], key=lambda x: x["name"])
+            cards = sorted(
+                [
+                    {"id": c.get("ID", ""), "name": c.get("Name", c.get("ID", ""))}
+                    for c in ac_data
+                    if c.get("ID")
+                ],
+                key=lambda x: x["name"],
+            )
     except Exception:
         pass
 
     try:
-        with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r") as f:
+        with open(
+            os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r"
+        ) as f:
             l_data = json.load(f)
-            leaders = sorted([{"id": l.get("ID", ""), "name": l.get("Name", l.get("ID", ""))} for l in l_data if l.get("ID")], key=lambda x: x["name"])
+            leaders = sorted(
+                [
+                    {"id": l.get("ID", ""), "name": l.get("Name", l.get("ID", ""))}
+                    for l in l_data
+                    if l.get("ID")
+                ],
+                key=lambda x: x["name"],
+            )
     except Exception:
         pass
 
@@ -2352,7 +2645,9 @@ def AdminRedeemCodeAdd():
     # For item rewards, require reward_item
     if reward_type in ("Creature", "ActionCard", "Leader"):
         if not reward_item:
-            return make_response(f"Item selection is required for {reward_type} reward!", 400)
+            return make_response(
+                f"Item selection is required for {reward_type} reward!", 400
+            )
         if reward_type == "Creature":
             # For creatures, reward_amount acts as star rating (1-5)
             reward_amount = min(max(reward_amount, 1), 5)
@@ -2383,7 +2678,11 @@ def AdminRedeemCodeAdd():
         db.session.add(new_code)
 
     db.session.commit()
-    Log("admin", current_user.username + f" added/updated redeem code: {code} ({reward_type} {reward_item} x{reward_amount})")
+    Log(
+        "admin",
+        current_user.username
+        + f" added/updated redeem code: {code} ({reward_type} {reward_item} x{reward_amount})",
+    )
     return redirect("/admin/redeemcodes")
 
 
@@ -2521,12 +2820,24 @@ def AdminCreatures():
     if not isAdmin(current_user):
         return abort(404)
     query = (request.args.get("q") or request.args.get("query") or "").strip().lower()
-    with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r") as f:
+    with open(
+        os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r"
+    ) as f:
         creatures = json.load(f)
     if query:
-        creatures = [c for c in creatures if query in c.get("ID", "").lower() or query in c.get("Name", "").lower()]
+        creatures = [
+            c
+            for c in creatures
+            if query in c.get("ID", "").lower() or query in c.get("Name", "").lower()
+        ]
     banned_set = set(GetPvpBanlist().get("banned_creatures", []))
-    return render_template("admin_creatures.html", creatures=creatures, query=query, total=len(creatures), banned_set=banned_set)
+    return render_template(
+        "admin_creatures.html",
+        creatures=creatures,
+        query=query,
+        total=len(creatures),
+        banned_set=banned_set,
+    )
 
 
 @admin_bp.route("/admin/cards")
@@ -2534,11 +2845,21 @@ def AdminCards():
     if not isAdmin(current_user):
         return abort(404)
     query = (request.args.get("q") or request.args.get("query") or "").strip().lower()
-    with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_ActionCards.json"), "r") as f:
+    with open(
+        os.path.join(ROOT_DIR, "data/persist/Blueprints/db_ActionCards.json"), "r"
+    ) as f:
         cards = json.load(f)
     if query:
-        cards = [c for c in cards if query in c.get("ID", "").lower() or query in c.get("Name", "").lower() or query in c.get("Description", "").lower()]
-    return render_template("admin_cards.html", cards=cards, query=query, total=len(cards))
+        cards = [
+            c
+            for c in cards
+            if query in c.get("ID", "").lower()
+            or query in c.get("Name", "").lower()
+            or query in c.get("Description", "").lower()
+        ]
+    return render_template(
+        "admin_cards.html", cards=cards, query=query, total=len(cards)
+    )
 
 
 @admin_bp.route("/admin/leaders")
@@ -2546,14 +2867,26 @@ def AdminLeaders():
     if not isAdmin(current_user):
         return abort(404)
     query = (request.args.get("q") or request.args.get("query") or "").strip().lower()
-    with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r") as f:
+    with open(
+        os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r"
+    ) as f:
         all_leaders = json.load(f)
     # Leader Book shows base heroes only; skins live under their hero's OwnedSkins.
     leaders = [l for l in all_leaders if not l.get("SkinOf")]
     if query:
-        leaders = [l for l in leaders if query in l.get("ID", "").lower() or query in l.get("Name", "").lower()]
+        leaders = [
+            l
+            for l in leaders
+            if query in l.get("ID", "").lower() or query in l.get("Name", "").lower()
+        ]
     banned_set = set(GetPvpBanlist().get("banned_leaders", []))
-    return render_template("admin_leaders.html", leaders=leaders, query=query, total=len(leaders), banned_set=banned_set)
+    return render_template(
+        "admin_leaders.html",
+        leaders=leaders,
+        query=query,
+        total=len(leaders),
+        banned_set=banned_set,
+    )
 
 
 @login_required
@@ -2566,19 +2899,25 @@ def AdminPvpBanlist():
 
     creatures = []
     try:
-        with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r") as f:
+        with open(
+            os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r"
+        ) as f:
             creatures = json.load(f)
     except Exception:
         pass
 
     leaders = []
     try:
-        with open(os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r") as f:
+        with open(
+            os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r"
+        ) as f:
             leaders = json.load(f)
     except Exception:
         pass
 
-    creature_map = {c.get("ID"): c.get("Name", c.get("ID")) for c in creatures if "ID" in c}
+    creature_map = {
+        c.get("ID"): c.get("Name", c.get("ID")) for c in creatures if "ID" in c
+    }
     leader_map = {l.get("ID"): l.get("Name", l.get("ID")) for l in leaders if "ID" in l}
 
     banned_creatures_details = [
@@ -2615,25 +2954,37 @@ def AdminPvpBanlistAddCreature():
         if creature_id not in banned:
             banned.append(creature_id)
             SavePvpBanlist(banlist)
-            Log("admin", f"{current_user.username} added creature '{creature_id}' to PVP banlist")
+            Log(
+                "admin",
+                f"{current_user.username} added creature '{creature_id}' to PVP banlist",
+            )
 
     return redirect(return_to)
 
 
 @login_required
-@admin_bp.route("/admin/pvp_banlist/remove_creature/<path:creature_id>", methods=["POST", "GET"])
+@admin_bp.route(
+    "/admin/pvp_banlist/remove_creature/<path:creature_id>", methods=["POST", "GET"]
+)
 def AdminPvpBanlistRemoveCreature(creature_id):
     if not isAdmin(current_user):
         return abort(404)
 
-    return_to = request.args.get("return_to") or request.form.get("return_to") or "/admin/pvp_banlist"
+    return_to = (
+        request.args.get("return_to")
+        or request.form.get("return_to")
+        or "/admin/pvp_banlist"
+    )
     banlist = GetPvpBanlist()
     banned = banlist.get("banned_creatures", [])
     if creature_id in banned:
         banned.remove(creature_id)
         banlist["banned_creatures"] = banned
         SavePvpBanlist(banlist)
-        Log("admin", f"{current_user.username} removed creature '{creature_id}' from PVP banlist")
+        Log(
+            "admin",
+            f"{current_user.username} removed creature '{creature_id}' from PVP banlist",
+        )
 
     return redirect(return_to)
 
@@ -2652,25 +3003,37 @@ def AdminPvpBanlistAddLeader():
         if leader_id not in banned:
             banned.append(leader_id)
             SavePvpBanlist(banlist)
-            Log("admin", f"{current_user.username} added leader '{leader_id}' to PVP banlist")
+            Log(
+                "admin",
+                f"{current_user.username} added leader '{leader_id}' to PVP banlist",
+            )
 
     return redirect(return_to)
 
 
 @login_required
-@admin_bp.route("/admin/pvp_banlist/remove_leader/<path:leader_id>", methods=["POST", "GET"])
+@admin_bp.route(
+    "/admin/pvp_banlist/remove_leader/<path:leader_id>", methods=["POST", "GET"]
+)
 def AdminPvpBanlistRemoveLeader(leader_id):
     if not isAdmin(current_user):
         return abort(404)
 
-    return_to = request.args.get("return_to") or request.form.get("return_to") or "/admin/pvp_banlist"
+    return_to = (
+        request.args.get("return_to")
+        or request.form.get("return_to")
+        or "/admin/pvp_banlist"
+    )
     banlist = GetPvpBanlist()
     banned = banlist.get("banned_leaders", [])
     if leader_id in banned:
         banned.remove(leader_id)
         banlist["banned_leaders"] = banned
         SavePvpBanlist(banlist)
-        Log("admin", f"{current_user.username} removed leader '{leader_id}' from PVP banlist")
+        Log(
+            "admin",
+            f"{current_user.username} removed leader '{leader_id}' from PVP banlist",
+        )
 
     return redirect(return_to)
 
@@ -2690,4 +3053,3 @@ def AdminPvpBanlistEditRaw():
         Log("admin", f"Failed to parse PVP banlist JSON: {e}")
 
     return redirect("/admin/pvp_banlist")
-

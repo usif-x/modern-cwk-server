@@ -226,7 +226,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
           Transfer Progress To Another Account
         </h3>
         <p class="text-xs text-muted-foreground mb-3">
-          Copies all progress (creatures, action cards, leaders, unlocks, rank,
+          Copies all progress (creatures, Auguments, leaders, unlocks, rank,
           quests) from
           <span class="font-mono text-foreground">{{ player.username }}</span>
           to the target account. The target keeps its own <strong>name</strong>,
@@ -1128,7 +1128,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
     </div>
   </div>
 
-  <!-- Action Cards Section -->
+  <!-- Auguments Section -->
   <div
     class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden"
   >
@@ -1153,7 +1153,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
           <button
             type="submit"
             class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
-            onclick="return confirm('Add all 695 action cards?');"
+            onclick="return confirm('Add all 695 Auguments?');"
           >
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
             <span>Add All Cards (695)</span>
@@ -1169,9 +1169,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
             type="submit"
             class="inline-flex items-center gap-1 rounded-md bg-destructive text-destructive-foreground px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-destructive/90 transition-colors"
             onclick="
-              return confirm(
-                'DANGER: Delete ALL action cards for this player?',
-              );
+              return confirm('DANGER: Delete ALL Auguments for this player?');
             "
           >
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>

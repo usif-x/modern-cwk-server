@@ -10,7 +10,7 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
 - **Friend System** — Friend discovery, friend requests, ally sharing, and anonymous helpers
 - **Multi-Reward Redeem Codes** — Promotional gift codes supporting:
   - Currencies: Soft Currency (Coins), Hard Currency (Gems), Free Gems, PVP Wishbones, and Evolution Shards
-  - Game Items: Creatures (with custom star ratings 1–5★), Action Cards (with custom quantities), and Heroes/Leaders
+  - Game Items: Creatures (with custom star ratings 1–5★), Auguments (with custom quantities), and Heroes/Leaders
   - Automated duplicate redemption tracking via `UsedRedeemCodes`
 - **Interactive Player Event Logs** — Audit trail with smart classification badges, compact single-line previews, and a full-featured modal dialog with structured parameter cards, syntax-highlighted JSON viewer, and instant clipboard copy
 - **Admin Panel** — Modern, responsive grid admin panel inspired by shadcn/ui (light/dark mode, Tailwind CSS, Lucide icons):
@@ -18,17 +18,17 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
   - Creature, action card, and leader tools (bulk multi-select deletion, delete all, max to 5★, add all 625 collectible creatures, 695 cards, and 32 base heroes)
   - Heroes and skins are handled separately: "Add All Heroes" adds only base leaders, and "Add All Skins" attaches skins to owned heroes via `OwnedSkins` (never as independent heroes)
   - Tutorial-only creatures are automatically skipped so granting them can't trigger the client's `Zxcvbnm` PVP-ban flag; a cleanup button removes any already present and clears the flag
-  - Interactive reference books for all creatures, action cards, and leaders
+  - Interactive reference books for all creatures, Auguments, and leaders
   - **Top PVP Players** leaderboard ranked by Multiplayer Level (`1` = Super Amadeus best → `25` = Dweeb), with league names and a champion spotlight
   - Modern, theme-aware confirmation dialogs (SweetAlert2); per-hero "Add Skin" picker in the heroes section
   - PVP ban list manager with raw JSON editor
   - **Secret Profile** — per-admin email, password change, and a passwordless 6-digit login passkey
   - Server backups (configurable interval, Telegram delivery, upload & restore), version management, maintenance mode, and logs
-- **Progress Transfer** — Copy all account progress (creatures, action cards, leaders, unlocks, rank, quests) from one account to another. The target keeps its own name and currencies (gems, coins, wishbones, etc.); the source account is left untouched
+- **Progress Transfer** — Copy all account progress (creatures, Auguments, leaders, unlocks, rank, quests) from one account to another. The target keeps its own name and currencies (gems, coins, wishbones, etc.); the source account is left untouched
 - **Broken Save Detection & Repair** — The admin panel automatically detects missing/invalid save fields and duplicate creature IDs. A one-click **Fix Save** repairs the structure without deleting any items
 - **Temporary Bans** — Bans support an optional expiry. Admins pick a preset duration (hour, day, week, month) or a custom amount/unit; expired bans are treated as inactive and purged automatically
 - **Automatic Telegram Backups** — Backups run on a configurable interval (default 4h, can be set to 1h or any custom value) and are delivered to an admin Telegram chat via bot (`TELEGRAM_BOT_TOKEN` + `TELEGRAM_ADMIN_ID` in `.env`). Backups can also be uploaded/restored from the admin panel
-- **Creature & Card Tooling** — Add 1–10 copies at once, max/downgrade a creature from the same button, and duplicate action cards with one click
+- **Creature & Card Tooling** — Add 1–10 copies at once, max/downgrade a creature from the same button, and duplicate Auguments with one click
 - **Anti-Cheat & Rank Sync** — Device binding, automated Rank & RankXP synchronization based on game blueprint curves (`db_PlayerRanks.json`), leader level jump validation, and ACTk detection
 - **Auto-Backup** — Automatic full database + persist directory backups every 4 hours
 

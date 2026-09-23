@@ -1,500 +1,699 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="h-full">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}CWK Admin Console{% endblock %}</title>
-    
+
     <!-- Google Fonts: Inter & JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        border: "hsl(var(--border))",
-                        input: "hsl(var(--input))",
-                        ring: "hsl(var(--ring))",
-                        background: "hsl(var(--background))",
-                        foreground: "hsl(var(--foreground))",
-                        primary: {
-                            DEFAULT: "hsl(var(--primary))",
-                            foreground: "hsl(var(--primary-foreground))",
-                        },
-                        secondary: {
-                            DEFAULT: "hsl(var(--secondary))",
-                            foreground: "hsl(var(--secondary-foreground))",
-                        },
-                        destructive: {
-                            DEFAULT: "hsl(var(--destructive))",
-                            foreground: "hsl(var(--destructive-foreground))",
-                        },
-                        muted: {
-                            DEFAULT: "hsl(var(--muted))",
-                            foreground: "hsl(var(--muted-foreground))",
-                        },
-                        accent: {
-                            DEFAULT: "hsl(var(--accent))",
-                            foreground: "hsl(var(--accent-foreground))",
-                        },
-                        popover: {
-                            DEFAULT: "hsl(var(--popover))",
-                            foreground: "hsl(var(--popover-foreground))",
-                        },
-                        card: {
-                            DEFAULT: "hsl(var(--card))",
-                            foreground: "hsl(var(--card-foreground))",
-                        },
-                    },
-                    borderRadius: {
-                        lg: "var(--radius)",
-                        md: "calc(var(--radius) - 2px)",
-                        sm: "calc(var(--radius) - 4px)",
-                    },
-                }
-            }
-        }
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "system-ui", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+            colors: {
+              border: "hsl(var(--border))",
+              input: "hsl(var(--input))",
+              ring: "hsl(var(--ring))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: {
+                DEFAULT: "hsl(var(--primary))",
+                foreground: "hsl(var(--primary-foreground))",
+              },
+              secondary: {
+                DEFAULT: "hsl(var(--secondary))",
+                foreground: "hsl(var(--secondary-foreground))",
+              },
+              destructive: {
+                DEFAULT: "hsl(var(--destructive))",
+                foreground: "hsl(var(--destructive-foreground))",
+              },
+              muted: {
+                DEFAULT: "hsl(var(--muted))",
+                foreground: "hsl(var(--muted-foreground))",
+              },
+              accent: {
+                DEFAULT: "hsl(var(--accent))",
+                foreground: "hsl(var(--accent-foreground))",
+              },
+              popover: {
+                DEFAULT: "hsl(var(--popover))",
+                foreground: "hsl(var(--popover-foreground))",
+              },
+              card: {
+                DEFAULT: "hsl(var(--card))",
+                foreground: "hsl(var(--card-foreground))",
+              },
+            },
+            borderRadius: {
+              lg: "var(--radius)",
+              md: "calc(var(--radius) - 2px)",
+              sm: "calc(var(--radius) - 4px)",
+            },
+          },
+        },
+      };
     </script>
-    
+
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Theme Initializer (Prevent flash of unstyled theme) -->
     <script>
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+      if (
+        localStorage.getItem("theme") === "dark" ||
+        (!("theme" in localStorage) &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
     </script>
 
     <style>
-        :root {
-            --background: 0 0% 100%;
-            --foreground: 240 10% 3.9%;
-            --card: 0 0% 100%;
-            --card-foreground: 240 10% 3.9%;
-            --popover: 0 0% 100%;
-            --popover-foreground: 240 10% 3.9%;
-            --primary: 240 5.9% 10%;
-            --primary-foreground: 0 0% 98%;
-            --secondary: 240 4.8% 95.9%;
-            --secondary-foreground: 240 5.9% 10%;
-            --muted: 240 4.8% 95.9%;
-            --muted-foreground: 240 3.8% 46.1%;
-            --accent: 240 4.8% 95.9%;
-            --accent-foreground: 240 5.9% 10%;
-            --destructive: 0 84.2% 60.2%;
-            --destructive-foreground: 0 0% 98%;
-            --border: 240 5.9% 90%;
-            --input: 240 5.9% 90%;
-            --ring: 240 5.9% 10%;
-            --radius: 0.5rem;
-        }
-        .dark {
-            --background: 240 10% 3.9%;
-            --foreground: 0 0% 98%;
-            --card: 240 10% 5.5%;
-            --card-foreground: 0 0% 98%;
-            --popover: 240 10% 3.9%;
-            --popover-foreground: 0 0% 98%;
-            --primary: 0 0% 98%;
-            --primary-foreground: 240 5.9% 10%;
-            --secondary: 240 3.7% 15.9%;
-            --secondary-foreground: 0 0% 98%;
-            --muted: 240 3.7% 15.9%;
-            --muted-foreground: 240 5% 64.9%;
-            --accent: 240 3.7% 15.9%;
-            --accent-foreground: 0 0% 98%;
-            --destructive: 0 62.8% 30.6%;
-            --destructive-foreground: 0 0% 98%;
-            --border: 240 3.7% 15.9%;
-            --input: 240 3.7% 15.9%;
-            --ring: 240 4.9% 83.9%;
-        }
-        
-        /* Smooth scroll & base transitions */
-        html { scroll-behavior: smooth; }
-        body { font-family: 'Inter', system-ui, sans-serif; }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.25); border-radius: 9999px; }
-        ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
+      :root {
+        --background: 0 0% 100%;
+        --foreground: 240 10% 3.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 240 10% 3.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 240 10% 3.9%;
+        --primary: 240 5.9% 10%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 240 4.8% 95.9%;
+        --secondary-foreground: 240 5.9% 10%;
+        --muted: 240 4.8% 95.9%;
+        --muted-foreground: 240 3.8% 46.1%;
+        --accent: 240 4.8% 95.9%;
+        --accent-foreground: 240 5.9% 10%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 240 5.9% 90%;
+        --input: 240 5.9% 90%;
+        --ring: 240 5.9% 10%;
+        --radius: 0.5rem;
+      }
+      .dark {
+        --background: 240 10% 3.9%;
+        --foreground: 0 0% 98%;
+        --card: 240 10% 5.5%;
+        --card-foreground: 0 0% 98%;
+        --popover: 240 10% 3.9%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 0 0% 98%;
+        --primary-foreground: 240 5.9% 10%;
+        --secondary: 240 3.7% 15.9%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 240 3.7% 15.9%;
+        --muted-foreground: 240 5% 64.9%;
+        --accent: 240 3.7% 15.9%;
+        --accent-foreground: 0 0% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 240 3.7% 15.9%;
+        --input: 240 3.7% 15.9%;
+        --ring: 240 4.9% 83.9%;
+      }
 
-        /* SweetAlert2 theme (follows light/dark CSS variables) */
-        .swal2-popup {
-            background: hsl(var(--card)) !important;
-            color: hsl(var(--card-foreground)) !important;
-            border: 1px solid hsl(var(--border)) !important;
-            border-radius: var(--radius) !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25) !important;
-        }
-        .swal2-title, .swal2-html-container { color: hsl(var(--card-foreground)) !important; }
-        .swal2-html-container { font-size: 0.9rem !important; }
-        .swal2-styled.swal2-confirm {
-            background: hsl(var(--primary)) !important;
-            color: hsl(var(--primary-foreground)) !important;
-            border-radius: calc(var(--radius) - 2px) !important;
-        }
-        .swal2-styled.swal2-cancel {
-            background: hsl(var(--secondary)) !important;
-            color: hsl(var(--secondary-foreground)) !important;
-            border-radius: calc(var(--radius) - 2px) !important;
-        }
-        .swal2-styled:focus { box-shadow: none !important; }
+      /* Smooth scroll & base transitions */
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: hsl(var(--muted-foreground) / 0.25);
+        border-radius: 9999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--muted-foreground) / 0.4);
+      }
+
+      /* SweetAlert2 theme (follows light/dark CSS variables) */
+      .swal2-popup {
+        background: hsl(var(--card)) !important;
+        color: hsl(var(--card-foreground)) !important;
+        border: 1px solid hsl(var(--border)) !important;
+        border-radius: var(--radius) !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+      }
+      .swal2-title,
+      .swal2-html-container {
+        color: hsl(var(--card-foreground)) !important;
+      }
+      .swal2-html-container {
+        font-size: 0.9rem !important;
+      }
+      .swal2-styled.swal2-confirm {
+        background: hsl(var(--primary)) !important;
+        color: hsl(var(--primary-foreground)) !important;
+        border-radius: calc(var(--radius) - 2px) !important;
+      }
+      .swal2-styled.swal2-cancel {
+        background: hsl(var(--secondary)) !important;
+        color: hsl(var(--secondary-foreground)) !important;
+        border-radius: calc(var(--radius) - 2px) !important;
+      }
+      .swal2-styled:focus {
+        box-shadow: none !important;
+      }
     </style>
-</head>
-<body class="bg-background text-foreground min-h-screen antialiased flex flex-col selection:bg-zinc-900 selection:text-white dark:selection:bg-zinc-100 dark:selection:text-zinc-900">
-
+  </head>
+  <body
+    class="bg-background text-foreground min-h-screen antialiased flex flex-col selection:bg-zinc-900 selection:text-white dark:selection:bg-zinc-100 dark:selection:text-zinc-900"
+  >
     <!-- Mobile Top Navigation Header -->
-    <header class="lg:hidden sticky top-0 z-50 flex items-center justify-between px-4 h-14 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-sm">
-                <i data-lucide="swords" class="w-4 h-4"></i>
-            </div>
-            <div>
-                <span class="font-semibold text-sm tracking-tight text-foreground block">CWK Admin</span>
-            </div>
+    <header
+      class="lg:hidden sticky top-0 z-50 flex items-center justify-between px-4 h-14 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    >
+      <div class="flex items-center gap-2.5">
+        <div
+          class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-sm"
+        >
+          <i data-lucide="swords" class="w-4 h-4"></i>
         </div>
+        <div>
+          <span
+            class="font-semibold text-sm tracking-tight text-foreground block"
+            >CWK Admin</span
+          >
+        </div>
+      </div>
 
-        <div class="flex items-center gap-1.5">
-            <button onclick="toggleTheme()" type="button" aria-label="Toggle Theme" class="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
-                <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
-                <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
-            </button>
-            <button onclick="toggleSidebar()" type="button" aria-label="Open Menu" class="p-2 rounded-md hover:bg-accent text-foreground transition-colors">
-                <i data-lucide="menu" class="w-5 h-5"></i>
-            </button>
-        </div>
+      <div class="flex items-center gap-1.5">
+        <button
+          onclick="toggleTheme()"
+          type="button"
+          aria-label="Toggle Theme"
+          class="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+          <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+        </button>
+        <button
+          onclick="toggleSidebar()"
+          type="button"
+          aria-label="Open Menu"
+          class="p-2 rounded-md hover:bg-accent text-foreground transition-colors"
+        >
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
     </header>
 
     <div class="flex flex-1 min-h-[calc(100vh-3.5rem)] lg:min-h-screen">
-        <!-- Sidebar Backdrop (Mobile) -->
-        <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden hidden transition-opacity"></div>
+      <!-- Sidebar Backdrop (Mobile) -->
+      <div
+        id="sidebar-backdrop"
+        onclick="toggleSidebar()"
+        class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden hidden transition-opacity"
+      ></div>
 
-        <!-- Sidebar Navigation -->
-        <aside id="sidebar" class="fixed lg:sticky top-0 left-0 z-50 w-64 h-screen -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out bg-card border-r border-border flex flex-col shrink-0">
-            <!-- Sidebar Header / Logo -->
-            <div class="h-14 px-4 border-b border-border flex items-center justify-between">
-                <a href="/admin/home" class="flex items-center gap-2.5 group">
-                    <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-sm group-hover:scale-105 transition-transform">
-                        <i data-lucide="swords" class="w-4 h-4"></i>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="font-semibold text-sm tracking-tight leading-tight text-foreground">Card Wars Kingdom</span>
-                        <span class="text-[11px] font-mono text-muted-foreground">Admin Console</span>
-                    </div>
-                </a>
-                <button onclick="toggleSidebar()" class="lg:hidden p-1 rounded-md text-muted-foreground hover:text-foreground">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
+      <!-- Sidebar Navigation -->
+      <aside
+        id="sidebar"
+        class="fixed lg:sticky top-0 left-0 z-50 w-64 h-screen -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out bg-card border-r border-border flex flex-col shrink-0"
+      >
+        <!-- Sidebar Header / Logo -->
+        <div
+          class="h-14 px-4 border-b border-border flex items-center justify-between"
+        >
+          <a href="/admin/home" class="flex items-center gap-2.5 group">
+            <div
+              class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-sm group-hover:scale-105 transition-transform"
+            >
+              <i data-lucide="swords" class="w-4 h-4"></i>
             </div>
-
-            <!-- Navigation Links -->
-            <nav class="flex-1 overflow-y-auto p-3 space-y-6">
-                <!-- Overview -->
-                <div class="space-y-1">
-                    <div class="px-2 pb-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Overview</div>
-                    <a href="/admin/home" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path == '/admin/home' or request.path == '/admin' %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </div>
-
-                <!-- Game Data -->
-                <div class="space-y-1">
-                    <div class="px-2 pb-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Game Data</div>
-                    <a href="/admin/players" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/players') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="users" class="w-4 h-4"></i>
-                        <span>Players</span>
-                    </a>
-                    <a href="/admin/creatures" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/creatures') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="sparkles" class="w-4 h-4"></i>
-                        <span>Creature Book</span>
-                    </a>
-                    <a href="/admin/cards" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/cards') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="layers" class="w-4 h-4"></i>
-                        <span>Action Cards</span>
-                    </a>
-                    <a href="/admin/leaders" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/leaders') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="crown" class="w-4 h-4"></i>
-                        <span>Leader Book</span>
-                    </a>
-                    <a href="/admin/top_pvp" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/top_pvp') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="trophy" class="w-4 h-4"></i>
-                        <span>Top PVP Players</span>
-                    </a>
-                </div>
-
-                <!-- Moderation -->
-                <div class="space-y-1">
-                    <div class="px-2 pb-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Moderation</div>
-                    <a href="/admin/bannedplayers" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/bannedplayers') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="user-x" class="w-4 h-4"></i>
-                        <span>Banned Players</span>
-                    </a>
-                    <a href="/admin/bannedips" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/bannedips') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
-                        <span>Banned IPs</span>
-                    </a>
-                    <a href="/admin/pvp_banlist" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/pvp_banlist') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="swords" class="w-4 h-4"></i>
-                        <span>PVP Banlist</span>
-                    </a>
-                </div>
-
-                <!-- Logs & Monitoring -->
-                <div class="space-y-1">
-                    <div class="px-2 pb-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Logs & Monitoring</div>
-                    <a href="/admin/logs" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/logs') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="file-text" class="w-4 h-4"></i>
-                        <span>Player Logs</span>
-                    </a>
-                    <a href="/admin/upsight" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/upsight') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="activity" class="w-4 h-4"></i>
-                        <span>Upsight Logs</span>
-                    </a>
-                </div>
-
-                <!-- System (Superadmins only) -->
-                {% if current_user.rank == 0 %}
-                <div class="space-y-1">
-                    <div class="px-2 pb-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">System</div>
-                    <a href="/admin/versions" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/versions') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="tag" class="w-4 h-4"></i>
-                        <span>Versions</span>
-                    </a>
-                    <a href="/admin/server" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/server') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="server" class="w-4 h-4"></i>
-                        <span>Server & Backup</span>
-                    </a>
-                    <a href="/admin/maintenance" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/maintenance') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="wrench" class="w-4 h-4"></i>
-                        <span>Maintenance</span>
-                    </a>
-                    <a href="/admin/createadmin" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/createadmin') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="user-plus" class="w-4 h-4"></i>
-                        <span>Create Admin</span>
-                    </a>
-                </div>
-                {% endif %}
-
-                <!-- Tools -->
-                <div class="space-y-1">
-                    <div class="px-2 pb-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Tools</div>
-                    <a href="/admin/redeemcodes" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/redeemcodes') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="gift" class="w-4 h-4"></i>
-                        <span>Redeem Codes</span>
-                    </a>
-                    <a href="/admin/misc" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/misc') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}">
-                        <i data-lucide="settings-2" class="w-4 h-4"></i>
-                        <span>Misc Tools</span>
-                    </a>
-                </div>
-            </nav>
-
-            <!-- User Footer Card -->
-            <div class="p-3 border-t border-border bg-card/50">
-                <div class="flex items-center justify-between p-2 rounded-lg bg-accent/50 border border-border">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary">
-                            {{ current_user.username[0]|upper if current_user.username else 'A' }}
-                        </div>
-                        <div class="flex flex-col min-w-0">
-                            <span class="text-xs font-medium text-foreground truncate">{{ current_user.username }}</span>
-                            <span class="text-[10px] text-muted-foreground">
-                                {% if current_user.rank == 0 %}Superadmin{% else %}Admin{% endif %}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <a href="/admin/profile" title="Secret Profile" class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
-                            <i data-lucide="user-cog" class="w-4 h-4"></i>
-                        </a>
-                        <a href="/admin/logout" title="Sign Out" class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors">
-                            <i data-lucide="log-out" class="w-4 h-4"></i>
-                        </a>
-                    </div>
-                </div>
+            <div class="flex flex-col">
+              <span
+                class="font-semibold text-sm tracking-tight leading-tight text-foreground"
+                >Card Wars Kingdom</span
+              >
+              <span class="text-[11px] font-mono text-muted-foreground"
+                >Admin Console</span
+              >
             </div>
-        </aside>
-
-        <!-- Main Workspace Area -->
-        <div class="flex-1 flex flex-col min-w-0">
-            <!-- Top Navbar (Desktop) -->
-            <div class="hidden lg:flex h-14 items-center justify-between px-8 border-b border-border bg-background/95 backdrop-blur sticky top-0 z-30">
-                <div class="flex items-center gap-2 text-xs text-muted-foreground">
-                    <a href="/admin/home" class="hover:text-foreground transition-colors">Console</a>
-                    <span>/</span>
-                    <span class="text-foreground font-medium truncate">{% block breadcrumb %}Dashboard{% endblock %}</span>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        <span>Server Online</span>
-                    </div>
-
-                    <button onclick="toggleTheme()" type="button" aria-label="Toggle Theme" class="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors border border-border bg-background shadow-xs">
-                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
-                        <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Page Content -->
-            <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
-                {% block content %}{% endblock %}
-            </main>
+          </a>
+          <button
+            onclick="toggleSidebar()"
+            class="lg:hidden p-1 rounded-md text-muted-foreground hover:text-foreground"
+          >
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
         </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 overflow-y-auto p-3 space-y-6">
+          <!-- Overview -->
+          <div class="space-y-1">
+            <div
+              class="px-2 pb-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider"
+            >
+              Overview
+            </div>
+            <a
+              href="/admin/home"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path == '/admin/home' or request.path == '/admin' %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+              <span>Dashboard</span>
+            </a>
+          </div>
+
+          <!-- Game Data -->
+          <div class="space-y-1">
+            <div
+              class="px-2 pb-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider"
+            >
+              Game Data
+            </div>
+            <a
+              href="/admin/players"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/players') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="users" class="w-4 h-4"></i>
+              <span>Players</span>
+            </a>
+            <a
+              href="/admin/creatures"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/creatures') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+              <span>Creature Book</span>
+            </a>
+            <a
+              href="/admin/cards"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/cards') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="layers" class="w-4 h-4"></i>
+              <span>Auguments</span>
+            </a>
+            <a
+              href="/admin/leaders"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/leaders') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="crown" class="w-4 h-4"></i>
+              <span>Leader Book</span>
+            </a>
+            <a
+              href="/admin/top_pvp"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/top_pvp') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="trophy" class="w-4 h-4"></i>
+              <span>Top PVP Players</span>
+            </a>
+          </div>
+
+          <!-- Moderation -->
+          <div class="space-y-1">
+            <div
+              class="px-2 pb-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider"
+            >
+              Moderation
+            </div>
+            <a
+              href="/admin/bannedplayers"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/bannedplayers') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="user-x" class="w-4 h-4"></i>
+              <span>Banned Players</span>
+            </a>
+            <a
+              href="/admin/bannedips"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/bannedips') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="shield-alert" class="w-4 h-4"></i>
+              <span>Banned IPs</span>
+            </a>
+            <a
+              href="/admin/pvp_banlist"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/pvp_banlist') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="swords" class="w-4 h-4"></i>
+              <span>PVP Banlist</span>
+            </a>
+          </div>
+
+          <!-- Logs & Monitoring -->
+          <div class="space-y-1">
+            <div
+              class="px-2 pb-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider"
+            >
+              Logs & Monitoring
+            </div>
+            <a
+              href="/admin/logs"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/logs') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="file-text" class="w-4 h-4"></i>
+              <span>Player Logs</span>
+            </a>
+            <a
+              href="/admin/upsight"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/upsight') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="activity" class="w-4 h-4"></i>
+              <span>Upsight Logs</span>
+            </a>
+          </div>
+
+          <!-- System (Superadmins only) -->
+          {% if current_user.rank == 0 %}
+          <div class="space-y-1">
+            <div
+              class="px-2 pb-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider"
+            >
+              System
+            </div>
+            <a
+              href="/admin/versions"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/versions') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="tag" class="w-4 h-4"></i>
+              <span>Versions</span>
+            </a>
+            <a
+              href="/admin/server"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/server') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="server" class="w-4 h-4"></i>
+              <span>Server & Backup</span>
+            </a>
+            <a
+              href="/admin/maintenance"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/maintenance') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="wrench" class="w-4 h-4"></i>
+              <span>Maintenance</span>
+            </a>
+            <a
+              href="/admin/createadmin"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/createadmin') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="user-plus" class="w-4 h-4"></i>
+              <span>Create Admin</span>
+            </a>
+          </div>
+          {% endif %}
+
+          <!-- Tools -->
+          <div class="space-y-1">
+            <div
+              class="px-2 pb-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider"
+            >
+              Tools
+            </div>
+            <a
+              href="/admin/redeemcodes"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/redeemcodes') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="gift" class="w-4 h-4"></i>
+              <span>Redeem Codes</span>
+            </a>
+            <a
+              href="/admin/misc"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/misc') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="settings-2" class="w-4 h-4"></i>
+              <span>Misc Tools</span>
+            </a>
+          </div>
+        </nav>
+
+        <!-- User Footer Card -->
+        <div class="p-3 border-t border-border bg-card/50">
+          <div
+            class="flex items-center justify-between p-2 rounded-lg bg-accent/50 border border-border"
+          >
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div
+                class="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary"
+              >
+                {{ current_user.username[0]|upper if current_user.username else
+                'A' }}
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-xs font-medium text-foreground truncate"
+                  >{{ current_user.username }}</span
+                >
+                <span class="text-[10px] text-muted-foreground">
+                  {% if current_user.rank == 0 %}Superadmin{% else %}Admin{%
+                  endif %}
+                </span>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <a
+                href="/admin/profile"
+                title="Secret Profile"
+                class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+              >
+                <i data-lucide="user-cog" class="w-4 h-4"></i>
+              </a>
+              <a
+                href="/admin/logout"
+                title="Sign Out"
+                class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+              >
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Workspace Area -->
+      <div class="flex-1 flex flex-col min-w-0">
+        <!-- Top Navbar (Desktop) -->
+        <div
+          class="hidden lg:flex h-14 items-center justify-between px-8 border-b border-border bg-background/95 backdrop-blur sticky top-0 z-30"
+        >
+          <div class="flex items-center gap-2 text-xs text-muted-foreground">
+            <a
+              href="/admin/home"
+              class="hover:text-foreground transition-colors"
+              >Console</a
+            >
+            <span>/</span>
+            <span class="text-foreground font-medium truncate"
+              >{% block breadcrumb %}Dashboard{% endblock %}</span
+            >
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div
+              class="flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+            >
+              <span class="relative flex h-2 w-2">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
+                ></span>
+                <span
+                  class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"
+                ></span>
+              </span>
+              <span>Server Online</span>
+            </div>
+
+            <button
+              onclick="toggleTheme()"
+              type="button"
+              aria-label="Toggle Theme"
+              class="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors border border-border bg-background shadow-xs"
+            >
+              <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+              <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Page Content -->
+        <main
+          class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6"
+        >
+          {% block content %}{% endblock %}
+        </main>
+      </div>
     </div>
 
     <!-- Scripts -->
     <script>
-        // Lucide icon render
+      // Lucide icon render
+      lucide.createIcons();
+
+      // Theme toggle
+      function toggleTheme() {
+        if (document.documentElement.classList.contains("dark")) {
+          document.documentElement.classList.remove("dark");
+          localStorage.setItem("theme", "light");
+        } else {
+          document.documentElement.classList.add("dark");
+          localStorage.setItem("theme", "dark");
+        }
         lucide.createIcons();
+      }
 
-        // Theme toggle
-        function toggleTheme() {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            }
-            lucide.createIcons();
+      // Mobile sidebar toggle
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const backdrop = document.getElementById("sidebar-backdrop");
+        const isClosed = sidebar.classList.contains("-translate-x-full");
+
+        if (isClosed) {
+          sidebar.classList.remove("-translate-x-full");
+          backdrop.classList.remove("hidden");
+        } else {
+          sidebar.classList.add("-translate-x-full");
+          backdrop.classList.add("hidden");
         }
-
-        // Mobile sidebar toggle
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('sidebar-backdrop');
-            const isClosed = sidebar.classList.contains('-translate-x-full');
-
-            if (isClosed) {
-                sidebar.classList.remove('-translate-x-full');
-                backdrop.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                backdrop.classList.add('hidden');
-            }
-        }
+      }
     </script>
 
     <!-- SweetAlert2 helpers + legacy confirm interception -->
     <script>
-        // Promise-based confirm using SweetAlert2 (theme aware).
-        function cwkConfirm(message, options) {
-            const opts = options || {};
-            const danger = /danger|delete|wipe|reset|permanently|ban|disable|remove|clear/i.test(message || '');
-            return Swal.fire({
-                title: opts.title || (danger ? 'Please confirm' : 'Are you sure?'),
-                text: message || '',
-                icon: opts.icon || (danger ? 'warning' : 'question'),
-                showCancelButton: true,
-                confirmButtonText: opts.confirmText || 'Confirm',
-                cancelButtonText: opts.cancelText || 'Cancel',
-                reverseButtons: true,
-                focusCancel: !!danger,
-                customClass: { popup: 'cwk-swal' },
-            }).then(function (result) {
-                return result.isConfirmed;
-            });
-        }
-
-        function cwkAlert(message, options) {
-            const opts = options || {};
-            return Swal.fire({
-                title: opts.title || 'Notice',
-                text: message || '',
-                icon: opts.icon || 'info',
-                confirmButtonText: opts.confirmText || 'OK',
-                customClass: { popup: 'cwk-swal' },
-            });
-        }
-
-        // Convert legacy `onclick="return confirm('...')"` attributes once the DOM is ready.
-        function cwkUpgradeLegacyConfirms(root) {
-            (root || document).querySelectorAll('[onclick]').forEach(function (el) {
-                const oc = el.getAttribute('onclick') || '';
-                const m = oc.match(/^\s*(?:return\s+)?confirm\((['"`])([\s\S]*?)\1\)\s*;?\s*$/);
-                if (m) {
-                    el.setAttribute('data-confirm', m[2]);
-                    el.removeAttribute('onclick');
-                }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            cwkUpgradeLegacyConfirms(document);
+      // Promise-based confirm using SweetAlert2 (theme aware).
+      function cwkConfirm(message, options) {
+        const opts = options || {};
+        const danger =
+          /danger|delete|wipe|reset|permanently|ban|disable|remove|clear/i.test(
+            message || "",
+          );
+        return Swal.fire({
+          title: opts.title || (danger ? "Please confirm" : "Are you sure?"),
+          text: message || "",
+          icon: opts.icon || (danger ? "warning" : "question"),
+          showCancelButton: true,
+          confirmButtonText: opts.confirmText || "Confirm",
+          cancelButtonText: opts.cancelText || "Cancel",
+          reverseButtons: true,
+          focusCancel: !!danger,
+          customClass: { popup: "cwk-swal" },
+        }).then(function (result) {
+          return result.isConfirmed;
         });
+      }
 
-        // Intercept link / non-submit clicks with data-confirm.
-        document.addEventListener('click', function (e) {
-            const el = e.target.closest('[data-confirm]');
-            if (!el) return;
-            const isSubmit = (el.tagName === 'BUTTON' && (el.type === 'submit' || el.form)) ||
-                             (el.tagName === 'INPUT' && el.type === 'submit');
-            if (isSubmit) return; // handled by the submit listener
+      function cwkAlert(message, options) {
+        const opts = options || {};
+        return Swal.fire({
+          title: opts.title || "Notice",
+          text: message || "",
+          icon: opts.icon || "info",
+          confirmButtonText: opts.confirmText || "OK",
+          customClass: { popup: "cwk-swal" },
+        });
+      }
 
-            e.preventDefault();
-            e.stopPropagation();
-            cwkConfirm(el.getAttribute('data-confirm')).then(function (ok) {
-                if (!ok) return;
-                if (el.tagName === 'A' && el.href) {
-                    window.location.href = el.href;
-                } else if (el.dataset.href) {
-                    window.location.href = el.dataset.href;
-                }
-            });
-        }, true);
+      // Convert legacy `onclick="return confirm('...')"` attributes once the DOM is ready.
+      function cwkUpgradeLegacyConfirms(root) {
+        (root || document).querySelectorAll("[onclick]").forEach(function (el) {
+          const oc = el.getAttribute("onclick") || "";
+          const m = oc.match(
+            /^\s*(?:return\s+)?confirm\((['"`])([\s\S]*?)\1\)\s*;?\s*$/,
+          );
+          if (m) {
+            el.setAttribute("data-confirm", m[2]);
+            el.removeAttribute("onclick");
+          }
+        });
+      }
 
-        // Intercept form submits whose submitter (or form) has data-confirm.
-        document.addEventListener('submit', function (e) {
-            const form = e.target;
-            let el = e.submitter && e.submitter.hasAttribute && e.submitter.hasAttribute('data-confirm')
-                ? e.submitter
-                : null;
-            if (!el) {
-                el = form.querySelector('button[type=submit][data-confirm], input[type=submit][data-confirm]');
+      document.addEventListener("DOMContentLoaded", function () {
+        cwkUpgradeLegacyConfirms(document);
+      });
+
+      // Intercept link / non-submit clicks with data-confirm.
+      document.addEventListener(
+        "click",
+        function (e) {
+          const el = e.target.closest("[data-confirm]");
+          if (!el) return;
+          const isSubmit =
+            (el.tagName === "BUTTON" && (el.type === "submit" || el.form)) ||
+            (el.tagName === "INPUT" && el.type === "submit");
+          if (isSubmit) return; // handled by the submit listener
+
+          e.preventDefault();
+          e.stopPropagation();
+          cwkConfirm(el.getAttribute("data-confirm")).then(function (ok) {
+            if (!ok) return;
+            if (el.tagName === "A" && el.href) {
+              window.location.href = el.href;
+            } else if (el.dataset.href) {
+              window.location.href = el.dataset.href;
             }
-            if (!el) return;
-            if (el.dataset.confirmed === '1') {
-                el.dataset.confirmed = '';
-                return;
-            }
+          });
+        },
+        true,
+      );
 
-            e.preventDefault();
-            cwkConfirm(el.getAttribute('data-confirm')).then(function (ok) {
-                if (!ok) return;
-                el.dataset.confirmed = '1';
-                if (e.submitter) {
-                    form.requestSubmit(e.submitter);
-                } else {
-                    form.submit();
-                }
-            });
-        }, true);
+      // Intercept form submits whose submitter (or form) has data-confirm.
+      document.addEventListener(
+        "submit",
+        function (e) {
+          const form = e.target;
+          let el =
+            e.submitter &&
+            e.submitter.hasAttribute &&
+            e.submitter.hasAttribute("data-confirm")
+              ? e.submitter
+              : null;
+          if (!el) {
+            el = form.querySelector(
+              "button[type=submit][data-confirm], input[type=submit][data-confirm]",
+            );
+          }
+          if (!el) return;
+          if (el.dataset.confirmed === "1") {
+            el.dataset.confirmed = "";
+            return;
+          }
+
+          e.preventDefault();
+          cwkConfirm(el.getAttribute("data-confirm")).then(function (ok) {
+            if (!ok) return;
+            el.dataset.confirmed = "1";
+            if (e.submitter) {
+              form.requestSubmit(e.submitter);
+            } else {
+              form.submit();
+            }
+          });
+        },
+        true,
+      );
     </script>
-</body>
+  </body>
 </html>

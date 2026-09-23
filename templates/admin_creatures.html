@@ -1,155 +1,246 @@
-{% extends "admin_base.html" %}
-{% block title %}Creature Book - CWK Admin{% endblock %}
-{% block breadcrumb %}Creature Book{% endblock %}
-
-{% block content %}
+{% extends "admin_base.html" %} {% block title %}Creature Book - CWK Admin{%
+endblock %} {% block breadcrumb %}Creature Book{% endblock %} {% block content
+%}
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-2.5">
-                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Creature Book</h1>
-                <span class="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground">
-                    {{ total }} creatures
-                </span>
-            </div>
-            <p class="text-sm text-muted-foreground mt-1">Reference encyclopedia for all collectible creatures and blueprint slots</p>
-        </div>
+  <!-- Header -->
+  <div
+    class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+  >
+    <div>
+      <div class="flex items-center gap-2.5">
+        <h1
+          class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground"
+        >
+          Creature Book
+        </h1>
+        <span
+          class="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground"
+        >
+          {{ total }} creatures
+        </span>
+      </div>
+      <p class="text-sm text-muted-foreground mt-1">
+        Reference encyclopedia for all collectible creatures and blueprint slots
+      </p>
     </div>
+  </div>
 
-    <!-- Search Card -->
-    <div class="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-xs">
-        <form method="GET" action="/admin/creatures" class="flex flex-col sm:flex-row gap-2">
-            <div class="relative flex-1">
-                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"></i>
-                <input
-                    type="text"
-                    name="q"
-                    value="{{ query }}"
-                    placeholder="Search by ID or creature name..."
-                    class="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-4 py-1 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-            </div>
-            <div class="flex items-center gap-2">
-                <button
-                    type="submit"
-                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors"
-                >
-                    Search
-                </button>
-                {% if query %}
-                <a
-                    href="/admin/creatures"
-                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                    Clear
-                </a>
-                {% endif %}
-            </div>
-        </form>
-
+  <!-- Search Card -->
+  <div
+    class="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-xs"
+  >
+    <form
+      method="GET"
+      action="/admin/creatures"
+      class="flex flex-col sm:flex-row gap-2"
+    >
+      <div class="relative flex-1">
+        <i
+          data-lucide="search"
+          class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+        ></i>
+        <input
+          type="text"
+          name="q"
+          value="{{ query }}"
+          placeholder="Search by ID or creature name..."
+          class="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-4 py-1 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        />
+      </div>
+      <div class="flex items-center gap-2">
+        <button
+          type="submit"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors"
+        >
+          Search
+        </button>
         {% if query %}
-        <div class="mt-3 text-xs text-muted-foreground flex items-center gap-1.5">
-            <span>Showing results for</span>
-            <span class="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">"{{ query }}"</span>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Creature Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-        {% for creature in creatures %}
-        <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-5 flex flex-col justify-between hover:border-border/80 transition-colors">
-            <div>
-                <div class="flex items-center justify-between gap-2 mb-2">
-                    <span class="font-mono text-xs text-muted-foreground truncate bg-muted/60 px-2 py-0.5 rounded border border-border/50">
-                        {{ creature.ID }}
-                    </span>
-                    <span class="inline-flex items-center rounded-md border border-border bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground shrink-0">
-                        {{ creature.CardSlots }} Slots
-                    </span>
-                </div>
-
-                <h3 class="font-semibold text-base text-foreground tracking-tight line-clamp-1 mb-3">
-                    {{ creature.Name }}
-                </h3>
-
-                <div class="space-y-1.5 pt-2 border-t border-border/60">
-                    <span class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">Action Cards</span>
-                    {% if creature.ActionCard1 %}
-                    <div class="flex items-center gap-1.5 text-xs font-mono bg-muted/30 px-2.5 py-1 rounded border border-border/40 text-muted-foreground truncate">
-                        <i data-lucide="layers" class="w-3 h-3 text-muted-foreground shrink-0"></i>
-                        <span class="truncate">{{ creature.ActionCard1 }}</span>
-                    </div>
-                    {% endif %}
-                    {% if creature.ActionCard2 %}
-                    <div class="flex items-center gap-1.5 text-xs font-mono bg-muted/30 px-2.5 py-1 rounded border border-border/40 text-muted-foreground truncate">
-                        <i data-lucide="layers" class="w-3 h-3 text-muted-foreground shrink-0"></i>
-                        <span class="truncate">{{ creature.ActionCard2 }}</span>
-                    </div>
-                    {% endif %}
-                    {% if creature.ActionCard3 %}
-                    <div class="flex items-center gap-1.5 text-xs font-mono bg-muted/30 px-2.5 py-1 rounded border border-border/40 text-muted-foreground truncate">
-                        <i data-lucide="layers" class="w-3 h-3 text-muted-foreground shrink-0"></i>
-                        <span class="truncate">{{ creature.ActionCard3 }}</span>
-                    </div>
-                    {% endif %}
-                    {% if creature.ActionCard4 %}
-                    <div class="flex items-center gap-1.5 text-xs font-mono bg-muted/30 px-2.5 py-1 rounded border border-border/40 text-muted-foreground truncate">
-                        <i data-lucide="layers" class="w-3 h-3 text-muted-foreground shrink-0"></i>
-                        <span class="truncate">{{ creature.ActionCard4 }}</span>
-                    </div>
-                    {% endif %}
-                    {% if creature.ActionCard5 %}
-                    <div class="flex items-center gap-1.5 text-xs font-mono bg-muted/30 px-2.5 py-1 rounded border border-border/40 text-muted-foreground truncate">
-                        <i data-lucide="layers" class="w-3 h-3 text-muted-foreground shrink-0"></i>
-                        <span class="truncate">{{ creature.ActionCard5 }}</span>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div class="mt-4 pt-3 border-t border-border/60 flex items-center justify-between">
-                    {% if creature.ID in banned_set %}
-                    <span class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-destructive/15 text-destructive border border-destructive/20">
-                        <i data-lucide="ban" class="w-3 h-3"></i> Banned in PVP
-                    </span>
-                    <form action="/admin/pvp_banlist/remove_creature/{{ creature.ID }}" method="POST" class="inline">
-                        <input type="hidden" name="return_to" value="{{ request.full_path }}">
-                        <button type="submit" class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2 py-1 text-[11px] font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
-                            <i data-lucide="shield-check" class="w-3 h-3"></i> Unban
-                        </button>
-                    </form>
-                    {% else %}
-                    <span class="text-[11px] text-muted-foreground font-mono">PVP Allowed</span>
-                    <form action="/admin/pvp_banlist/add_creature" method="POST" class="inline">
-                        <input type="hidden" name="creature_id" value="{{ creature.ID }}">
-                        <input type="hidden" name="return_to" value="{{ request.full_path }}">
-                        <button type="submit" class="inline-flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 text-destructive px-2 py-1 text-[11px] font-medium shadow-xs hover:bg-destructive/20 transition-colors cursor-pointer">
-                            <i data-lucide="ban" class="w-3 h-3"></i> Ban
-                        </button>
-                    </form>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- Empty State -->
-    {% if not creatures %}
-    <div class="rounded-xl border border-border bg-card p-12 text-center text-card-foreground shadow-xs">
-        <div class="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4 text-muted-foreground">
-            <i data-lucide="sparkles" class="w-6 h-6"></i>
-        </div>
-        <h3 class="text-base font-semibold text-foreground">No creatures found</h3>
-        <p class="text-sm text-muted-foreground mt-1">Try adjusting your search terms or filter.</p>
-        {% if query %}
-        <a href="/admin/creatures" class="inline-flex items-center gap-1.5 mt-4 text-xs font-medium text-primary hover:underline">
-            <span>Reset search filter</span>
-            <i data-lucide="arrow-right" class="w-3 h-3"></i>
+        <a
+          href="/admin/creatures"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+        >
+          Clear
         </a>
         {% endif %}
+      </div>
+    </form>
+
+    {% if query %}
+    <div class="mt-3 text-xs text-muted-foreground flex items-center gap-1.5">
+      <span>Showing results for</span>
+      <span
+        class="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded"
+        >"{{ query }}"</span
+      >
     </div>
     {% endif %}
+  </div>
+
+  <!-- Creature Grid -->
+  <div
+    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
+  >
+    {% for creature in creatures %}
+    <div
+      class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-5 flex flex-col justify-between hover:border-border/80 transition-colors"
+    >
+      <div>
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <span
+            class="font-mono text-xs text-muted-foreground truncate bg-muted/60 px-2 py-0.5 rounded border border-border/50"
+          >
+            {{ creature.ID }}
+          </span>
+          <span
+            class="inline-flex items-center rounded-md border border-border bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground shrink-0"
+          >
+            {{ creature.CardSlots }} Slots
+          </span>
+        </div>
+
+        <h3
+          class="font-semibold text-base text-foreground tracking-tight line-clamp-1 mb-3"
+        >
+          {{ creature.Name }}
+        </h3>
+
+        <div class="space-y-1.5 pt-2 border-t border-border/60">
+          <span
+            class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5"
+            >Auguments</span
+          >
+          {% if creature.ActionCard1 %}
+          <div
+            class="flex items-center gap-1.5 text-xs font-mono bg-muted/30 px-2.5 py-1 rounded border border-border/40 text-muted-foreground truncate"
+          >
+            <i
+              data-lucide="layers"
+              class="w-3 h-3 text-muted-foreground shrink-0"
+            ></i>
+            <span class="truncate">{{ creature.ActionCard1 }}</span>
+          </div>
+          {% endif %} {% if creature.ActionCard2 %}
+          <div
+            class="flex items-center gap-1.5 text-xs font-mono bg-muted/30 px-2.5 py-1 rounded border border-border/40 text-muted-foreground truncate"
+          >
+            <i
+              data-lucide="layers"
+              class="w-3 h-3 text-muted-foreground shrink-0"
+            ></i>
+            <span class="truncate">{{ creature.ActionCard2 }}</span>
+          </div>
+          {% endif %} {% if creature.ActionCard3 %}
+          <div
+            class="flex items-center gap-1.5 text-xs font-mono bg-muted/30 px-2.5 py-1 rounded border border-border/40 text-muted-foreground truncate"
+          >
+            <i
+              data-lucide="layers"
+              class="w-3 h-3 text-muted-foreground shrink-0"
+            ></i>
+            <span class="truncate">{{ creature.ActionCard3 }}</span>
+          </div>
+          {% endif %} {% if creature.ActionCard4 %}
+          <div
+            class="flex items-center gap-1.5 text-xs font-mono bg-muted/30 px-2.5 py-1 rounded border border-border/40 text-muted-foreground truncate"
+          >
+            <i
+              data-lucide="layers"
+              class="w-3 h-3 text-muted-foreground shrink-0"
+            ></i>
+            <span class="truncate">{{ creature.ActionCard4 }}</span>
+          </div>
+          {% endif %} {% if creature.ActionCard5 %}
+          <div
+            class="flex items-center gap-1.5 text-xs font-mono bg-muted/30 px-2.5 py-1 rounded border border-border/40 text-muted-foreground truncate"
+          >
+            <i
+              data-lucide="layers"
+              class="w-3 h-3 text-muted-foreground shrink-0"
+            ></i>
+            <span class="truncate">{{ creature.ActionCard5 }}</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <div
+          class="mt-4 pt-3 border-t border-border/60 flex items-center justify-between"
+        >
+          {% if creature.ID in banned_set %}
+          <span
+            class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-destructive/15 text-destructive border border-destructive/20"
+          >
+            <i data-lucide="ban" class="w-3 h-3"></i> Banned in PVP
+          </span>
+          <form
+            action="/admin/pvp_banlist/remove_creature/{{ creature.ID }}"
+            method="POST"
+            class="inline"
+          >
+            <input
+              type="hidden"
+              name="return_to"
+              value="{{ request.full_path }}"
+            />
+            <button
+              type="submit"
+              class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2 py-1 text-[11px] font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+            >
+              <i data-lucide="shield-check" class="w-3 h-3"></i> Unban
+            </button>
+          </form>
+          {% else %}
+          <span class="text-[11px] text-muted-foreground font-mono"
+            >PVP Allowed</span
+          >
+          <form
+            action="/admin/pvp_banlist/add_creature"
+            method="POST"
+            class="inline"
+          >
+            <input type="hidden" name="creature_id" value="{{ creature.ID }}" />
+            <input
+              type="hidden"
+              name="return_to"
+              value="{{ request.full_path }}"
+            />
+            <button
+              type="submit"
+              class="inline-flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 text-destructive px-2 py-1 text-[11px] font-medium shadow-xs hover:bg-destructive/20 transition-colors cursor-pointer"
+            >
+              <i data-lucide="ban" class="w-3 h-3"></i> Ban
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Empty State -->
+  {% if not creatures %}
+  <div
+    class="rounded-xl border border-border bg-card p-12 text-center text-card-foreground shadow-xs"
+  >
+    <div
+      class="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4 text-muted-foreground"
+    >
+      <i data-lucide="sparkles" class="w-6 h-6"></i>
+    </div>
+    <h3 class="text-base font-semibold text-foreground">No creatures found</h3>
+    <p class="text-sm text-muted-foreground mt-1">
+      Try adjusting your search terms or filter.
+    </p>
+    {% if query %}
+    <a
+      href="/admin/creatures"
+      class="inline-flex items-center gap-1.5 mt-4 text-xs font-medium text-primary hover:underline"
+    >
+      <span>Reset search filter</span>
+      <i data-lucide="arrow-right" class="w-3 h-3"></i>
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
 </div>
 {% endblock %}
