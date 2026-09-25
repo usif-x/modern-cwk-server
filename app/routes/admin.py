@@ -32,6 +32,8 @@ from app.utils import (
     DATABASE_DUMP_NAME,
     DecryptGameData,
     DEFAULT_LOADOUT_COUNT,
+    DEFAULT_TEAM_CREATURES,
+    DescribeBattleRecord,
     DiscordWebhookMessage,
     EncryptGameData,
     FindBrokenSaveIssues,
@@ -54,8 +56,10 @@ from app.utils import (
     IsTutorialOnlyCreature,
     IsUserBanned,
     LoadSettings,
+    LoadoutCreatureCount,
     Log,
     MAX_LOADOUTS,
+    MAX_TEAM_CREATURES,
     MigrateSqliteDatabase,
     PlayerLog,
     ReadMiscParam,
@@ -66,6 +70,7 @@ from app.utils import (
     SaveSettings,
     SendBackupToTelegram,
     SetLoadoutCount,
+    SetTeamCreatureCount,
     SQLITE_DUMP_NAME,
     UpdateLastOnline,
     WriteMiscParam,
@@ -703,6 +708,13 @@ def AdminPlayer(player):
             CreatureByUid={},
             MaxLoadouts=MAX_LOADOUTS,
             DefaultLoadoutCount=DEFAULT_LOADOUT_COUNT,
+            TeamSlots=[],
+            TeamCreatureCount=DEFAULT_TEAM_CREATURES,
+            MaxTeamCreatures=MAX_TEAM_CREATURES,
+            BannedBattleCount=0,
+            TeamBans=[],
+            BannedCreatures=set(),
+            BannedLeaders=set(),
             HelperCreature=None,
             invalid_creature_count=0,
             rank_xp_json=json.dumps(GetRankXPTable()),
@@ -720,6 +732,19 @@ def AdminPlayer(player):
         battle["recordTime"] = datetime.fromtimestamp(
             battle.get("recordTime", 0), tz=timezone.utc
         ).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    # Opponent loadout per match + PVP ban screening. BattleHistory only
+    # stores the opponent's side (opponentLeader + creatures).
+    banlist = GetPvpBanlist()
+    banned_creature_set = set(banlist.get("banned_creatures") or [])
+    banned_leader_set = set(banlist.get("banned_leaders") or [])
+
+    battle_history = [
+        DescribeBattleRecord(b, banned_creature_set, banned_leader_set)
+        for b in battle_history
+    ]
+    battle_history = [b for b in battle_history if b is not None]
+    banned_battle_count = sum(1 for b in battle_history if b.get("has_ban"))
 
     # fix device name
     if player["devicename"] is not None:
@@ -785,6 +810,27 @@ def AdminPlayer(player):
     except (TypeError, ValueError):
         selected_loadout = 0
 
+    # Creature slots per team. Teams already in this save may carry more
+    # slots than the global CreaturesOnTeam default, so the widest team wins.
+    team_creature_count = max(
+        (LoadoutCreatureCount(lo) for lo in loadouts), default=0
+    )
+    if not team_creature_count:
+        team_creature_count = max(
+            1,
+            min(
+                MAX_TEAM_CREATURES,
+                safe_int(ReadMiscParam("CreaturesOnTeam"), DEFAULT_TEAM_CREATURES),
+            ),
+        )
+
+    team_slots = []
+    for loadout in loadouts:
+        width = max(LoadoutCreatureCount(loadout), team_creature_count)
+        team_slots.append(
+            [loadout.get("CreatureID" + str(index)) for index in range(width)]
+        )
+
     # UniqueID -> creature blueprint ID so team rows can show creature names
     creature_by_uid = {}
     for item in Inventory:
@@ -805,6 +851,29 @@ def AdminPlayer(player):
         leader_skins[base_id] = [
             skin for skin in GetLeaderSkins(base_id) if skin not in owned
         ]
+
+    # This player's current teams screened against the PVP ban list
+    team_bans = []
+    for index, slots in enumerate(team_slots):
+        loadout = loadouts[index]
+        leader_id = loadout.get("LeaderID") or ""
+        banned_here = []
+        for uid in slots:
+            if not uid:
+                continue
+            creature_id = creature_by_uid.get(safe_int(uid, 0))
+            if creature_id and creature_id in banned_creature_set:
+                banned_here.append(creature_id)
+        if banned_here or (leader_id and leader_id in banned_leader_set):
+            team_bans.append(
+                {
+                    "index": index + 1,
+                    "leader": leader_id,
+                    "leader_banned": bool(leader_id)
+                    and leader_id in banned_leader_set,
+                    "creatures": banned_here,
+                }
+            )
 
     return render_template(
         "admin_player.html",
@@ -835,6 +904,15 @@ def AdminPlayer(player):
         CreatureByUid=creature_by_uid,
         MaxLoadouts=MAX_LOADOUTS,
         DefaultLoadoutCount=DEFAULT_LOADOUT_COUNT,
+        TeamSlots=team_slots,
+        TeamCreatureCount=team_creature_count,
+        MaxTeamCreatures=MAX_TEAM_CREATURES,
+        BannedBattleCount=banned_battle_count,
+        TeamBans=team_bans,
+        BannedCreatureCount=len(banned_creature_set),
+        BannedLeaderCount=len(banned_leader_set),
+        BannedCreatures=banned_creature_set,
+        BannedLeaders=banned_leader_set,
         HelperCreature=helper_creature,
         invalid_creature_count=invalid_creature_count,
         rank_xp_json=json.dumps(GetRankXPTable()),
@@ -2137,6 +2215,37 @@ def AdminPlayerSetLoadouts(player):
 
 
 @login_required
+@admin_bp.route("/admin/players/<player>/loadouts/creatures", methods=["POST"])
+def AdminPlayerSetTeamCreatures(player):
+    if not isAdmin(current_user):
+        return abort(404)
+
+    db_player = Player.query.filter_by(username=player).first()
+    if db_player is None:
+        return make_response("No player found!", 404)
+
+    game = DecryptGameData(db_player.game)
+    if game is None:
+        return make_response("No game data found!", 400)
+
+    loadouts = game.get("Loadouts")
+    if not isinstance(loadouts, list):
+        loadouts = []
+    before = max((LoadoutCreatureCount(lo) for lo in loadouts), default=0)
+
+    count = SetTeamCreatureCount(game, request.form.get("count"))
+    db_player.game = EncryptGameData(game, player)
+    db.session.commit()
+
+    Log(
+        "admin",
+        current_user.username
+        + f" set creatures per team for player: {player} ({before} -> {count})",
+    )
+    return redirect("/admin/players/" + player)
+
+
+@login_required
 @admin_bp.route("/admin/players/<player>/export_save", methods=["GET"])
 def AdminPlayerExportSave(player):
     if not isAdmin(current_user):
@@ -2634,11 +2743,22 @@ def AdminMisc():
     except (TypeError, ValueError):
         starting_loadouts = DEFAULT_LOADOUT_COUNT
 
+    try:
+        creatures_on_team = int(
+            safe_int(ReadMiscParam("CreaturesOnTeam"), DEFAULT_TEAM_CREATURES)
+        )
+    except (TypeError, ValueError):
+        creatures_on_team = DEFAULT_TEAM_CREATURES
+    creatures_on_team = max(1, min(MAX_TEAM_CREATURES, creatures_on_team))
+
     return render_template(
         "admin_misc.html",
         starting_loadouts=starting_loadouts,
         max_loadouts=MAX_LOADOUTS,
         default_loadouts=DEFAULT_LOADOUT_COUNT,
+        creatures_on_team=creatures_on_team,
+        max_team_creatures=MAX_TEAM_CREATURES,
+        default_team_creatures=DEFAULT_TEAM_CREATURES,
     )
 
 
@@ -2664,6 +2784,32 @@ def AdminMiscLoadoutCount():
     )
     DiscordWebhookMessage(
         f"**{current_user.username}** set `StartingLoadoutCount` to **{count}** (was {old_value})"
+    )
+    return redirect("/admin/misc")
+
+
+@login_required
+@admin_bp.route("/admin/misc/creatures_on_team", methods=["POST"])
+def AdminMiscCreaturesOnTeam():
+    if not isAdmin(current_user):
+        return abort(404)
+
+    raw = request.form.get("preset") or request.form.get("count")
+    try:
+        count = int(raw)
+    except (TypeError, ValueError):
+        count = DEFAULT_TEAM_CREATURES
+    count = max(1, min(MAX_TEAM_CREATURES, count))
+
+    old_value = WriteMiscParam("CreaturesOnTeam", count)
+
+    Log(
+        "admin",
+        current_user.username
+        + f" set blueprint CreaturesOnTeam: {old_value} -> {count}",
+    )
+    DiscordWebhookMessage(
+        f"**{current_user.username}** set `CreaturesOnTeam` to **{count}** (was {old_value})"
     )
     return redirect("/admin/misc")
 

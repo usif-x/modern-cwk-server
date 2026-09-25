@@ -185,6 +185,21 @@ Each base hero has: `{"ID": "Leader_Finn", "Skin": "Leader_Finn", "OwnedSkins": 
 
 Skins are stored inside their base hero's `OwnedSkins` — they must never be added as independent entries in `Leaders` (the client flags this). `db_Leaders.json` contains 32 base heroes and 51 skins; a skin entry has a `SkinOf` field pointing at its base hero. The admin **Leader Book** (`/admin/leaders`) shows base heroes only.
 
+### Battle History
+
+Each `BattleHistory` entry records only the **opponent's** side of a PVP match:
+
+```json
+{"opponentName": "...", "opponentId": "<uuid>", "opponentLeader": "Leader_FlameKing",
+ "creatures": ["...", "..."], "season": "Season19SmellySewer", "youWon": true,
+ "recordTime": 1790108761, "currentLeague": 14, "bestLeague": 1,
+ "bestLeagueSeasonID": 0, "flag": "US", "battleVideo": "<uuid>"}
+```
+
+- `creatures` + `opponentLeader` are the loadout the match was fought against — this player's own deck is never stored, so it cannot be reconstructed
+- An empty or missing `season` means a friendly match: PVP ban rules do not apply, so `DescribeBattleRecord` never flags those records
+- The admin player page expands each row to show that opponent loadout, highlights anything listed in `pvp_banlist.json`, and screens the player's current Teams the same way
+
 ## Route Reference
 
 ### Game API Routes (`app/routes/game.py`)
@@ -289,7 +304,8 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | POST     | `/admin/players/<uuid>/delete_leaders_bulk`      | Multi-delete selected leaders                                                    |
 | POST     | `/admin/players/<uuid>/add_all_skins`            | Attach all skins to the player's owned heroes via `OwnedSkins`                   |
 | POST     | `/admin/players/<uuid>/max_resources`            | Max all currencies preset                                                        |
-| POST     | `/admin/players/<uuid>/loadouts/set`             | Set team (loadout) count 1-12; grows with blank team lines                       |
+| POST     | `/admin/players/<uuid>/loadouts/set`             | Set team (loadout) count 1-50; grows with blank team lines                       |
+| POST     | `/admin/players/<uuid>/loadouts/creatures`       | Set creatures per team 1-10; shrinking drops the extra slots                     |
 | GET      | `/admin/players/<uuid>/export_save`              | Download save as JSON                                                            |
 | POST     | `/admin/players/<uuid>/import_save`              | Upload & replace save JSON                                                       |
 | POST     | `/admin/players/<uuid>/fix_save`                 | Detect & repair broken save fields / duplicate creature IDs (deletes nothing)    |
@@ -314,6 +330,7 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | GET      | `/admin/upsight`                                 | Analytics logs (paginated)                                                       |
 | GET      | `/admin/misc`                                    | Misc tools                                                                       |
 | POST     | `/admin/misc/loadout_count`                      | Set global `StartingLoadoutCount` blueprint value (default team lines)           |
+| POST     | `/admin/misc/creatures_on_team`                  | Set global `CreaturesOnTeam` blueprint value (slots per team)                    |
 | GET      | `/admin/redeemcodes`                             | Redeem codes list                                                                |
 | POST     | `/admin/redeemcodes/add`                         | Add/update redeem code                                                           |
 | POST     | `/admin/redeemcodes/delete/<code>`               | Delete redeem code                                                               |
@@ -345,7 +362,10 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | `FindBrokenSaveIssues(game)`                           | `app/utils.py` | Return list of missing/invalid save fields & duplicate creature IDs        |
 | `RepairGameData(game, username, fallback_name)`        | `app/utils.py` | Fill missing fields / fix duplicate IDs without deleting data              |
 | `BuildTransferredGame(source, target, username, name)` | `app/utils.py` | Copy progress to a target save keeping target name & currencies            |
-| `SetLoadoutCount(game, count)`                         | `app/utils.py` | Resize `game["Loadouts"]` team lines (1-12); grows with blank teams        |
+| `SetLoadoutCount(game, count)`                         | `app/utils.py` | Resize `game["Loadouts"]` team lines (1-50); pads new teams to match        |
+| `SetTeamCreatureCount(game, count)`                    | `app/utils.py` | Resize `CreatureID0..n` slots on every team (1-10, truncates on shrink)     |
+| `LoadoutCreatureCount(loadout)`                        | `app/utils.py` | How many creature slots a team dict currently exposes                        |
+| `DescribeBattleRecord(record, banned_c, banned_l)`     | `app/utils.py` | Battle row + opponent loadout & PVP ban flags (no-season = friendly)        |
 | `UpdateLastOnline(player_id)`                          | `app/utils.py` | Update last_online timestamp                                               |
 | `GetAllyInfo(player_id, isally)`                       | `app/utils.py` | Build ally info dict                                                       |
 | `GetPlayerWins(player_id)`                             | `app/utils.py` | Count PVP wins this season                                                 |

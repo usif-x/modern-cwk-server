@@ -550,8 +550,8 @@ CRITICAL_SAVE_FIELDS = [
     "MultiplayerLevel",
     "RankXP",
     "PlayersLastSavedLevel",
-    "AdminLeaderLevel",
-    "AdminPlayerLevel",
+    # AdminLeaderLevel / AdminPlayerLevel are admin-set overrides: a save
+    # without them is normal, so the detector no longer flags them as issues.
     "Inventory",
     "CardCollection",
     "Collection",
@@ -871,7 +871,13 @@ def BuildTransferredGame(source_game, target_game, target_username, target_name=
 # Team (loadout) lines. The client ships with StartingLoadoutCount = 5 rows on
 # the deck screen; the save simply stores one entry per row in game["Loadouts"].
 DEFAULT_LOADOUT_COUNT = 5
-MAX_LOADOUTS = 12
+MAX_LOADOUTS = 50
+
+# Creatures inside a single team: `CreaturesOnTeam` in db_MiscParams.json (5 in
+# the shipped blueprint) plus one `CreatureID<n>` slot per creature in each
+# loadout entry.
+DEFAULT_TEAM_CREATURES = 5
+MAX_TEAM_CREATURES = 10
 
 
 def DefaultLoadoutLeader(game):
@@ -896,12 +902,63 @@ def DefaultLoadoutLeader(game):
     return ""
 
 
+def LoadoutCreatureCount(loadout):
+    """How many `CreatureID<n>` slots a team dict currently exposes."""
+    if not isinstance(loadout, dict):
+        return 0
+    highest = -1
+    for key in loadout:
+        if not key.startswith("CreatureID"):
+            continue
+        suffix = key[len("CreatureID") :]
+        if suffix.isdigit():
+            highest = max(highest, int(suffix))
+    return highest + 1
+
+
+def SetTeamCreatureCount(game, count):
+    """Resize every team's `CreatureID<n>` slots to `count`.
+
+    Growing pads with empty (`0`) slots, shrinking drops the extra ones.
+    Returns the clamped count actually applied.
+    """
+    if not isinstance(game, dict):
+        return 0
+
+    try:
+        count = int(count)
+    except (TypeError, ValueError):
+        count = DEFAULT_TEAM_CREATURES
+
+    count = max(1, min(MAX_TEAM_CREATURES, count))
+
+    loadouts = game.get("Loadouts")
+    if not isinstance(loadouts, list):
+        return count
+
+    for loadout in loadouts:
+        if not isinstance(loadout, dict):
+            continue
+        for index in range(count):
+            loadout.setdefault("CreatureID" + str(index), 0)
+        for key in [
+            key
+            for key in list(loadout)
+            if key.startswith("CreatureID")
+            and key[len("CreatureID") :].isdigit()
+            and int(key[len("CreatureID") :]) >= count
+        ]:
+            del loadout[key]
+
+    return count
+
+
 def SetLoadoutCount(game, count):
     """Resize game["Loadouts"] to `count` team lines.
 
     Existing teams are kept when growing; new lines are blank (leader only,
-    no creatures) which is the shape the client already stores for unused
-    team rows. Returns the clamped count actually applied.
+    padded with empty creature slots matching the save's existing teams).
+    Returns the clamped count actually applied.
     """
     if not isinstance(game, dict):
         return 0
@@ -918,9 +975,15 @@ def SetLoadoutCount(game, count):
         loadouts = []
     loadouts = [lo if isinstance(lo, dict) else {"LeaderID": ""} for lo in loadouts]
 
+    # New teams should look like the ones already in this save.
+    slot_count = max((LoadoutCreatureCount(lo) for lo in loadouts), default=0)
+
     leader = DefaultLoadoutLeader(game)
     while len(loadouts) < count:
-        loadouts.append({"LeaderID": leader})
+        new_team = {"LeaderID": leader}
+        for index in range(slot_count):
+            new_team["CreatureID" + str(index)] = 0
+        loadouts.append(new_team)
     if len(loadouts) > count:
         loadouts = loadouts[:count]
 
@@ -1678,6 +1741,50 @@ def GetPlayerWins(player_id):
         if battle["youWon"] == True and battle["season"] == currentSeason:
             wins += 1
     return wins
+
+
+def DescribeBattleRecord(record, banned_creatures, banned_leaders):
+    """Enrich one BattleHistory row with the opponent loadout + ban flags.
+
+    The save only records the *opponent's* side of a match
+    (opponentLeader + creatures), so that is what gets screened.
+    Records without a season are friendly matches — ban rules do not
+    apply to them, so they are never flagged.
+    """
+    if not isinstance(record, dict):
+        return None
+
+    banned_creatures = banned_creatures or set()
+    banned_leaders = banned_leaders or set()
+
+    leader_id = record.get("opponentLeader") or ""
+    raw_creatures = record.get("creatures") or []
+    if not isinstance(raw_creatures, list):
+        raw_creatures = []
+
+    friendly = not str(record.get("season") or "").strip()
+
+    creature_details = []
+    banned_count = 0
+    for creature_id in raw_creatures:
+        if not isinstance(creature_id, str):
+            continue
+        banned = not friendly and creature_id in banned_creatures
+        banned_count += 1 if banned else 0
+        creature_details.append({"id": creature_id, "banned": banned})
+
+    leader_banned = (
+        not friendly and bool(leader_id) and leader_id in banned_leaders
+    )
+    banned_count += 1 if leader_banned else 0
+
+    enriched = dict(record)
+    enriched["friendly"] = friendly
+    enriched["creature_details"] = creature_details
+    enriched["leader_banned"] = leader_banned
+    enriched["banned_count"] = banned_count
+    enriched["has_ban"] = banned_count > 0
+    return enriched
 
 
 def GetPvpBanlist():

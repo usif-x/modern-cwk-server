@@ -25,11 +25,12 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
   - **Secret Profile** — per-admin email, password change, and a passwordless 6-digit login passkey
   - Server backups (configurable interval, Telegram delivery, upload & restore), version management, maintenance mode, and logs
 - **Progress Transfer** — Copy all account progress (creatures, Auguments, leaders, unlocks, rank, quests) from one account to another. The target keeps its own name and currencies (gems, coins, wishbones, etc.); the source account is left untouched
-- **Broken Save Detection & Repair** — The admin panel automatically detects missing/invalid save fields and duplicate creature IDs. A one-click **Fix Save** repairs the structure without deleting any items
+- **Broken Save Detection & Repair** — The admin panel automatically detects missing/invalid save fields and duplicate creature IDs. Admin-set rank overrides (`AdminLeaderLevel` / `AdminPlayerLevel`) are never flagged. A one-click **Fix Save** repairs the structure without deleting any items
 - **Temporary Bans** — Bans support an optional expiry. Admins pick a preset duration (hour, day, week, month) or a custom amount/unit; expired bans are treated as inactive and purged automatically
 - **Automatic Telegram Backups** — Backups run on a configurable interval (default 4h, can be set to 1h or any custom value) and are delivered to an admin Telegram chat via bot (`TELEGRAM_BOT_TOKEN` + `TELEGRAM_ADMIN_ID` in `.env`). Backups can also be uploaded/restored from the admin panel
 - **Creature & Card Tooling** — Add 1–10 copies at once, max/downgrade a creature from the same button, and duplicate Auguments with one click
-- **Team (Loadout) Count** — The deck screen normally shows 5 team lines. Each player page now has a Teams section to raise their team count (up to 12, blank lines are created for you), plus a Maintenance Tools control for the global `StartingLoadoutCount` blueprint that the client reads
+- **Team (Loadout) Count** — The deck screen normally shows 5 team lines. Each player page has a Teams section to raise a player's team count (up to 50, blank lines are created for you) and to resize the creature slots on every team (1–10 per team; lowering it drops the extra slots), plus Maintenance Tools controls for the global `StartingLoadoutCount` and `CreaturesOnTeam` blueprints that the client reads
+- **Battle History Loadouts & PVP Ban Screening** — Every battle record expands to show the opponent loadout it was fought with (leader + creatures), with banned items highlighted in red against `pvp_banlist.json`. The header counts how many matches used banned items, and the player's own current teams are screened too. Records without a season are friendly matches and are never flagged
 - **Anti-Cheat & Rank Sync** — Device binding, automated Rank & RankXP synchronization based on game blueprint curves (`db_PlayerRanks.json`), leader level jump validation, and ACTk detection
 - **Auto-Backup** — Automatic full database + persist directory backups every 4 hours
 
@@ -170,8 +171,10 @@ cwk-server/
 | `/admin/players/<uuid>/game`                     | Structured game save viewer and raw editor                                          |
 | `/admin/players/<uuid>/fix_save`                 | Detect & repair broken save fields (no data deleted)                                |
 | `/admin/players/<uuid>/transfer_progress`        | Copy progress to another account (keeps target name/currencies)                     |
-| `/admin/players/<uuid>/loadouts/set`             | Set a player's team (loadout) count, 1–12 lines                                     |
+| `/admin/players/<uuid>/loadouts/set`             | Set a player's team (loadout) count, 1–50 lines                                     |
+| `/admin/players/<uuid>/loadouts/creatures`       | Set creatures per team for a player, 1–10 (shrinking drops extra slots)            |
 | `/admin/misc/loadout_count`                      | Set the global team-count blueprint (`StartingLoadoutCount`)                        |
+| `/admin/misc/creatures_on_team`                  | Set the global creature-slot blueprint (`CreaturesOnTeam`)                          |
 | `/admin/players/<uuid>/add_card_copy/<idx>`      | Duplicate an Auguments                                                              |
 | `/admin/players/<uuid>/downgrade_creature/<idx>` | Reset a maxed creature to 1★                                                        |
 | `/admin/creatures`                               | Searchable Creature Book with PVP ban toggles                                       |
