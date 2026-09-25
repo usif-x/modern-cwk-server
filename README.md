@@ -29,6 +29,7 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
 - **Temporary Bans** — Bans support an optional expiry. Admins pick a preset duration (hour, day, week, month) or a custom amount/unit; expired bans are treated as inactive and purged automatically
 - **Automatic Telegram Backups** — Backups run on a configurable interval (default 4h, can be set to 1h or any custom value) and are delivered to an admin Telegram chat via bot (`TELEGRAM_BOT_TOKEN` + `TELEGRAM_ADMIN_ID` in `.env`). Backups can also be uploaded/restored from the admin panel
 - **Creature & Card Tooling** — Add 1–10 copies at once, max/downgrade a creature from the same button, and duplicate Auguments with one click
+- **Team (Loadout) Count** — The deck screen normally shows 5 team lines. Each player page now has a Teams section to raise their team count (up to 12, blank lines are created for you), plus a Maintenance Tools control for the global `StartingLoadoutCount` blueprint that the client reads
 - **Anti-Cheat & Rank Sync** — Device binding, automated Rank & RankXP synchronization based on game blueprint curves (`db_PlayerRanks.json`), leader level jump validation, and ACTk detection
 - **Auto-Backup** — Automatic full database + persist directory backups every 4 hours
 
@@ -148,6 +149,8 @@ cwk-server/
 | `/admin/players/<uuid>/game`                     | Structured game save viewer and raw editor                                          |
 | `/admin/players/<uuid>/fix_save`                 | Detect & repair broken save fields (no data deleted)                                |
 | `/admin/players/<uuid>/transfer_progress`        | Copy progress to another account (keeps target name/currencies)                     |
+| `/admin/players/<uuid>/loadouts/set`             | Set a player's team (loadout) count, 1–12 lines                                     |
+| `/admin/misc/loadout_count`                      | Set the global team-count blueprint (`StartingLoadoutCount`)                        |
 | `/admin/players/<uuid>/add_card_copy/<idx>`      | Duplicate an Auguments                                                              |
 | `/admin/players/<uuid>/downgrade_creature/<idx>` | Reset a maxed creature to 1★                                                        |
 | `/admin/creatures`                               | Searchable Creature Book with PVP ban toggles                                       |

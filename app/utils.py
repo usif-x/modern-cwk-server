@@ -822,6 +822,11 @@ def DefaultLoadoutLeader(game):
             if isinstance(leader, dict) and leader.get("ID"):
                 return leader.get("Skin") or leader.get("ID")
 
+    # Last resort: the blueprint hero every new account is given
+    fallback = ReadMiscParam("TutorialBuyHero")
+    if isinstance(fallback, str) and fallback:
+        return fallback
+
     return ""
 
 
