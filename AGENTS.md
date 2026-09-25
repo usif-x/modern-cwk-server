@@ -31,7 +31,7 @@ cwk-server/
 │       ├── multiplayer.py          # Multiplayer routes
 │       ├── friends.py              # Friend system routes
 │       └── analytics.py            # Analytics + leaderboard routes
-├── flaskkey                        # Flask secret key (auto-generated)
+├── flaskkey                        # Flask secret key (fallback; set SECRET_KEY on Heroku)
 ├── requirements.txt                # Python dependencies
 ├── migrate_sqlite_to_postgres.py   # One-off SQLite -> PostgreSQL data migration
 ├── instance/
@@ -380,6 +380,7 @@ Each `BattleHistory` entry records only the **opponent's** side of a PVP match:
 | `NormalizeLeaders(leaders)`                            | `app/utils.py` | Fold skin entries into their base hero's `OwnedSkins`                      |
 | `InvalidUsername(username)`                            | `app/utils.py` | Validate username                                                          |
 | `IPFromRequest(request)`                               | `app/utils.py` | Extract client IP                                                          |
+| `SafeLoginNext(target, default)`                       | `app/utils.py` | Same-site post-login redirect target (rejects `//host`, `://`)             |
 | `LoadSettings()` / `SaveSettings(d)`                   | `app/utils.py` | Read/write `data/persist/settings.json` (backup interval, Telegram toggle) |
 | `GetBackupIntervalHours()`                             | `app/utils.py` | Effective backup interval (setting → `BACKUP_INTERVAL_HOURS` → 4)          |
 | `ReadMiscParam(name)` / `WriteMiscParam(name, value)` | `app/utils.py` | Read/write a `db_MiscParams.json` blueprint parameter                       |
@@ -415,7 +416,10 @@ Each `BattleHistory` entry records only the **opponent's** side of a PVP match:
 - **Game data changes**: Always use `EncryptGameData(game, player)` to save — it handles the `username=&data=` format and returns `str` (PostgreSQL text columns reject `bytes`)
 - **Typed columns**: Never write display values back onto ORM rows (e.g. converting a timestamp to a formatted string for a template) — the strict-typed column fails on flush. Format in Jinja with the `fmt_ts` filter (`FormatTimestamp`) or build a plain dict for the template
 - **Logging**: Use `Log("category", "message")` for file logs, `DiscordWebhookMessage()` for alerts
-- **Admin access**: All admin routes check `@login_required` + `isAdmin(current_user)`
+- **Admin access**: All admin routes check `@login_required` + `isAdmin(current_user)`.
+  - Decorator order must stay `@admin_bp.route(...)` **first (top)**, `@login_required` **second**: Flask registers the view at decoration time, so putting `@login_required` above the route wraps only the module name and the guard never runs — every anonymous request then falls into `isAdmin` and returns a bare `404` page
+  - `/admin` and `/admin/passkey` are intentionally unguarded (login endpoints)
+  - Anonymous requests are redirected to `/admin?next=…` (`login_manager.login_view = "/admin"`); `SafeLoginNext` validates the return path after login
 - **Blueprints**: All routes use Flask Blueprints registered in `app/routes/__init__.py`
 - **File paths**: Always use `ROOT_DIR` for file access (defined in each route file)
 - **Confirm dialogs**: Use SweetAlert2 via `cwkConfirm(message)` / `cwkAlert(message)` (defined in `admin_base.html`); never native `confirm()`/`alert()`. Inline `onclick="return confirm('...')"` is auto-upgraded to a `data-confirm` attribute at load

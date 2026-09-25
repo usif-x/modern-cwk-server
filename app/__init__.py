@@ -34,15 +34,27 @@ except Exception:
     pass
 
 secret_key_path = os.path.join(_root_dir, "flaskkey")
-if not os.path.exists(secret_key_path):
-    print("Creating new Flask secret key")
-    with open(secret_key_path, "w") as f:
-        f.write(
-            "".join(
-                random.choice(string.ascii_letters + string.digits) for i in range(50)
+_secret_env = (os.getenv("SECRET_KEY") or "").strip()
+if _secret_env:
+    app.secret_key = _secret_env
+else:
+    if not os.path.exists(secret_key_path):
+        print("Creating new Flask secret key")
+        with open(secret_key_path, "w") as f:
+            f.write(
+                "".join(
+                    random.choice(string.ascii_letters + string.digits) for i in range(50)
+                )
             )
+    app.secret_key = open(secret_key_path, "r").read()
+    if os.getenv("DYNO"):
+        # Heroku wipes the slug's files between releases: a regenerated key
+        # silently invalidates every admin session.
+        print(
+            "WARNING: SECRET_KEY is not set — sessions are invalidated on every "
+            "restart. Set one with: "
+            'heroku config:set SECRET_KEY="$(openssl rand -hex 32)"'
         )
-app.secret_key = os.getenv("SECRET_KEY") or open(secret_key_path, "r").read()
 
 # PostgreSQL is the primary database. Point DATABASE_URL (or POSTGRES_URL) at
 # any PostgreSQL server; without one we use the local development server.
@@ -94,7 +106,7 @@ db.init_app(app)
 bcrypt = Bcrypt(app)
 
 login_manager = LoginManager(app)
-login_manager.login_view = "/"
+login_manager.login_view = "/admin"
 
 maintenance = False
 

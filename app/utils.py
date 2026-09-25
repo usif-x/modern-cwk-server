@@ -1703,6 +1703,22 @@ def isAdmin(user):
     return db_user is not None
 
 
+def SafeLoginNext(target, default="/admin/home"):
+    """Where to send an admin after signing in.
+
+    Only same-site relative paths are accepted so a crafted `?next=`
+    cannot bounce the session off-site.
+    """
+    if not isinstance(target, str):
+        return default
+    target = target.strip()
+    if not target.startswith("/") or target.startswith("//"):
+        return default
+    if "\\" in target or "://" in target or "\n" in target or "\r" in target:
+        return default
+    return target
+
+
 def GetPlayerWins(player_id):
     db_user = Player.query.filter_by(username=player_id).first()
     if db_user is None:

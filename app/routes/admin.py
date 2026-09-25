@@ -66,6 +66,7 @@ from app.utils import (
     ReadPersistText,
     RepairGameData,
     RestoreDatabaseSql,
+    SafeLoginNext,
     SavePvpBanlist,
     SaveSettings,
     SendBackupToTelegram,
@@ -84,7 +85,7 @@ admin_bp = Blueprint("admin_bp", __name__)
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-@admin_bp.route("/admin", methods=["GET", "POST"])
+@admin_bp.route("/admin", methods=["GET", "POST"], strict_slashes=False)
 def AdminPage():
 
     # create an admin account if one doesn't exist
@@ -119,11 +120,11 @@ def AdminPage():
         if not bcrypt.check_password_hash(db_user.password, password):
             return make_response("Invalid Password or Username!", 400)
         login_user(db_user, remember=True)
-        return redirect("/admin")
+        return redirect(SafeLoginNext(request.args.get("next")))
 
 
-@login_required
 @admin_bp.route("/admin/home")
+@login_required
 def AdminHome():
     if not isAdmin(current_user):
         return abort(404)
@@ -155,8 +156,8 @@ def AdminHome():
     )
 
 
-@login_required
 @admin_bp.route("/admin/versions", methods=["GET", "POST"])
+@login_required
 def AdminVersions():
     if not isAdmin(current_user):
         return abort(404)
@@ -186,8 +187,8 @@ def AdminVersions():
         return redirect("/admin/versions")
 
 
-@login_required
 @admin_bp.route("/admin/server")
+@login_required
 def AdminServer():
     if not isAdmin(current_user):
         return abort(404)
@@ -225,8 +226,8 @@ def AdminServer():
     )
 
 
-@login_required
 @admin_bp.route("/admin/server/backup")
+@login_required
 def AdminBackup():
     if not isAdmin(current_user):
         return abort(404)
@@ -242,8 +243,8 @@ def AdminBackup():
     return redirect("/admin/server")
 
 
-@login_required
 @admin_bp.route("/admin/server/settings", methods=["POST"])
+@login_required
 def AdminServerSettings():
     if not isAdmin(current_user):
         return abort(404)
@@ -270,8 +271,8 @@ def AdminServerSettings():
     return redirect("/admin/server")
 
 
-@login_required
 @admin_bp.route("/admin/server/telegram_test", methods=["POST"])
+@login_required
 def AdminServerTelegramTest():
     if not isAdmin(current_user):
         return abort(404)
@@ -291,8 +292,8 @@ def AdminServerTelegramTest():
     return redirect("/admin/server")
 
 
-@login_required
 @admin_bp.route("/admin/server/upload_backup", methods=["POST"])
+@login_required
 def AdminServerUploadBackup():
     """Restore the server from an uploaded backup .zip (db + persist folder)."""
     if not isAdmin(current_user):
@@ -377,8 +378,8 @@ def AdminServerUploadBackup():
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
-@login_required
 @admin_bp.route("/admin/server/pull")
+@login_required
 def AdminGitPull():
     if not isAdmin(current_user):
         return abort(404)
@@ -395,8 +396,8 @@ def AdminGitPull():
     return make_response(output.decode("utf-8"), 200)
 
 
-@login_required
 @admin_bp.route("/admin/createadmin", methods=["GET", "POST"])
+@login_required
 def AdminCreateAdmin():
     if not isAdmin(current_user):
         return abort(404)
@@ -442,15 +443,15 @@ def AdminPasskeyLogin():
         if admin.passkey and bcrypt.check_password_hash(admin.passkey, passkey):
             login_user(admin, remember=True)
             Log("admin", admin.username + " signed in with passkey")
-            return redirect("/admin/home")
+            return redirect(SafeLoginNext(request.args.get("next")))
 
     time.sleep(1)
     Log("admin", "Failed passkey login attempt from " + IPFromRequest(request))
     return make_response("Invalid passkey!", 400)
 
 
-@login_required
 @admin_bp.route("/admin/profile")
+@login_required
 def AdminProfile():
     if not isAdmin(current_user):
         return abort(404)
@@ -461,8 +462,8 @@ def AdminProfile():
     return render_template("admin_profile.html", admin=admin)
 
 
-@login_required
 @admin_bp.route("/admin/profile/email", methods=["POST"])
+@login_required
 def AdminProfileEmail():
     if not isAdmin(current_user):
         return abort(404)
@@ -480,8 +481,8 @@ def AdminProfileEmail():
     return redirect("/admin/profile")
 
 
-@login_required
 @admin_bp.route("/admin/profile/password", methods=["POST"])
+@login_required
 def AdminProfilePassword():
     if not isAdmin(current_user):
         return abort(404)
@@ -507,8 +508,8 @@ def AdminProfilePassword():
     return redirect("/admin/profile")
 
 
-@login_required
 @admin_bp.route("/admin/profile/passkey", methods=["POST"])
+@login_required
 def AdminProfilePasskey():
     if not isAdmin(current_user):
         return abort(404)
@@ -531,8 +532,8 @@ def AdminProfilePasskey():
     return redirect("/admin/profile")
 
 
-@login_required
 @admin_bp.route("/admin/profile/passkey/disable", methods=["POST"])
+@login_required
 def AdminProfilePasskeyDisable():
     if not isAdmin(current_user):
         return abort(404)
@@ -548,8 +549,8 @@ def AdminProfilePasskeyDisable():
     return redirect("/admin/profile")
 
 
-@login_required
 @admin_bp.route("/admin/players")
+@login_required
 def AdminPlayers():
     if not isAdmin(current_user):
         return abort(404)
@@ -590,8 +591,8 @@ def AdminPlayers():
     )
 
 
-@login_required
 @admin_bp.route("/admin/top_pvp")
+@login_required
 def AdminTopPvp():
     if not isAdmin(current_user):
         return abort(404)
@@ -650,8 +651,8 @@ def AdminTopPvp():
     )
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>")
+@login_required
 def AdminPlayer(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -919,8 +920,8 @@ def AdminPlayer(player):
     )
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/game")
+@login_required
 def AdminPlayerGame(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -945,8 +946,8 @@ def AdminPlayerGame(player):
     )
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/game/edit", methods=["POST"])
+@login_required
 def AdminPlayerGameEdit(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -988,8 +989,8 @@ def AdminPlayerGameEdit(player):
     return redirect("/admin/players/" + player.username)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/edit", methods=["POST"])
+@login_required
 def AdminPlayerEdit(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1119,8 +1120,8 @@ def AdminPlayerEdit(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/add_creature", methods=["POST"])
+@login_required
 def AdminPlayerAddCreature(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1188,8 +1189,8 @@ def AdminPlayerAddCreature(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/delete_creature/<int:index>", methods=["POST"])
+@login_required
 def AdminPlayerDeleteCreature(player, index):
     if not isAdmin(current_user):
         return abort(404)
@@ -1218,8 +1219,8 @@ def AdminPlayerDeleteCreature(player, index):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/delete_all_creatures", methods=["POST"])
+@login_required
 def AdminPlayerDeleteAllCreatures(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1248,8 +1249,8 @@ def AdminPlayerDeleteAllCreatures(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/delete_creatures_bulk", methods=["POST"])
+@login_required
 def AdminPlayerDeleteCreaturesBulk(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1291,8 +1292,8 @@ def AdminPlayerDeleteCreaturesBulk(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/max_creature/<int:index>", methods=["POST"])
+@login_required
 def AdminPlayerMaxCreature(player, index):
     if not isAdmin(current_user):
         return abort(404)
@@ -1327,10 +1328,10 @@ def AdminPlayerMaxCreature(player, index):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route(
     "/admin/players/<player>/downgrade_creature/<int:index>", methods=["POST"]
 )
+@login_required
 def AdminPlayerDowngradeCreature(player, index):
     if not isAdmin(current_user):
         return abort(404)
@@ -1361,8 +1362,8 @@ def AdminPlayerDowngradeCreature(player, index):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/add_card", methods=["POST"])
+@login_required
 def AdminPlayerAddCard(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1424,8 +1425,8 @@ def AdminPlayerAddCard(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/add_card_copy/<int:index>", methods=["POST"])
+@login_required
 def AdminPlayerAddCardCopy(player, index):
     if not isAdmin(current_user):
         return abort(404)
@@ -1490,8 +1491,8 @@ def AdminPlayerAddCardCopy(player, index):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/delete_card/<int:index>", methods=["POST"])
+@login_required
 def AdminPlayerDeleteCard(player, index):
     if not isAdmin(current_user):
         return abort(404)
@@ -1517,8 +1518,8 @@ def AdminPlayerDeleteCard(player, index):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/delete_all_cards", methods=["POST"])
+@login_required
 def AdminPlayerDeleteAllCards(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1549,8 +1550,8 @@ def AdminPlayerDeleteAllCards(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/delete_cards_bulk", methods=["POST"])
+@login_required
 def AdminPlayerDeleteCardsBulk(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1597,8 +1598,8 @@ def AdminPlayerDeleteCardsBulk(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/add_all_creatures", methods=["POST"])
+@login_required
 def AdminPlayerAddAllCreatures(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1670,8 +1671,8 @@ def AdminPlayerAddAllCreatures(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/max_all_creatures", methods=["POST"])
+@login_required
 def AdminPlayerMaxAllCreatures(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1725,8 +1726,8 @@ def AdminPlayerMaxAllCreatures(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/remove_invalid_creatures", methods=["POST"])
+@login_required
 def AdminPlayerRemoveInvalidCreatures(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1775,8 +1776,8 @@ def AdminPlayerRemoveInvalidCreatures(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/add_max_creature", methods=["POST"])
+@login_required
 def AdminPlayerAddMaxCreature(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1832,8 +1833,8 @@ def AdminPlayerAddMaxCreature(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/add_all_cards", methods=["POST"])
+@login_required
 def AdminPlayerAddAllCards(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1894,8 +1895,8 @@ def AdminPlayerAddAllCards(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/add_all_leaders", methods=["POST"])
+@login_required
 def AdminPlayerAddAllLeaders(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1937,8 +1938,8 @@ def AdminPlayerAddAllLeaders(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/add_leader", methods=["POST"])
+@login_required
 def AdminPlayerAddLeader(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -1995,8 +1996,8 @@ def AdminPlayerAddLeader(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/add_all_skins", methods=["POST"])
+@login_required
 def AdminPlayerAddAllSkins(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -2046,8 +2047,8 @@ def AdminPlayerAddAllSkins(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/delete_leader/<int:index>", methods=["POST"])
+@login_required
 def AdminPlayerDeleteLeader(player, index):
     if not isAdmin(current_user):
         return abort(404)
@@ -2076,8 +2077,8 @@ def AdminPlayerDeleteLeader(player, index):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/delete_all_leaders", methods=["POST"])
+@login_required
 def AdminPlayerDeleteAllLeaders(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -2105,8 +2106,8 @@ def AdminPlayerDeleteAllLeaders(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/delete_leaders_bulk", methods=["POST"])
+@login_required
 def AdminPlayerDeleteLeadersBulk(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -2144,8 +2145,8 @@ def AdminPlayerDeleteLeadersBulk(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/max_resources", methods=["POST"])
+@login_required
 def AdminPlayerMaxResources(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -2184,8 +2185,8 @@ def AdminPlayerMaxResources(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/loadouts/set", methods=["POST"])
+@login_required
 def AdminPlayerSetLoadouts(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -2214,8 +2215,8 @@ def AdminPlayerSetLoadouts(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/loadouts/creatures", methods=["POST"])
+@login_required
 def AdminPlayerSetTeamCreatures(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -2245,8 +2246,8 @@ def AdminPlayerSetTeamCreatures(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/export_save", methods=["GET"])
+@login_required
 def AdminPlayerExportSave(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -2269,8 +2270,8 @@ def AdminPlayerExportSave(player):
     return response
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/import_save", methods=["POST"])
+@login_required
 def AdminPlayerImportSave(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -2308,8 +2309,8 @@ def AdminPlayerImportSave(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/fix_save", methods=["POST"])
+@login_required
 def AdminPlayerFixSave(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -2356,8 +2357,8 @@ def AdminPlayerFixSave(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/transfer_progress", methods=["POST"])
+@login_required
 def AdminPlayerTransferProgress(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -2435,8 +2436,8 @@ def AdminPlayerTransferProgress(player):
     return redirect("/admin/players/" + target.username)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/reset_save", methods=["POST"])
+@login_required
 def AdminPlayerResetSave(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -2487,8 +2488,8 @@ def AdminPlayerResetSave(player):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/delete", methods=["POST"])
+@login_required
 def AdminPlayerDelete(player):
     if not isAdmin(current_user):
         return abort(404)
@@ -2503,8 +2504,8 @@ def AdminPlayerDelete(player):
     return redirect("/admin/players")
 
 
-@login_required
 @admin_bp.route("/admin/players/bulk_action", methods=["POST"])
+@login_required
 def AdminPlayersBulkAction():
     if not isAdmin(current_user):
         return abort(404)
@@ -2561,8 +2562,8 @@ def AdminPlayersBulkAction():
     return redirect("/admin/players")
 
 
-@login_required
 @admin_bp.route("/admin/players/<player>/<action>", methods=["GET", "POST"])
+@login_required
 def AdminPlayerAction(player, action):
     if not isAdmin(current_user):
         return abort(404)
@@ -2605,8 +2606,8 @@ def AdminPlayerAction(player, action):
     return redirect("/admin/players/" + player)
 
 
-@login_required
 @admin_bp.route("/admin/ipban/<ip>/unban")
+@login_required
 def AdminIPBan(ip):
     if not isAdmin(current_user):
         return abort(404)
@@ -2621,8 +2622,8 @@ def AdminIPBan(ip):
     return redirect("/admin/bannedips")
 
 
-@login_required
 @admin_bp.route("/admin/ipban", methods=["POST"])
+@login_required
 def AdminIPBanAction():
     if not isAdmin(current_user):
         return abort(404)
@@ -2644,8 +2645,8 @@ def AdminIPBanAction():
     return redirect("/admin/bannedips")
 
 
-@login_required
 @admin_bp.route("/admin/bannedplayers")
+@login_required
 def AdminBannedPlayers():
     if not isAdmin(current_user):
         return abort(404)
@@ -2681,8 +2682,8 @@ def AdminBannedPlayers():
     return render_template("admin_bannedplayers.html", bans=bans)
 
 
-@login_required
 @admin_bp.route("/admin/bannedips")
+@login_required
 def AdminBannedIPs():
     if not isAdmin(current_user):
         return abort(404)
@@ -2697,8 +2698,8 @@ def AdminBannedIPs():
     return render_template("admin_bannedips.html", bans=bans)
 
 
-@login_required
 @admin_bp.route("/admin/maintenance")
+@login_required
 def AdminMaintenance():
     if not isAdmin(current_user):
         return abort(404)
@@ -2706,8 +2707,8 @@ def AdminMaintenance():
     return render_template("admin_maintenance.html", maintenance=maintenance)
 
 
-@login_required
 @admin_bp.route("/admin/maintenance/<action>")
+@login_required
 def AdminMaintenanceAction(action):
     if not isAdmin(current_user):
         return abort(404)
@@ -2732,8 +2733,8 @@ def AdminLogout():
     return redirect("/admin")
 
 
-@login_required
 @admin_bp.route("/admin/misc")
+@login_required
 def AdminMisc():
     if not isAdmin(current_user):
         return abort(404)
@@ -2762,8 +2763,8 @@ def AdminMisc():
     )
 
 
-@login_required
 @admin_bp.route("/admin/misc/loadout_count", methods=["POST"])
+@login_required
 def AdminMiscLoadoutCount():
     if not isAdmin(current_user):
         return abort(404)
@@ -2788,8 +2789,8 @@ def AdminMiscLoadoutCount():
     return redirect("/admin/misc")
 
 
-@login_required
 @admin_bp.route("/admin/misc/creatures_on_team", methods=["POST"])
+@login_required
 def AdminMiscCreaturesOnTeam():
     if not isAdmin(current_user):
         return abort(404)
@@ -2814,8 +2815,8 @@ def AdminMiscCreaturesOnTeam():
     return redirect("/admin/misc")
 
 
-@login_required
 @admin_bp.route("/admin/redeemcodes")
+@login_required
 def AdminRedeemCodes():
     if not isAdmin(current_user):
         return abort(404)
@@ -2882,8 +2883,8 @@ def AdminRedeemCodes():
     )
 
 
-@login_required
 @admin_bp.route("/admin/redeemcodes/add", methods=["POST"])
+@login_required
 def AdminRedeemCodeAdd():
     if not isAdmin(current_user):
         return abort(404)
@@ -2940,8 +2941,8 @@ def AdminRedeemCodeAdd():
     return redirect("/admin/redeemcodes")
 
 
-@login_required
 @admin_bp.route("/admin/redeemcodes/delete/<code>", methods=["POST"])
+@login_required
 def AdminRedeemCodeDelete(code):
     if not isAdmin(current_user):
         return abort(404)
@@ -2952,8 +2953,8 @@ def AdminRedeemCodeDelete(code):
     return redirect("/admin/redeemcodes")
 
 
-@login_required
 @admin_bp.route("/admin/redeemcodes/toggle/<code>", methods=["POST"])
+@login_required
 def AdminRedeemCodeToggle(code):
     if not isAdmin(current_user):
         return abort(404)
@@ -2966,8 +2967,8 @@ def AdminRedeemCodeToggle(code):
     return redirect("/admin/redeemcodes")
 
 
-@login_required
 @admin_bp.route("/admin/logs/delete/olderthan/<days>")
+@login_required
 def AdminLogsDeleteOlderThan(days):
     if not isAdmin(current_user):
         return abort(404)
@@ -2988,8 +2989,8 @@ def AdminLogsDeleteOlderThan(days):
     return redirect("/admin/logs")
 
 
-@login_required
 @admin_bp.route("/admin/upsight/delete/olderthan/<days>")
+@login_required
 def AdminUpsightDeleteOlderThan(days):
     if not isAdmin(current_user):
         return abort(404)
@@ -3015,8 +3016,8 @@ def AdminUpsightDeleteOlderThan(days):
     return redirect("/admin/upsight")
 
 
-@login_required
 @admin_bp.route("/admin/logs", methods=["GET"])
+@login_required
 def AdminLogs():
     if not isAdmin(current_user):
         return abort(404)
@@ -3038,8 +3039,8 @@ def AdminLogs():
     return render_template("admin_logs.html", logs=logs, query=query)
 
 
-@login_required
 @admin_bp.route("/admin/upsight", methods=["GET"])
+@login_required
 def AdminUpsight():
     if not isAdmin(current_user):
         return abort(404)
@@ -3138,8 +3139,8 @@ def AdminLeaders():
     )
 
 
-@login_required
 @admin_bp.route("/admin/pvp_banlist")
+@login_required
 def AdminPvpBanlist():
     if not isAdmin(current_user):
         return abort(404)
@@ -3189,8 +3190,8 @@ def AdminPvpBanlist():
     )
 
 
-@login_required
 @admin_bp.route("/admin/pvp_banlist/add_creature", methods=["POST"])
+@login_required
 def AdminPvpBanlistAddCreature():
     if not isAdmin(current_user):
         return abort(404)
@@ -3211,10 +3212,10 @@ def AdminPvpBanlistAddCreature():
     return redirect(return_to)
 
 
-@login_required
 @admin_bp.route(
     "/admin/pvp_banlist/remove_creature/<path:creature_id>", methods=["POST", "GET"]
 )
+@login_required
 def AdminPvpBanlistRemoveCreature(creature_id):
     if not isAdmin(current_user):
         return abort(404)
@@ -3238,8 +3239,8 @@ def AdminPvpBanlistRemoveCreature(creature_id):
     return redirect(return_to)
 
 
-@login_required
 @admin_bp.route("/admin/pvp_banlist/add_leader", methods=["POST"])
+@login_required
 def AdminPvpBanlistAddLeader():
     if not isAdmin(current_user):
         return abort(404)
@@ -3260,10 +3261,10 @@ def AdminPvpBanlistAddLeader():
     return redirect(return_to)
 
 
-@login_required
 @admin_bp.route(
     "/admin/pvp_banlist/remove_leader/<path:leader_id>", methods=["POST", "GET"]
 )
+@login_required
 def AdminPvpBanlistRemoveLeader(leader_id):
     if not isAdmin(current_user):
         return abort(404)
@@ -3287,8 +3288,8 @@ def AdminPvpBanlistRemoveLeader(leader_id):
     return redirect(return_to)
 
 
-@login_required
 @admin_bp.route("/admin/pvp_banlist/edit_raw", methods=["POST"])
+@login_required
 def AdminPvpBanlistEditRaw():
     if not isAdmin(current_user):
         return abort(404)

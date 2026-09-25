@@ -245,7 +245,7 @@ Saves live in the `player.game` text column as `username=<uuid>&data=<base64 gzi
 
 ## Configuration & Assets
 
-- **Flask secret key**: Automatically generated in `flaskkey`
+- **Flask secret key**: `SECRET_KEY` env var when set, otherwise a file auto-generated in `flaskkey`. On Heroku that file disappears on every restart, so always run the `heroku config:set SECRET_KEY=…` line above — otherwise every admin session is invalidated (each such request now bounces to the login page instead of a bare 404)
 - **Database URI**: `postgresql+psycopg2://localhost:5432/cardwarskingdom` — override with `DATABASE_URL` (or `POSTGRES_URL`); `postgres://` (Heroku's format), `postgresql://` and `postgres+psycopg2://` are normalised to `postgresql+psycopg2://`, query strings such as `?sslmode=require` are kept. Set `DATABASE_URL=sqlite:///...` to opt back into SQLite
 - **Blueprints**: Game data in `data/persist/Blueprints/` (`db_Creatures.json`, `db_ActionCards.json`, `db_Leaders.json`, `db_PlayerRanks.json`)
 - **PVP Ban List**: JSON file at `data/persist/pvp_banlist.json`
