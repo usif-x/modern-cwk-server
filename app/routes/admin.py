@@ -29,6 +29,7 @@ from app.models import Admin, AdminActivity, Bans, Logs, Player, RedeemCode, Ups
 from app.utils import (
     Backup,
     BuildTransferredGame,
+    DATABASE_DUMP_NAME,
     DecryptGameData,
     DEFAULT_LOADOUT_COUNT,
     DiscordWebhookMessage,
@@ -49,18 +50,22 @@ from app.utils import (
     GetXPForRank,
     InvalidUsername,
     IPFromRequest,
+    IsPostgres,
     IsTutorialOnlyCreature,
     IsUserBanned,
     LoadSettings,
     Log,
     MAX_LOADOUTS,
+    MigrateSqliteDatabase,
     PlayerLog,
     ReadMiscParam,
     RepairGameData,
+    RestoreDatabaseSql,
     SavePvpBanlist,
     SaveSettings,
     SendBackupToTelegram,
     SetLoadoutCount,
+    SQLITE_DUMP_NAME,
     UpdateLastOnline,
     WriteMiscParam,
     isAdmin,
@@ -118,14 +123,6 @@ def AdminHome():
         return abort(404)
 
     adminActivity = AdminActivity.query.order_by(AdminActivity.time).all()
-    # convert time
-    for log in adminActivity:
-        try:
-            log.time = datetime.fromtimestamp(int(log.time), tz=timezone.utc).strftime(
-                "%Y-%m-%d %H:%M:%S UTC"
-            )
-        except (ValueError, TypeError, OSError):
-            log.time = str(log.time)
 
     # reverse list
     adminActivity.reverse()
@@ -324,22 +321,39 @@ def AdminServerUploadBackup():
                     return make_response("Invalid archive: unsafe path detected.", 400)
             archive.extractall(extract_dir)
 
-        db_src = None
+        db_dump = None
+        sqlite_dump = None
         persist_src = None
         for root, dirs, files in os.walk(extract_dir):
-            if db_src is None and "cardwarskingdom.db" in files:
-                db_src = os.path.join(root, "cardwarskingdom.db")
+            if db_dump is None and DATABASE_DUMP_NAME in files:
+                db_dump = os.path.join(root, DATABASE_DUMP_NAME)
+            if sqlite_dump is None and SQLITE_DUMP_NAME in files:
+                sqlite_dump = os.path.join(root, SQLITE_DUMP_NAME)
             if persist_src is None and "persist" in dirs:
                 persist_src = os.path.join(root, "persist")
-        if db_src is None:
+        if db_dump is None and sqlite_dump is None:
             return make_response(
-                "Invalid backup: database file not found inside archive.", 400
+                "Invalid backup: database dump not found inside archive.", 400
             )
 
         # Snapshot the current state first so a bad restore can be undone.
         Backup()
 
-        shutil.copy(db_src, os.path.join(ROOT_DIR, "instance/cardwarskingdom.db"))
+        if db_dump is not None:
+            ok, error = RestoreDatabaseSql(db_dump)
+            if not ok:
+                return make_response("Database restore failed: " + error, 400)
+        elif IsPostgres():
+            # Legacy backup: a SQLite file. Copy its rows into PostgreSQL.
+            try:
+                MigrateSqliteDatabase(sqlite_dump, replace=True)
+            except Exception as e:
+                return make_response("Database restore failed: " + str(e), 400)
+        else:
+            shutil.copy(
+                sqlite_dump, os.path.join(ROOT_DIR, "instance/cardwarskingdom.db")
+            )
+
         if persist_src is not None:
             persist_dest = os.path.join(ROOT_DIR, "data/persist")
             if os.path.isdir(persist_dest):
@@ -2905,12 +2919,7 @@ def AdminUpsight():
             per_page=perpage,
         )
 
-    # convert time
-    for log in logs.items:
-        log.time = datetime.fromtimestamp(log.time)
-
     return render_template("admin_upsight.html", logs=logs, query=query)
-
 
 @admin_bp.route("/admin/creatures")
 def AdminCreatures():

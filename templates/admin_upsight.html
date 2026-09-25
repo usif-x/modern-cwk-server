@@ -61,7 +61,7 @@
                     {% for log in logs.items %}
                     <tr class="hover:bg-muted/30 transition-colors">
                         <td class="px-6 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">
-                            {{ log.time }}
+                            {{ log.time|fmt_ts }}
                         </td>
                         <td class="px-6 py-2.5 font-mono text-xs whitespace-nowrap">
                             <a href="/admin/players/{{ log.player_id }}" class="text-primary hover:underline">

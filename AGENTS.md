@@ -8,11 +8,11 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
 
 ## Tech Stack
 
-- **Python 3.11+**, Flask, SQLAlchemy (SQLite), Flask-Login, Flask-Bcrypt
-- **Database**: SQLite at `instance/cardwarskingdom.db`
+- **Python 3.11+**, Flask, SQLAlchemy (PostgreSQL), Flask-Login, Flask-Bcrypt
+- **Database**: PostgreSQL `cardwarskingdom` at `postgresql+psycopg2://localhost:5432/cardwarskingdom` (override with `DATABASE_URL` / `POSTGRES_URL`; `postgres://` (Heroku), `postgresql://` and `postgres+psycopg2://` are normalised to `postgresql+psycopg2://`, query strings kept; `DATABASE_URL=sqlite:///...` falls back to SQLite)
 - **Frontend**: Tailwind CSS (CDN) + Lucide Icons + shadcn/ui design system (modern, responsive grid, light/dark mode)
-- **Dependencies**: `flask`, `flask_sqlalchemy`, `flask_login`, `flask_bcrypt`, `schedule`, `discord-webhook`, `python-dotenv`, `requests`
-- **Config**: `.env` (gitignored, copy from `.env.example`) — `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_ID`, optional `BACKUP_INTERVAL_HOURS`
+- **Dependencies**: `flask`, `flask_sqlalchemy`, `flask_login`, `flask_bcrypt`, `psycopg2-binary`, `schedule`, `discord-webhook`, `python-dotenv`, `requests`
+- **Config**: `.env` (gitignored, copy from `.env.example`) — optional `DATABASE_URL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_ID`, optional `BACKUP_INTERVAL_HOURS`
 
 ## File Structure
 
@@ -33,8 +33,9 @@ cwk-server/
 │       └── analytics.py            # Analytics + leaderboard routes
 ├── flaskkey                        # Flask secret key (auto-generated)
 ├── requirements.txt                # Python dependencies
+├── migrate_sqlite_to_postgres.py   # One-off SQLite -> PostgreSQL data migration
 ├── instance/
-│   └── cardwarskingdom.db          # SQLite database
+│   └── cardwarskingdom.db          # Legacy SQLite database (pre-migration)
 ├── data/persist/
 │   ├── version.txt                 # PC version string
 │   ├── android_version.txt         # Android version string
@@ -326,8 +327,14 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | Function                                               | Location       | Description                                                                |
 | ------------------------------------------------------ | -------------- | -------------------------------------------------------------------------- |
 | `DecryptGameData(game)`                                | `app/utils.py` | Decode base64+gzip game save to dict                                       |
-| `EncryptGameData(game, username)`                      | `app/utils.py` | Encode dict to base64+gzip game save                                       |
-| `Backup()`                                             | `app/utils.py` | Zip DB + persist folder to `backup/`                                       |
+| `EncryptGameData(game, username)`                      | `app/utils.py` | Encode dict to base64+gzip game save (`str`, never `bytes`)                |
+| `DatabaseBackend()` / `IsPostgres()`                   | `app/utils.py` | `"postgres"` / `"sqlite"` for the active SQLAlchemy URI                     |
+| `DumpDatabase()`                                       | `app/utils.py` | `pg_dump` (or sqlite file copy) of the active DB                           |
+| `RestoreDatabaseSql(path)`                             | `app/utils.py` | `psql` restore; disposes pooled connections first (locks)                  |
+| `MigrateSqliteDatabase(path, replace)`                 | `app/utils.py` | Copy every SQLite table into the active DB (coercing types)                |
+| `SyncPostgresSequences()`                              | `app/utils.py` | Advance `SERIAL` sequences to `MAX(id) + 1` after a row copy               |
+| `FormatTimestamp(value, utc)`                          | `app/utils.py` | Render a unix timestamp for display (`fmt_ts` Jinja filter)                |
+| `Backup()`                                             | `app/utils.py` | Zip `pg_dump` + persist folder to `backup/`                                |
 | `Log(category, message)`                               | `app/utils.py` | Write to daily log file                                                    |
 | `PlayerLog(ip, player, message)`                       | `app/utils.py` | Create Logs DB entry                                                       |
 | `DiscordWebhookMessage(message)`                       | `app/utils.py` | Send Discord webhook + log to AdminActivity                                |
@@ -362,10 +369,12 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 
 ## Configuration & Assets
 
-- **`.env`** (gitignored, copy `.env.example`): `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_ID`, optional `BACKUP_INTERVAL_HOURS`
+- **`.env`** (gitignored, copy `.env.example`): optional `DATABASE_URL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_ID`, optional `BACKUP_INTERVAL_HOURS`
+- **Database**: PostgreSQL `cardwarskingdom` by default (`app/__init__.py::ResolveDatabaseUri` normalises `postgres://` / `postgresql://` / `postgres+psycopg2://` onto `postgresql+psycopg2://` and keeps query strings); `DATABASE_URL=sqlite:///instance/cardwarskingdom.db` opts into SQLite
+- **Migration**: `python migrate_sqlite_to_postgres.py [--sqlite PATH] [--keep] [--dry-run] [--yes]` copies an existing SQLite file into the active DB and resyncs sequences
 - **Runtime settings**: `data/persist/settings.json` — `backup_interval_hours`, `backup_to_telegram`, `last_backup`
 - **Auto-backup**: scheduler thread checks every minute in `app/__init__.py::run_scheduler` → `RunScheduledBackup()`; backups go to `backup/*.zip` and optionally Telegram
-- **Restore**: `POST /admin/server/upload_backup` extracts a backup zip (db + `persist/`) after taking a safety snapshot
+- **Restore**: `POST /admin/server/upload_backup` accepts a zip with `cardwarskingdom.sql` (pg_dump) or a legacy `cardwarskingdom.db` (routed through `MigrateSqliteDatabase`), plus `persist/`, after taking a safety snapshot
 
 ## Anti-Cheat / Security
 
@@ -383,7 +392,8 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 - **New routes**: Add to the appropriate blueprint file in `app/routes/`
 - **New models**: Add to `app/models.py`
 - **New admin pages**: Create template in `templates/`, add route in `app/routes/admin.py`, add nav link in `admin_base.html`
-- **Game data changes**: Always use `EncryptGameData(game, player)` to save — it handles the `username=&data=` format
+- **Game data changes**: Always use `EncryptGameData(game, player)` to save — it handles the `username=&data=` format and returns `str` (PostgreSQL text columns reject `bytes`)
+- **Typed columns**: Never write display values back onto ORM rows (e.g. converting a timestamp to a formatted string for a template) — the strict-typed column fails on flush. Format in Jinja with the `fmt_ts` filter (`FormatTimestamp`) or build a plain dict for the template
 - **Logging**: Use `Log("category", "message")` for file logs, `DiscordWebhookMessage()` for alerts
 - **Admin access**: All admin routes check `@login_required` + `isAdmin(current_user)`
 - **Blueprints**: All routes use Flask Blueprints registered in `app/routes/__init__.py`
@@ -395,6 +405,8 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 
 ```bash
 pip install -r requirements.txt
+createdb cardwarskingdom             # once; or set DATABASE_URL
+python migrate_sqlite_to_postgres.py # only when importing an old SQLite file
 python app.py                    # Default port 5000
 python app.py --port 8080        # Custom port
 python app.py --debug            # Debug mode

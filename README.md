@@ -36,7 +36,7 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
 ## Tech Stack
 
 - **Python 3.11+**
-- **Flask** + **SQLAlchemy** (SQLite)
+- **Flask** + **SQLAlchemy** (PostgreSQL via `psycopg2`; SQLite still supported for legacy backups)
 - **Flask-Login** (session authentication)
 - **Flask-Bcrypt** (password hashing)
 - **Tailwind CSS** + **Lucide Icons**
@@ -48,6 +48,9 @@ A Flask-based backend server for the mobile game **Card Wars Kingdom**. Handles 
 # Install dependencies
 pip install -r requirements.txt
 
+# Create the PostgreSQL database (once)
+createdb cardwarskingdom
+
 # Run the server (default port 5000)
 python app.py
 
@@ -56,6 +59,18 @@ python app.py --port 8080
 
 # Debug mode
 python app.py --debug
+
+# Optional: point at another database
+# `postgres://` (Heroku), `postgresql://`, `postgres+psycopg2://` and
+# `postgresql+psycopg2://` are all accepted; the driver is normalised to psycopg2
+DATABASE_URL="postgresql+psycopg2://user:pass@host:5432/cwk" python app.py
+```
+
+Migrating an existing `instance/cardwarskingdom.db`:
+
+```bash
+python migrate_sqlite_to_postgres.py          # copies rows into the active DB
+python migrate_sqlite_to_postgres.py --dry-run # preview only
 ```
 
 > **Note**: The first admin account is auto-created on first login if no admin exists. Check the terminal output for the generated password.
@@ -67,13 +82,14 @@ Install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli), log 
 ```bash
 heroku login
 heroku create your-app-name
+heroku addons:create heroku-postgresql:essential-0
 heroku config:set SECRET_KEY="$(openssl rand -hex 32)"
 heroku config:set TELEGRAM_BOT_TOKEN="your-token" TELEGRAM_ADMIN_ID="your-chat-id"
 git push heroku main
 heroku open
 ```
 
-The `Procfile` starts the app with Gunicorn and binds it to Heroku's `$PORT`. Telegram variables are optional. Heroku's filesystem is ephemeral, so this app's SQLite database, logs, backups, and runtime settings can be lost when the dyno restarts. Use an external persistent database and storage service before relying on the deployment for production data.
+The `Procfile` starts the app with Gunicorn and binds it to Heroku's `$PORT`. The Postgres add-on exports `DATABASE_URL` in `postgres://…?sslmode=require` form, which the app accepts directly (it is normalised to `postgresql+psycopg2://` with the query string preserved). Telegram variables are optional. Because Heroku's filesystem is ephemeral, logs, backups, and runtime settings are lost when the dyno restarts — keep data in the add-on and use an external persistent storage service before relying on the deployment for production data. Database backups shell out to `pg_dump`/`psql` on `PATH`; if the binary is missing the backup is skipped and written to the log.
 
 ## Project Structure
 
@@ -94,7 +110,8 @@ cwk-server/
 │       └── analytics.py    # Analytics & PVP leaderboard
 ├── templates/              # 22 Jinja2 admin templates (shadcn/ui style)
 ├── data/persist/           # Game data, blueprints, ban lists, logs
-├── instance/               # SQLite database (cardwarskingdom.db)
+├── migrate_sqlite_to_postgres.py  # One-off SQLite -> PostgreSQL data migration
+├── instance/               # Legacy SQLite database (cardwarskingdom.db, pre-migration)
 └── backup/                 # Automatic zip backups (every 4 hours)
 ```
 
@@ -205,7 +222,7 @@ username=<uuid>&data=<base64(gzip(json))>
 
 ## Database
 
-SQLite database located at `instance/cardwarskingdom.db` with models:
+PostgreSQL database (`cardwarskingdom` by default, `DATABASE_URL` to override) with models:
 
 - `player` — Player accounts, profiles, and encrypted saves
 - `admin` — Admin credentials, rank, `email`, and optional `passkey` / `passkey_enabled`
@@ -215,15 +232,20 @@ SQLite database located at `instance/cardwarskingdom.db` with models:
 - `admin_activity` — Admin audit trail
 - `redeem_code` — Promotional codes (`code`, `reward_type`, `reward_amount`, `reward_item`, `enabled`, `created_by`)
 
+Saves live in the `player.game` text column as `username=<uuid>&data=<base64 gzip JSON>`. `EncryptGameData` returns `str`, never `bytes` — PostgreSQL text columns reject `bytes` (psycopg2 turns them into a bytea hex literal and the save silently corrupts).
+
+> **Display rule**: routes must not assign formatted strings back onto ORM rows (e.g. converting a timestamp for a template); PostgreSQL columns are strictly typed and the write-back fails on flush. Use the `fmt_ts` Jinja filter (`FormatTimestamp`) instead.
+
 ## Configuration & Assets
 
 - **Flask secret key**: Automatically generated in `flaskkey`
-- **Database URI**: SQLite at `instance/cardwarskingdom.db` (auto-migrated)
+- **Database URI**: `postgresql+psycopg2://localhost:5432/cardwarskingdom` — override with `DATABASE_URL` (or `POSTGRES_URL`); `postgres://` (Heroku's format), `postgresql://` and `postgres+psycopg2://` are normalised to `postgresql+psycopg2://`, query strings such as `?sslmode=require` are kept. Set `DATABASE_URL=sqlite:///...` to opt back into SQLite
 - **Blueprints**: Game data in `data/persist/Blueprints/` (`db_Creatures.json`, `db_ActionCards.json`, `db_Leaders.json`, `db_PlayerRanks.json`)
 - **PVP Ban List**: JSON file at `data/persist/pvp_banlist.json`
-- **Backups**: Compressed zip archives in `backup/`; interval configurable in the admin Server page (default 4h). Upload & restore supported
+- **Backups**: Compressed zip archives in `backup/` holding a `pg_dump` (`cardwarskingdom.sql`) plus `persist/`; interval configurable in the admin Server page (default 4h). Upload & restore supported, including legacy `.db` zips (imported through the SQLite migration path)
 - **Runtime settings**: `data/persist/settings.json` (backup interval, Telegram toggle, last backup time)
 - **.env** (gitignored, copy from `.env.example`):
+  - `DATABASE_URL` — optional PostgreSQL connection string
   - `TELEGRAM_BOT_TOKEN` — Telegram bot token from @BotFather
   - `TELEGRAM_ADMIN_ID` — chat id that receives backups
   - `BACKUP_INTERVAL_HOURS` — optional default interval override
