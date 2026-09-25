@@ -802,6 +802,116 @@ def BuildTransferredGame(source_game, target_game, target_username, target_name=
     return new_game
 
 
+# Team (loadout) lines. The client ships with StartingLoadoutCount = 5 rows on
+# the deck screen; the save simply stores one entry per row in game["Loadouts"].
+DEFAULT_LOADOUT_COUNT = 5
+MAX_LOADOUTS = 12
+
+
+def DefaultLoadoutLeader(game):
+    """Leader a brand new blank team line should use."""
+    loadouts = game.get("Loadouts")
+    if isinstance(loadouts, list):
+        for loadout in loadouts:
+            if isinstance(loadout, dict) and loadout.get("LeaderID"):
+                return loadout["LeaderID"]
+
+    leaders = game.get("Leaders")
+    if isinstance(leaders, list):
+        for leader in leaders:
+            if isinstance(leader, dict) and leader.get("ID"):
+                return leader.get("Skin") or leader.get("ID")
+
+    return ""
+
+
+def SetLoadoutCount(game, count):
+    """Resize game["Loadouts"] to `count` team lines.
+
+    Existing teams are kept when growing; new lines are blank (leader only,
+    no creatures) which is the shape the client already stores for unused
+    team rows. Returns the clamped count actually applied.
+    """
+    if not isinstance(game, dict):
+        return 0
+
+    try:
+        count = int(count)
+    except (TypeError, ValueError):
+        count = DEFAULT_LOADOUT_COUNT
+
+    count = max(1, min(MAX_LOADOUTS, count))
+
+    loadouts = game.get("Loadouts")
+    if not isinstance(loadouts, list):
+        loadouts = []
+    loadouts = [lo if isinstance(lo, dict) else {"LeaderID": ""} for lo in loadouts]
+
+    leader = DefaultLoadoutLeader(game)
+    while len(loadouts) < count:
+        loadouts.append({"LeaderID": leader})
+    if len(loadouts) > count:
+        loadouts = loadouts[:count]
+
+    game["Loadouts"] = loadouts
+
+    try:
+        selected = int(game.get("SelectedLoadout", 0) or 0)
+    except (TypeError, ValueError):
+        selected = 0
+    if selected < 0 or selected >= count:
+        game["SelectedLoadout"] = 0
+
+    return count
+
+
+MISC_PARAMS_PATH = os.path.join(
+    ROOT_DIR, "data", "persist", "Blueprints", "db_MiscParams.json"
+)
+
+
+def ReadMiscParam(name, default=None):
+    """Return a Parameter value from db_MiscParams.json (raw string)."""
+    try:
+        with open(MISC_PARAMS_PATH, "r") as f:
+            params = json.load(f)
+    except (OSError, ValueError):
+        return default
+
+    if isinstance(params, list):
+        for entry in params:
+            if isinstance(entry, dict) and entry.get("Parameter") == name:
+                return entry.get("Value", default)
+    return default
+
+
+def WriteMiscParam(name, value):
+    """Set a Parameter value in db_MiscParams.json. Returns the previous value."""
+    try:
+        with open(MISC_PARAMS_PATH, "r") as f:
+            params = json.load(f)
+    except (OSError, ValueError):
+        params = []
+    if not isinstance(params, list):
+        params = []
+
+    old_value = None
+    found = False
+    for entry in params:
+        if isinstance(entry, dict) and entry.get("Parameter") == name:
+            old_value = entry.get("Value")
+            entry["Value"] = str(value)
+            found = True
+            break
+    if not found:
+        params.append({"Parameter": name, "Value": str(value)})
+
+    with open(MISC_PARAMS_PATH, "w") as f:
+        json.dump(params, f, indent=4)
+
+    return old_value
+
+
 def IPFromRequest(request: Request):
     ip = request.remote_addr
     if request.headers.getlist("X-Forwarded-For"):

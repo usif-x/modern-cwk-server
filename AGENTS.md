@@ -288,6 +288,7 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | POST     | `/admin/players/<uuid>/delete_leaders_bulk`      | Multi-delete selected leaders                                                    |
 | POST     | `/admin/players/<uuid>/add_all_skins`            | Attach all skins to the player's owned heroes via `OwnedSkins`                   |
 | POST     | `/admin/players/<uuid>/max_resources`            | Max all currencies preset                                                        |
+| POST     | `/admin/players/<uuid>/loadouts/set`             | Set team (loadout) count 1-12; grows with blank team lines                       |
 | GET      | `/admin/players/<uuid>/export_save`              | Download save as JSON                                                            |
 | POST     | `/admin/players/<uuid>/import_save`              | Upload & replace save JSON                                                       |
 | POST     | `/admin/players/<uuid>/fix_save`                 | Detect & repair broken save fields / duplicate creature IDs (deletes nothing)    |
@@ -311,6 +312,7 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | GET      | `/admin/logs`                                    | Player logs (paginated)                                                          |
 | GET      | `/admin/upsight`                                 | Analytics logs (paginated)                                                       |
 | GET      | `/admin/misc`                                    | Misc tools                                                                       |
+| POST     | `/admin/misc/loadout_count`                      | Set global `StartingLoadoutCount` blueprint value (default team lines)           |
 | GET      | `/admin/redeemcodes`                             | Redeem codes list                                                                |
 | POST     | `/admin/redeemcodes/add`                         | Add/update redeem code                                                           |
 | POST     | `/admin/redeemcodes/delete/<code>`               | Delete redeem code                                                               |
@@ -336,6 +338,7 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | `FindBrokenSaveIssues(game)`                           | `app/utils.py` | Return list of missing/invalid save fields & duplicate creature IDs        |
 | `RepairGameData(game, username, fallback_name)`        | `app/utils.py` | Fill missing fields / fix duplicate IDs without deleting data              |
 | `BuildTransferredGame(source, target, username, name)` | `app/utils.py` | Copy progress to a target save keeping target name & currencies            |
+| `SetLoadoutCount(game, count)`                         | `app/utils.py` | Resize `game["Loadouts"]` team lines (1-12); grows with blank teams        |
 | `UpdateLastOnline(player_id)`                          | `app/utils.py` | Update last_online timestamp                                               |
 | `GetAllyInfo(player_id, isally)`                       | `app/utils.py` | Build ally info dict                                                       |
 | `GetPlayerWins(player_id)`                             | `app/utils.py` | Count PVP wins this season                                                 |
@@ -352,6 +355,7 @@ Skins are stored inside their base hero's `OwnedSkins` — they must never be ad
 | `IPFromRequest(request)`                               | `app/utils.py` | Extract client IP                                                          |
 | `LoadSettings()` / `SaveSettings(d)`                   | `app/utils.py` | Read/write `data/persist/settings.json` (backup interval, Telegram toggle) |
 | `GetBackupIntervalHours()`                             | `app/utils.py` | Effective backup interval (setting → `BACKUP_INTERVAL_HOURS` → 4)          |
+| `ReadMiscParam(name)` / `WriteMiscParam(name, value)` | `app/utils.py` | Read/write a `db_MiscParams.json` blueprint parameter                       |
 | `SendTelegramDocument(path, caption)`                  | `app/utils.py` | Send a file to the admin Telegram chat via bot                             |
 | `SendBackupToTelegram(zip_path)`                       | `app/utils.py` | Send a (latest) backup archive to Telegram                                 |
 | `RunScheduledBackup()`                                 | `app/utils.py` | Run a backup when the configured interval elapsed                          |

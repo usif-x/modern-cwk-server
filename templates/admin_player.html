@@ -1612,6 +1612,150 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
     </div>
   </div>
 
+  <!-- Teams / Loadouts Section -->
+  <div
+    class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden"
+  >
+    <div
+      class="p-6 border-b border-border flex items-start justify-between gap-4 flex-wrap"
+    >
+      <div>
+        <h2 class="text-base font-semibold tracking-tight">Teams (Loadouts)</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">
+          Team lines shown on the deck screen — the game ships with
+          {{ DefaultLoadoutCount }}
+        </p>
+      </div>
+      <span
+        class="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground"
+      >
+        <i data-lucide="users" class="w-3.5 h-3.5"></i>
+        <span>{{ Loadouts|length }} / {{ MaxLoadouts }} teams</span>
+      </span>
+    </div>
+
+    <div class="p-6 space-y-5">
+      {% if Loadouts %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+        {% for loadout in Loadouts %}
+        {% set slots = [
+          loadout.get('CreatureID0'),
+          loadout.get('CreatureID1'),
+          loadout.get('CreatureID2'),
+          loadout.get('CreatureID3')
+        ] %}
+        <div
+          class="rounded-lg border border-border bg-muted/20 p-4 space-y-2 {% if loop.index0 == SelectedLoadout %}ring-1 ring-primary{% endif %}"
+        >
+          <div class="flex items-center justify-between gap-2">
+            <span
+              class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider"
+              >Team {{ loop.index }}</span
+            >
+            {% if loop.index0 == SelectedLoadout %}
+            <span
+              class="rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
+              >Active</span
+            >
+            {% endif %}
+          </div>
+          <div class="font-mono text-xs text-foreground truncate">
+            {{ loadout.get('LeaderID') or 'No leader' }}
+          </div>
+          <div class="space-y-1">
+            {% for uid in slots if uid %}
+            <div
+              class="flex items-center justify-between gap-2 text-[11px] font-mono text-muted-foreground"
+            >
+              <span class="text-foreground truncate">{{
+                CreatureByUid.get(uid, uid)
+              }}</span>
+              <span>#{{ uid }}</span>
+            </div>
+            {% else %}
+            <div class="text-[11px] text-muted-foreground italic">
+              Empty team
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div
+        class="rounded-lg border border-dashed border-border p-6 text-center text-xs text-muted-foreground"
+      >
+        No team lines in this save yet. Apply a team count below to create them.
+      </div>
+      {% endif %}
+
+      {% set next_count = Loadouts|length + 1 if Loadouts|length < MaxLoadouts else Loadouts|length %}
+      <form
+        action="/admin/players/{{ player.username }}/loadouts/set"
+        method="POST"
+        class="flex flex-wrap items-end gap-3 pt-5 border-t border-border"
+      >
+        <div class="space-y-1">
+          <label
+            for="loadoutCount"
+            class="block text-xs font-medium text-muted-foreground"
+            >Team count</label
+          >
+          <input
+            id="loadoutCount"
+            name="count"
+            type="number"
+            min="1"
+            max="{{ MaxLoadouts }}"
+            value="{{ Loadouts|length }}"
+            class="flex h-9 w-24 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          />
+        </div>
+
+        <button
+          type="submit"
+          data-confirm="Set this player's team count to the value above? Extra team lines are removed if you lower it."
+          class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors"
+        >
+          <i data-lucide="check" class="w-4 h-4"></i>
+          Apply
+        </button>
+
+        <button
+          type="submit"
+          name="preset"
+          value="{{ next_count }}"
+          {% if Loadouts|length >= MaxLoadouts %}disabled{% endif %}
+          data-confirm="Add 1 more team line for this player?"
+          class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50 disabled:pointer-events-none"
+        >
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          Add Team
+        </button>
+
+        <button
+          type="submit"
+          name="preset"
+          value="{{ DefaultLoadoutCount }}"
+          data-confirm="Reset this player back to the default {{ DefaultLoadoutCount }} team lines?"
+          class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+        >
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+          Reset to {{ DefaultLoadoutCount }}
+        </button>
+
+        <span class="text-[11px] text-muted-foreground pb-2">
+          Teams beyond 5 only show in-game if the server blueprint
+          <span class="font-mono">StartingLoadoutCount</span> matches — set it
+          under
+          <a href="/admin/misc" class="underline hover:text-foreground"
+            >Maintenance Tools</a
+          >.
+        </span>
+      </form>
+    </div>
+  </div>
+
   <!-- Battle History Section -->
   <div
     class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden"

@@ -50,12 +50,58 @@
                 </p>
             </div>
 
+                <div>
+                    <a href="/admin/upsight/delete/olderthan/14" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-destructive/90 transition-colors w-full sm:w-auto" onclick="return confirm('Are you sure you want to permanently delete all Upsight analytics logs older than 14 days?')">
+                        <i data-lucide="alert-octagon" class="w-4 h-4"></i>
+                        <span>Prune Upsight Older Than 14 Days</span>
+                    </a>
+                </div>
+        </div>
+
+        <!-- Default Team Count -->
+        <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6 flex flex-col justify-between">
             <div>
-                <a href="/admin/upsight/delete/olderthan/14" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-destructive/90 transition-colors w-full sm:w-auto" onclick="return confirm('Are you sure you want to permanently delete all Upsight analytics logs older than 14 days?')">
-                    <i data-lucide="alert-octagon" class="w-4 h-4"></i>
-                    <span>Prune Upsight Older Than 14 Days</span>
-                </a>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-semibold tracking-tight">Default Team Count</h2>
+                    <div class="w-8 h-8 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                    </div>
+                </div>
+
+                <p class="text-sm text-muted-foreground mb-4">
+                    Sets <span class="font-mono text-xs">StartingLoadoutCount</span> in the <span class="font-mono text-xs">db_MiscParams.json</span> blueprint — the number of team (loadout) rows the client renders on the deck screen, and how many teams a new account starts with. Ships with {{ default_loadouts }}.
+                </p>
+
+                <div class="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3 mb-6">
+                    <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Current</span>
+                    <span class="text-2xl font-bold text-foreground">{{ starting_loadouts }} teams</span>
+                </div>
             </div>
+
+            <form action="/admin/misc/loadout_count" method="POST" class="space-y-3">
+                <div class="flex flex-wrap items-end gap-3">
+                    <div class="space-y-1">
+                        <label for="miscLoadoutCount" class="block text-xs font-medium text-muted-foreground">Team count</label>
+                        <input id="miscLoadoutCount" name="count" type="number" min="1" max="{{ max_loadouts }}" value="{{ starting_loadouts }}"
+                               class="flex h-9 w-24 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                    </div>
+                    <button type="submit" data-confirm="Change the global StartingLoadoutCount blueprint value? This affects every player's deck screen."
+                            class="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        <span>Apply</span>
+                    </button>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    {% for preset in [5, 8, 10] %}
+                    <button type="submit" name="preset" value="{{ preset }}"
+                            data-confirm="Set the global team count to {{ preset }}?"
+                            class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
+                        {{ preset }} teams
+                    </button>
+                    {% endfor %}
+                </div>
+            </form>
         </div>
     </div>
 </div>

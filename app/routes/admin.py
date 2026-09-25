@@ -30,6 +30,7 @@ from app.utils import (
     Backup,
     BuildTransferredGame,
     DecryptGameData,
+    DEFAULT_LOADOUT_COUNT,
     DiscordWebhookMessage,
     EncryptGameData,
     FindBrokenSaveIssues,
@@ -52,12 +53,16 @@ from app.utils import (
     IsUserBanned,
     LoadSettings,
     Log,
+    MAX_LOADOUTS,
     PlayerLog,
+    ReadMiscParam,
     RepairGameData,
     SavePvpBanlist,
     SaveSettings,
     SendBackupToTelegram,
+    SetLoadoutCount,
     UpdateLastOnline,
+    WriteMiscParam,
     isAdmin,
     safe_int,
     time_ago_string,
@@ -682,6 +687,11 @@ def AdminPlayer(player):
             CardInventory=[],
             Leaders=[],
             leader_skins={},
+            Loadouts=[],
+            SelectedLoadout=0,
+            CreatureByUid={},
+            MaxLoadouts=MAX_LOADOUTS,
+            DefaultLoadoutCount=DEFAULT_LOADOUT_COUNT,
             HelperCreature=None,
             invalid_creature_count=0,
             rank_xp_json=json.dumps(GetRankXPTable()),
@@ -754,6 +764,22 @@ def AdminPlayer(player):
     if not isinstance(leaders, list):
         leaders = []
 
+    loadouts = game.get("Loadouts", [])
+    if not isinstance(loadouts, list):
+        loadouts = []
+    loadouts = [lo if isinstance(lo, dict) else {} for lo in loadouts]
+
+    try:
+        selected_loadout = int(game.get("SelectedLoadout", 0) or 0)
+    except (TypeError, ValueError):
+        selected_loadout = 0
+
+    # UniqueID -> creature blueprint ID so team rows can show creature names
+    creature_by_uid = {}
+    for item in Inventory:
+        if item.get("_T") == "CR" and item.get("UniqueID") is not None:
+            creature_by_uid[safe_int(item.get("UniqueID"), 0)] = item.get("ID", "")
+
     # Per-hero list of skins the player does not own yet (for the Add Skin picker)
     leader_skins = {}
     for leader in leaders:
@@ -793,6 +819,11 @@ def AdminPlayer(player):
         CardInventory=CardInventory,
         Leaders=leaders,
         leader_skins=leader_skins,
+        Loadouts=loadouts,
+        SelectedLoadout=selected_loadout,
+        CreatureByUid=creature_by_uid,
+        MaxLoadouts=MAX_LOADOUTS,
+        DefaultLoadoutCount=DEFAULT_LOADOUT_COUNT,
         HelperCreature=helper_creature,
         invalid_creature_count=invalid_creature_count,
         rank_xp_json=json.dumps(GetRankXPTable()),
@@ -2065,6 +2096,36 @@ def AdminPlayerMaxResources(player):
 
 
 @login_required
+@admin_bp.route("/admin/players/<player>/loadouts/set", methods=["POST"])
+def AdminPlayerSetLoadouts(player):
+    if not isAdmin(current_user):
+        return abort(404)
+
+    db_player = Player.query.filter_by(username=player).first()
+    if db_player is None:
+        return make_response("No player found!", 404)
+
+    game = DecryptGameData(db_player.game)
+    if game is None:
+        return make_response("No game data found!", 400)
+
+    before = game.get("Loadouts")
+    before = len(before) if isinstance(before, list) else 0
+
+    count = request.form.get("preset") or request.form.get("count")
+    count = SetLoadoutCount(game, count)
+    db_player.game = EncryptGameData(game, player)
+    db.session.commit()
+
+    Log(
+        "admin",
+        current_user.username
+        + f" set team count for player: {player} ({before} -> {count})",
+    )
+    return redirect("/admin/players/" + player)
+
+
+@login_required
 @admin_bp.route("/admin/players/<player>/export_save", methods=["GET"])
 def AdminPlayerExportSave(player):
     if not isAdmin(current_user):
@@ -2557,7 +2618,43 @@ def AdminMisc():
     if not isAdmin(current_user):
         return abort(404)
 
-    return render_template("admin_misc.html")
+    try:
+        starting_loadouts = int(safe_int(ReadMiscParam("StartingLoadoutCount"), 5))
+    except (TypeError, ValueError):
+        starting_loadouts = DEFAULT_LOADOUT_COUNT
+
+    return render_template(
+        "admin_misc.html",
+        starting_loadouts=starting_loadouts,
+        max_loadouts=MAX_LOADOUTS,
+        default_loadouts=DEFAULT_LOADOUT_COUNT,
+    )
+
+
+@login_required
+@admin_bp.route("/admin/misc/loadout_count", methods=["POST"])
+def AdminMiscLoadoutCount():
+    if not isAdmin(current_user):
+        return abort(404)
+
+    raw = request.form.get("preset") or request.form.get("count")
+    try:
+        count = int(raw)
+    except (TypeError, ValueError):
+        count = DEFAULT_LOADOUT_COUNT
+    count = max(1, min(MAX_LOADOUTS, count))
+
+    old_value = WriteMiscParam("StartingLoadoutCount", count)
+
+    Log(
+        "admin",
+        current_user.username
+        + f" set blueprint StartingLoadoutCount: {old_value} -> {count}",
+    )
+    DiscordWebhookMessage(
+        f"**{current_user.username}** set `StartingLoadoutCount` to **{count}** (was {old_value})"
+    )
+    return redirect("/admin/misc")
 
 
 @login_required
