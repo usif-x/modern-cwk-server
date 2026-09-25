@@ -10,7 +10,7 @@ from app.utils import (
     DecryptGameData, EncryptGameData, DiscordWebhookMessage, IPFromRequest,
     InvalidUsername, IsUserBanned, Log, PlayerLog, UpdateLastOnline,
     GetAllyInfo, GetPlayerWins, SystemBan, get_hash_string, safe_int, GetRankForXP,
-    GetPvpBanlist,
+    GetPvpBanlist, ReadPersistText,
 )
 
 game_bp = Blueprint('game_bp', __name__)
@@ -20,10 +20,8 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 
 @game_bp.route("/static/version.txt")
 def PersistVersion():
-    with open(os.path.join(ROOT_DIR, "data/persist/version.txt"), "r") as f:
-        pc_version = f.read()
-    with open(os.path.join(ROOT_DIR, "data/persist/android_version.txt"), "r") as f:
-        android_version = f.read()
+    pc_version = ReadPersistText("version.txt", "0.0.0").strip()
+    android_version = ReadPersistText("android_version.txt", "0.0.0").strip()
 
     data = {
         "maintenance_mode": "yes" if maintenance else "no",

@@ -130,11 +130,14 @@ badcharaters = [
     "=",
 ]
 
-from app.utils import FormatTimestamp, Log
+from app.utils import EnsurePersistLayout, FormatTimestamp, Log
 
 # Templates format stored unix timestamps through this filter so routes never
 # overwrite ORM rows with display strings (PostgreSQL rejects that on flush).
 app.jinja_env.filters["fmt_ts"] = FormatTimestamp
+
+# Ship-time repairs for files git may have tracked under a different case.
+EnsurePersistLayout()
 
 
 @login_manager.user_loader
@@ -149,7 +152,10 @@ def run_scheduler():
 
     while True:
         try:
-            RunScheduledBackup()
+            # The backup path touches the database (pg_dump connection info),
+            # which Flask-SQLAlchemy only exposes inside an app context.
+            with app.app_context():
+                RunScheduledBackup()
         except Exception as e:
             print(f"Scheduler notice: {e}")
         time.sleep(60)

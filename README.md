@@ -83,13 +83,17 @@ Install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli), log 
 heroku login
 heroku create your-app-name
 heroku addons:create heroku-postgresql:essential-0
+# apt buildpack first so `pg_dump` / `psql` exist on the dyno (see Aptfile)
+heroku buildpacks:add --index 1 https://github.com/heroku/heroku-buildpack-apt
 heroku config:set SECRET_KEY="$(openssl rand -hex 32)"
 heroku config:set TELEGRAM_BOT_TOKEN="your-token" TELEGRAM_ADMIN_ID="your-chat-id"
 git push heroku main
 heroku open
 ```
 
-The `Procfile` starts the app with Gunicorn and binds it to Heroku's `$PORT`. The Postgres add-on exports `DATABASE_URL` in `postgres://…?sslmode=require` form, which the app accepts directly (it is normalised to `postgresql+psycopg2://` with the query string preserved). Telegram variables are optional. Because Heroku's filesystem is ephemeral, logs, backups, and runtime settings are lost when the dyno restarts — keep data in the add-on and use an external persistent storage service before relying on the deployment for production data. Database backups shell out to `pg_dump`/`psql` on `PATH`; if the binary is missing the backup is skipped and written to the log.
+The `Procfile` starts the app with Gunicorn and binds it to Heroku's `$PORT`. The Postgres add-on exports `DATABASE_URL` in `postgres://…?sslmode=require` form, which the app accepts directly (it is normalised to `postgresql+psycopg2://` with the query string preserved). Telegram variables are optional.
+
+Files shipped with the code: `data/persist/Blueprints/`, `manifest.json`, `version.txt`, `android_version.txt`. Runtime files (`settings.json`, `pvp_banlist.json`, `logs/`, `backup/`, `messages/`, `pvpmatches/`) are created on the dyno and are **not** tracked by git, so on Heroku they reset on every deploy/restart — Telegram delivery is the durable copy of a backup. Database backups shell out to `pg_dump`/`psql` on `PATH` (installed by the apt buildpack above); if the binary is missing the backup still runs for `persist/` but skips the database and says so in the log.
 
 ## Project Structure
 

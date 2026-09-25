@@ -154,10 +154,13 @@ cython_debug/
 data/*
 !data/persist/
 data/persist/*
-!data/persist/blueprints/
+# Static game data that has to ship with the code (Heroku has no local files).
+!data/persist/Blueprints/
 !data/persist/manifest.json
+!data/persist/version.txt
+!data/persist/android_version.txt
 backup/*
-version.txt
+/version.txt
 flaskkey
 discordwebhookurl
 

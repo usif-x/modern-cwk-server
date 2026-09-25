@@ -1,0 +1,3 @@
+# Installed by the Heroku apt buildpack (https://github.com/heroku/heroku-buildpack-apt)
+# so database backups can run `pg_dump` on the dyno.
+postgresql-client

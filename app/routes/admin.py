@@ -59,6 +59,7 @@ from app.utils import (
     MigrateSqliteDatabase,
     PlayerLog,
     ReadMiscParam,
+    ReadPersistText,
     RepairGameData,
     RestoreDatabaseSql,
     SavePvpBanlist,
@@ -159,12 +160,8 @@ def AdminVersions():
 
         return render_template(
             "admin_versions.html",
-            pc_version=open(
-                os.path.join(ROOT_DIR, "data/persist/version.txt"), "r"
-            ).read(),
-            android_version=open(
-                os.path.join(ROOT_DIR, "data/persist/android_version.txt"), "r"
-            ).read(),
+            pc_version=ReadPersistText("version.txt", "0.0.0").strip(),
+            android_version=ReadPersistText("android_version.txt", "0.0.0").strip(),
         )
     elif request.method == "POST":
         form = request.form

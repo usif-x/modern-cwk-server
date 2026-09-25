@@ -8,6 +8,7 @@ import json
 import os
 import shutil
 import subprocess
+import threading
 import time as _time
 from datetime import datetime, timezone
 from io import BytesIO
@@ -55,6 +56,48 @@ def FormatTimestamp(value, utc=False):
         return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
     except (OSError, OverflowError, ValueError):
         return str(value)
+
+
+def PersistPath(*parts):
+    """Path inside the `data/persist` folder."""
+    return os.path.join(ROOT_DIR, "data/persist", *parts)
+
+
+def ReadPersistText(name, default=""):
+    """Read a small text file from `data/persist`, `default` when missing."""
+    try:
+        with open(PersistPath(name), "r", encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return default
+
+
+def EnsurePersistLayout():
+    """Repair the `data/persist` layout expected by the code.
+
+    The blueprint folder is referenced as `Blueprints/` while older checkouts
+    tracked it as `blueprints/`; on a case-sensitive filesystem (Heroku) that
+    mismatch makes every blueprint read fail.
+    """
+    persist_dir = os.path.join(ROOT_DIR, "data/persist")
+    if not os.path.isdir(persist_dir):
+        os.makedirs(persist_dir, exist_ok=True)
+        return
+    canonical = os.path.join(persist_dir, "Blueprints")
+    if os.path.isdir(canonical):
+        return
+    try:
+        for entry in os.listdir(persist_dir):
+            if entry.lower() != "blueprints":
+                continue
+            source = os.path.join(persist_dir, entry)
+            if not os.path.isdir(source):
+                continue
+            os.rename(source, canonical)
+            Log("server", f"Renamed data/persist/{entry} -> Blueprints/")
+            return
+    except OSError as e:
+        Log("server", f"Could not normalise data/persist/Blueprints: {e}")
 
 
 def DiscordWebhookMessage(message):
@@ -1174,7 +1217,9 @@ def DumpDatabase(dest_dir):
             )
             return DATABASE_DUMP_NAME
         except FileNotFoundError:
-            Log("admin", "pg_dump is not installed - database backup skipped")
+            message = "pg_dump is not installed - database backup skipped"
+            Log("admin", message)
+            print(message, flush=True)
         except subprocess.CalledProcessError as e:
             Log(
                 "admin",
@@ -1375,25 +1420,42 @@ def MigrateSqliteDatabase(sqlite_path, replace=True):
     return counts
 
 
+_BACKUP_LOCK = threading.Lock()
+
+
 def Backup():
+    """Create `backup/<timestamp>.zip` (database dump + `data/persist`).
+
+    Serialized with a lock: the scheduler thread and the admin button can fire
+    at the same time, and two runs in the same second used to collide on the
+    working directory.
+    """
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    os.makedirs(os.path.join(ROOT_DIR, "backup/" + now), exist_ok=True)
+    work_dir = os.path.join(ROOT_DIR, "backup", now)
+    zip_path = work_dir + ".zip"
 
-    dumped = DumpDatabase(os.path.join(ROOT_DIR, f"backup/{now}"))
+    with _BACKUP_LOCK:
+        try:
+            if os.path.isdir(work_dir):
+                shutil.rmtree(work_dir, ignore_errors=True)
+            os.makedirs(work_dir, exist_ok=True)
 
-    shutil.copytree(
-        os.path.join(ROOT_DIR, "data/persist"),
-        os.path.join(ROOT_DIR, f"backup/{now}/persist"),
-    )
-    shutil.make_archive(
-        os.path.join(ROOT_DIR, "backup/" + now),
-        "zip",
-        os.path.join(ROOT_DIR, "backup/" + now),
-    )
-    shutil.rmtree(os.path.join(ROOT_DIR, "backup/" + now))
-    zip_path = os.path.join(ROOT_DIR, "backup/" + now + ".zip")
-    Log("admin", f"Backed up (database: {dumped or 'SKIPPED'})")
-    return zip_path
+            dumped = DumpDatabase(work_dir)
+
+            shutil.copytree(
+                os.path.join(ROOT_DIR, "data/persist"),
+                os.path.join(work_dir, "persist"),
+            )
+            shutil.make_archive(work_dir, "zip", work_dir)
+            Log("admin", f"Backed up (database: {dumped or 'SKIPPED'})")
+            return zip_path
+        except Exception as e:
+            message = f"Backup failed: {e}"
+            Log("admin", message)
+            print(message.splitlines()[0], flush=True)
+            return None
+        finally:
+            shutil.rmtree(work_dir, ignore_errors=True)
 
 
 # --- Settings -------------------------------------------------------------
@@ -1544,6 +1606,10 @@ def RunScheduledBackup():
         return False
 
     zip_path = Backup()
+    if not zip_path:
+        # Nothing was produced (concurrent run or dump failure) - retry later
+        # without pushing the next attempt further into the future.
+        return False
     settings["last_backup"] = int(_time.time())
     SaveSettings(settings)
 
