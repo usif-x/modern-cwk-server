@@ -3,6 +3,7 @@ import time as _time
 
 from ._common import *
 from .database import *
+from .game_data import Log
 
 _BACKUP_LOCK = threading.Lock()
 

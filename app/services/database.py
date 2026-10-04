@@ -1,4 +1,5 @@
 from ._common import *
+from .game_data import Log
 
 
 def DatabaseBackend():
