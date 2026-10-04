@@ -177,7 +177,7 @@ with app.app_context():
     print(f"Database: {db.engine.url.render_as_string(hide_password=True)}")
     db.create_all()
     try:
-        from sqlalchemy import Boolean, Integer, String, inspect, text
+        from sqlalchemy import Boolean, Integer, String, Text, inspect, text
 
         engine = db.engine
         is_postgres = engine.dialect.name == "postgresql"
@@ -187,7 +187,10 @@ with app.app_context():
         # the first release have to be backfilled by hand. The DDL is dialect
         # aware because PostgreSQL and SQLite disagree on boolean literals.
         required_columns = {
-            "redeem_code": [("reward_item", String(128), None)],
+            "redeem_code": [
+                ("reward_item", String(128), None),
+                ("rewards", Text, None),
+            ],
             "bans": [("expires", Integer, 0)],
             "admin": [
                 ("email", String(255), None),

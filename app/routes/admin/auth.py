@@ -348,6 +348,89 @@ def AdminCreateAdmin():
         )
 
 
+def _RequireSuperAdmin():
+    """True when the current admin is a superadmin (rank 0)."""
+    return isAdmin(current_user) and (current_user.rank or 0) == 0
+
+
+@admin_bp.route("/admin/admins")
+@login_required
+def AdminManageAdmins():
+    if not _RequireSuperAdmin():
+        return abort(404)
+
+    admins = Admin.query.order_by(Admin.rank, Admin.username).all()
+    return render_template(
+        "admin_admins.html",
+        admins=admins,
+        superadmin_count=sum(1 for a in admins if (a.rank or 0) == 0),
+    )
+
+
+@admin_bp.route("/admin/admins/<username>/rank", methods=["POST"])
+@login_required
+def AdminSetRank(username):
+    if not _RequireSuperAdmin():
+        return abort(404)
+
+    target = Admin.query.filter_by(username=username).first()
+    if target is None:
+        return abort(404)
+    if target.username == current_user.username:
+        return make_response("You cannot change your own rank.", 400)
+
+    try:
+        rank = int(request.form.get("rank", "1"))
+    except (TypeError, ValueError):
+        return make_response("Invalid rank.", 400)
+    if rank not in (0, 1):
+        return make_response("Invalid rank.", 400)
+
+    # Never leave the server without a superadmin.
+    if target.rank == 0 and rank != 0:
+        remaining = Admin.query.filter(Admin.rank == 0, Admin.username != target.username).count()
+        if remaining == 0:
+            return make_response("Cannot demote the last superadmin.", 400)
+
+    old_rank = target.rank
+    target.rank = rank
+    db.session.commit()
+
+    action = "promoted" if rank == 0 and old_rank != 0 else (
+        "demoted" if rank != 0 and old_rank == 0 else "updated"
+    )
+    Log("admin", f"{current_user.username} {action} admin '{username}' (rank {old_rank} -> {rank})")
+    DiscordWebhookMessage(
+        f"{current_user.username} {action} admin '{username}' (rank {old_rank} -> {rank})"
+    )
+    return redirect("/admin/admins")
+
+
+@admin_bp.route("/admin/admins/<username>/remove", methods=["POST"])
+@login_required
+def AdminRemoveAdmin(username):
+    if not _RequireSuperAdmin():
+        return abort(404)
+
+    target = Admin.query.filter_by(username=username).first()
+    if target is None:
+        return abort(404)
+    if target.username == current_user.username:
+        return make_response("You cannot remove your own account.", 400)
+
+    if target.rank == 0:
+        remaining = Admin.query.filter(Admin.rank == 0, Admin.username != target.username).count()
+        if remaining == 0:
+            return make_response("Cannot remove the last superadmin.", 400)
+
+    db.session.delete(target)
+    db.session.commit()
+
+    Log("admin", f"{current_user.username} removed admin '{username}'")
+    DiscordWebhookMessage(f"{current_user.username} removed admin '{username}'")
+    return redirect("/admin/admins")
+
+
 @admin_bp.route("/admin/passkey", methods=["POST"])
 def AdminPasskeyLogin():
     """Passwordless login using a 6-digit passkey only."""

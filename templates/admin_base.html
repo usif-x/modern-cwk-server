@@ -425,6 +425,13 @@
               <i data-lucide="user-plus" class="w-4 h-4"></i>
               <span>Create Admin</span>
             </a>
+            <a
+              href="/admin/admins"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/admins') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="users-round" class="w-4 h-4"></i>
+              <span>Manage Admins</span>
+            </a>
           </div>
           {% endif %}
 

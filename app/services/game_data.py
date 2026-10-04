@@ -1,3 +1,6 @@
+import re
+import time as _time
+
 from ._common import *
 
 
@@ -401,6 +404,294 @@ def GetNameFromSave(save):
     if game is None:
         return None
     return game.get("MultiplayerPlayerName")
+
+
+def FormatBlueprintName(name):
+    """Convert a localization token into a readable blueprint name."""
+    if not isinstance(name, str):
+        return name
+
+    name = name.strip()
+    if name.startswith("!!"):
+        name = name[2:]
+    name = name.replace("_", " ")
+    name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", name)
+    name = re.sub(r"\s+", " ", name).strip()
+    if name.endswith(" NAME"):
+        name = name[:-5].strip()
+    return name
+
+
+def FormatCreatureName(creature):
+    """Readable creature name with its Evolve variant stripped.
+
+    Blueprint names such as ``!!CornBall_Awaken_NAME`` become ``Corn Ball``;
+    the variant (``Awaken``/``Base``) is returned separately so the UI can
+    render it as a badge instead of inline text.
+    """
+    if not isinstance(creature, dict):
+        return creature, ""
+    creature_id = creature.get("ID", "")
+    variant = ""
+    if "_Awaken" in creature_id:
+        variant = "Awaken"
+    elif "_Base" in creature_id:
+        variant = "Base"
+    name = FormatBlueprintName(creature.get("Name", creature_id))
+    if variant:
+        name = re.sub(rf"\b{re.escape(variant)}\b", "", name)
+        name = re.sub(r"\s+", " ", name).strip()
+    return name, variant
+
+
+_ACTION_CARD_TYPE_ALIASES = {
+    "KEYWORD_MAGICATTACK": "Magic Attack",
+}
+
+
+def FormatLeaderName(leader):
+    """Readable hero/leader name derived from the ID (``Leader_Finn`` -> ``Finn``).
+
+    Real names (e.g. ``Summer Style Finn``) are kept; placeholder tokens that
+    merely mirror the ID fall back to the ID with the ``Leader_`` prefix removed.
+    """
+    if not isinstance(leader, dict):
+        return leader
+    name = leader.get("Name", "")
+    if name and not (name.startswith("!!") and name.endswith("_NAME")):
+        return FormatBlueprintName(name)
+    identifier = leader.get("ID", "")
+    if identifier.startswith("Leader_"):
+        identifier = identifier[len("Leader_"):]
+    return FormatBlueprintName(identifier)
+
+
+def FormatActionCardName(card):
+    """Readable name for an action card.
+
+    Most localization names merely mirror the card ID (``!!CORN_0022_NAME``), so
+    the display name falls back to the ``UITexture`` when no real name exists
+    (e.g. ``Spell_Corn_ThirdWind`` -> ``Corn Third Wind``).
+    """
+    if not isinstance(card, dict):
+        return card
+    name = card.get("Name", "")
+    if name and not (name.startswith("!!") and name.endswith("_NAME")):
+        return FormatBlueprintName(name)
+    texture = card.get("UITexture", "") or ""
+    for prefix in ("Spell_", "Spel_", "Leader_"):
+        if texture.startswith(prefix):
+            texture = texture[len(prefix):]
+            break
+    return FormatBlueprintName(texture)
+
+
+def FormatActionCardType(card):
+    """Readable card type derived from the card frame, falling back to TypeText."""
+    if not isinstance(card, dict):
+        return ""
+    frame = card.get("CardFrame", "") or ""
+    prefix = "UI_ActionCard_Frame_"
+    if frame.startswith(prefix):
+        return FormatBlueprintName(frame[len(prefix):])
+    typetext = card.get("TypeText", "") or ""
+    if typetext.startswith("!!"):
+        typetext = typetext[2:]
+    return _ACTION_CARD_TYPE_ALIASES.get(typetext, FormatBlueprintName(typetext))
+
+
+_CREATURE_NAME_CACHE = None
+_ACTION_CARD_NAME_CACHE = None
+
+
+def GetCreatureNameMap():
+    """Return ``{creature_id: display_name}`` for db_Creatures.json."""
+    global _CREATURE_NAME_CACHE
+    if _CREATURE_NAME_CACHE is not None:
+        return _CREATURE_NAME_CACHE
+    mapping = {}
+    path = os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json")
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                for creature in json.load(f):
+                    creature_id = creature.get("ID")
+                    if creature_id:
+                        mapping[creature_id] = FormatCreatureName(creature)[0]
+        except Exception as e:
+            Log("admin", f"Failed to load db_Creatures.json: {e}")
+    _CREATURE_NAME_CACHE = mapping
+    return mapping
+
+
+def GetActionCardNameMap():
+    """Return ``{card_id: display_name}`` for db_ActionCards.json."""
+    global _ACTION_CARD_NAME_CACHE
+    if _ACTION_CARD_NAME_CACHE is not None:
+        return _ACTION_CARD_NAME_CACHE
+    mapping = {}
+    path = os.path.join(ROOT_DIR, "data/persist/Blueprints/db_ActionCards.json")
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                for card in json.load(f):
+                    card_id = card.get("ID")
+                    if card_id:
+                        mapping[card_id] = FormatActionCardName(card)
+        except Exception as e:
+            Log("admin", f"Failed to load db_ActionCards.json: {e}")
+    _ACTION_CARD_NAME_CACHE = mapping
+    return mapping
+
+
+def GetLeaderNameMap():
+    """Return ``{leader_id: display_name}`` for db_Leaders.json."""
+    by_id, _, _ = _LoadLeaderBlueprints()
+    return {leader_id: FormatLeaderName(l) for leader_id, l in by_id.items()}
+
+
+# --- Redeem code rewards ----------------------------------------------------
+def ParseRedeemRewards(code_row):
+    """Return a normalized list of reward dicts for a RedeemCode row.
+
+    New codes store a JSON array in the ``rewards`` column; older codes keep a
+    single reward in the ``reward_type``/``reward_amount``/``reward_item``
+    columns, which are still honoured as a fallback.
+    """
+    rewards = []
+    raw = getattr(code_row, "rewards", None)
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                rewards = [r for r in parsed if isinstance(r, dict)]
+        except (ValueError, TypeError):
+            rewards = []
+
+    if not rewards:
+        reward_type = getattr(code_row, "reward_type", "") or ""
+        reward_item = (getattr(code_row, "reward_item", None) or "").strip()
+        reward_amount = getattr(code_row, "reward_amount", 0) or 0
+        if not reward_item and ":" in reward_type:
+            reward_type, reward_item = reward_type.split(":", 1)
+        if reward_type:
+            rewards = [
+                {
+                    "type": reward_type,
+                    "amount": reward_amount,
+                    "item": reward_item,
+                }
+            ]
+
+    normalized = []
+    for reward in rewards:
+        try:
+            amount = int(reward.get("amount", 0))
+        except (TypeError, ValueError):
+            amount = 0
+        normalized.append(
+            {
+                "type": (reward.get("type") or "").strip(),
+                "amount": amount,
+                "item": (reward.get("item") or "").strip(),
+            }
+        )
+    return normalized
+
+
+def ApplyRedeemReward(game, reward_type, reward_amount, reward_item):
+    """Apply a single reward to a decrypted game dict (mutates in place).
+
+    Returns ``(True, description)`` on success or ``(False, message)``.
+    """
+    reward_item = (reward_item or "").strip()
+    try:
+        reward_amount = int(reward_amount)
+    except (TypeError, ValueError):
+        reward_amount = 0
+
+    if reward_type in ("HardCurrency", "PaidHardCurrency"):
+        game["HardCurrency"] = game.get("HardCurrency", 0) + reward_amount
+        game["PaidHardCurrency"] = game.get("PaidHardCurrency", 0) + reward_amount
+        return True, f"{reward_amount} Gems"
+    if reward_type == "FreeHardCurrency":
+        game["FreeHardCurrency"] = game.get("FreeHardCurrency", 0) + reward_amount
+        game["HardCurrency"] = game.get("HardCurrency", 0) + reward_amount
+        return True, f"{reward_amount} Free Gems"
+    if reward_type == "SoftCurrency":
+        game["SoftCurrency"] = game.get("SoftCurrency", 0) + reward_amount
+        return True, f"{reward_amount} Coins"
+    if reward_type == "PvpCurrency":
+        game["PvpCurrency"] = game.get("PvpCurrency", 0) + reward_amount
+        return True, f"{reward_amount} Wishbones"
+    if reward_type == "EvolutionShards":
+        game["EvolutionShards"] = game.get("EvolutionShards", 0) + reward_amount
+        return True, f"{reward_amount} Evolution Shards"
+    if reward_type == "Creature":
+        if not reward_item:
+            return False, "No creature specified for this code"
+        if game.get("Inventory") is None:
+            game["Inventory"] = []
+        next_uid = (
+            max(
+                [
+                    item.get("UniqueID", 0)
+                    for item in game["Inventory"]
+                    if item.get("_T") == "CR"
+                ],
+                default=0,
+            )
+            + 1
+        )
+        stars = min(max(reward_amount, 1), 5) if reward_amount else 1
+        game["Inventory"].append(
+            {
+                "_T": "CR",
+                "ID": reward_item,
+                "UniqueID": next_uid,
+                "Xp": 0,
+                "StarRating": stars,
+                "Favorite": 0,
+                "Passive": 1,
+                "PassiveFeeds": 0,
+            }
+        )
+        return True, f"{stars}★ {reward_item} Creature"
+    if reward_type in ("ActionCard", "Card"):
+        if not reward_item:
+            return False, "No Auguments specified for this code"
+        if game.get("CardCollection") is None:
+            game["CardCollection"] = []
+        if not any(c.get("ID") == reward_item for c in game["CardCollection"]):
+            game["CardCollection"].append({"ID": reward_item, "Stat": 1})
+        if game.get("Inventory") is None:
+            game["Inventory"] = []
+        count = max(1, reward_amount)
+        for _ in range(count):
+            next_uid = (
+                max([item.get("UniqueID", 0) for item in game["Inventory"]], default=0)
+                + 1
+            )
+            game["Inventory"].append(
+                {
+                    "_T": "CA",
+                    "ID": reward_item,
+                    "UniqueID": next_uid,
+                    "Favorite": 0,
+                    "CreatureUID": -1,
+                    "CreatureSlot": 0,
+                }
+            )
+        return True, f"{count}x {reward_item} Auguments"
+    if reward_type in ("Leader", "Hero"):
+        if not reward_item:
+            return False, "No leader specified for this code"
+        leaders = game.get("Leaders", [])
+        if not any(l.get("ID") == reward_item for l in leaders):
+            leaders.append({"ID": reward_item, "Skin": reward_item, "OwnedSkins": []})
+            game["Leaders"] = leaders
+        return True, f"Leader {reward_item}"
+    return False, f"Unsupported reward type: {reward_type}"
 
 
 # --- Game save validation & repair -----------------------------------------

@@ -101,7 +101,10 @@ def AdminRedeemCodes():
             c_data = json.load(f)
             creatures = sorted(
                 [
-                    {"id": c.get("ID", ""), "name": c.get("Name", c.get("ID", ""))}
+                    {
+                        "id": c.get("ID", ""),
+                        "name": FormatCreatureName(c)[0],
+                    }
                     for c in c_data
                     if c.get("ID")
                 ],
@@ -117,7 +120,10 @@ def AdminRedeemCodes():
             ac_data = json.load(f)
             cards = sorted(
                 [
-                    {"id": c.get("ID", ""), "name": c.get("Name", c.get("ID", ""))}
+                    {
+                        "id": c.get("ID", ""),
+                        "name": FormatActionCardName(c),
+                    }
                     for c in ac_data
                     if c.get("ID")
                 ],
@@ -133,7 +139,10 @@ def AdminRedeemCodes():
             l_data = json.load(f)
             leaders = sorted(
                 [
-                    {"id": l.get("ID", ""), "name": l.get("Name", l.get("ID", ""))}
+                    {
+                        "id": l.get("ID", ""),
+                        "name": FormatLeaderName(l),
+                    }
                     for l in l_data
                     if l.get("ID")
                 ],

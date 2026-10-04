@@ -10,6 +10,8 @@ def AdminCreatures():
         os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r"
     ) as f:
         creatures = json.load(f)
+    for creature in creatures:
+        creature["Name"], creature["Variant"] = FormatCreatureName(creature)
     if query:
         creatures = [
             c
@@ -35,6 +37,10 @@ def AdminCards():
         os.path.join(ROOT_DIR, "data/persist/Blueprints/db_ActionCards.json"), "r"
     ) as f:
         cards = json.load(f)
+    for card in cards:
+        card["Name"] = FormatActionCardName(card)
+        card["Type"] = FormatActionCardType(card)
+        card["ManaCost"] = card.get("Cost", "")
     if query:
         cards = [
             c
@@ -57,6 +63,8 @@ def AdminLeaders():
         os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r"
     ) as f:
         all_leaders = json.load(f)
+    for leader in all_leaders:
+        leader["Name"] = FormatLeaderName(leader)
     # Leader Book shows base heroes only; skins live under their hero's OwnedSkins.
     leaders = [l for l in all_leaders if not l.get("SkinOf")]
     if query:
@@ -101,10 +109,15 @@ def AdminPvpBanlist():
     except Exception:
         pass
 
+    for item in creatures + leaders:
+        item["Name"] = FormatBlueprintName(item.get("Name", item.get("ID", "")))
+
     creature_map = {
-        c.get("ID"): c.get("Name", c.get("ID")) for c in creatures if "ID" in c
+        c.get("ID"): FormatBlueprintName(c.get("Name", c.get("ID")))
+        for c in creatures
+        if "ID" in c
     }
-    leader_map = {l.get("ID"): l.get("Name", l.get("ID")) for l in leaders if "ID" in l}
+    leader_map = {l.get("ID"): FormatLeaderName(l) for l in leaders if "ID" in l}
 
     banned_creatures_details = [
         {"ID": cid, "Name": creature_map.get(cid, cid)}

@@ -223,6 +223,14 @@ def AdminPlayer(player):
         if isinstance(item, dict) and item.get("_T") == "CA"
     ]
 
+    # Friendly display names for inventory rows (creatures, Auguments, heroes)
+    creature_names = GetCreatureNameMap()
+    card_names = GetActionCardNameMap()
+    for item in Inventory:
+        item["Name"] = creature_names.get(item.get("ID"), "")
+    for item in CardInventory:
+        item["Name"] = card_names.get(item.get("ID"), "")
+
     tutorial_creature_ids = GetTutorialOnlyCreatureIds()
     invalid_creature_count = sum(
         1 for item in Inventory if item.get("ID") in tutorial_creature_ids
@@ -302,6 +310,14 @@ def AdminPlayer(player):
         leader_skins[base_id] = [
             skin for skin in GetLeaderSkins(base_id) if skin not in owned
         ]
+
+    # Friendly hero names for the Leaders table and helper creature card
+    leader_names = GetLeaderNameMap()
+    for leader in leaders:
+        if isinstance(leader, dict):
+            leader["Name"] = leader_names.get(leader.get("ID"), "")
+    if isinstance(helper_creature, dict):
+        helper_creature["Name"] = creature_names.get(helper_creature.get("ID"), "")
 
     # This player's current teams screened against the PVP ban list
     team_bans = []

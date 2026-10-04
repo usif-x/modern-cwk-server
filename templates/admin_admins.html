@@ -1,0 +1,178 @@
+{% extends "admin_base.html" %} {% block title %}Manage Admins - CWK Admin{%
+endblock %} {% block breadcrumb %}Manage Admins{% endblock %} {% block content
+%}
+<div class="space-y-6">
+  <!-- Header -->
+  <div
+    class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+  >
+    <div>
+      <div class="flex items-center gap-2.5">
+        <h1
+          class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground"
+        >
+          Manage Admins
+        </h1>
+        <span
+          class="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground"
+        >
+          {{ admins|length }} accounts
+        </span>
+      </div>
+      <p class="text-sm text-muted-foreground mt-1">
+        Superadmin only &middot; upgrade, downgrade or remove administrator
+        accounts
+      </p>
+    </div>
+    <a
+      href="/admin/createadmin"
+      class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors"
+    >
+      <i data-lucide="user-plus" class="w-4 h-4"></i>
+      <span>Create Admin</span>
+    </a>
+  </div>
+
+  <!-- Admins Table -->
+  <div
+    class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden"
+  >
+    <div class="relative w-full overflow-auto">
+      <table class="w-full caption-bottom text-sm">
+        <thead
+          class="[&_tr]:border-b border-border bg-muted/40 text-xs text-muted-foreground"
+        >
+          <tr class="text-left">
+            <th class="h-10 px-6 font-medium">Username</th>
+            <th class="h-10 px-6 font-medium">Role</th>
+            <th class="h-10 px-6 font-medium">Email</th>
+            <th class="h-10 px-6 font-medium">Passkey</th>
+            <th class="h-10 px-6 text-right font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+          {% for admin in admins %}
+          {% set is_self = admin.username == current_user.username %}
+          {% set is_super = (admin.rank or 0) == 0 %}
+          {% set last_super = is_super and superadmin_count <= 1 %}
+          <tr class="hover:bg-muted/30 transition-colors">
+            <td class="px-6 py-3 whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-foreground"
+                  >{{ admin.username }}</span
+                >
+                {% if is_self %}
+                <span
+                  class="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground"
+                  >You</span
+                >
+                {% endif %}
+              </div>
+            </td>
+            <td class="px-6 py-3 whitespace-nowrap">
+              {% if is_super %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400"
+              >
+                <i data-lucide="crown" class="w-3 h-3"></i> Superadmin
+              </span>
+              {% else %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-600 dark:text-sky-400"
+              >
+                <i data-lucide="shield" class="w-3 h-3"></i> Admin
+              </span>
+              {% endif %}
+            </td>
+            <td
+              class="px-6 py-3 text-xs text-muted-foreground whitespace-nowrap"
+            >
+              {{ admin.email or '—' }}
+            </td>
+            <td class="px-6 py-3 whitespace-nowrap">
+              {% if admin.passkey_enabled %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"
+              >
+                <i data-lucide="key-round" class="w-3 h-3"></i> Enabled
+              </span>
+              {% else %}
+              <span class="text-xs text-muted-foreground">Disabled</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-3">
+              <div class="flex items-center justify-end gap-2">
+                {% if not is_self %}
+                {% if is_super %}
+                <form
+                  action="/admin/admins/{{ admin.username }}/rank"
+                  method="POST"
+                  class="inline"
+                >
+                  <input type="hidden" name="rank" value="1" />
+                  <button
+                    type="submit"
+                    {% if last_super %}disabled{% endif %}
+                    data-confirm="Downgrade '{{ admin.username }}' to a standard admin?"
+                    class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    Downgrade
+                  </button>
+                </form>
+                {% else %}
+                <form
+                  action="/admin/admins/{{ admin.username }}/rank"
+                  method="POST"
+                  class="inline"
+                >
+                  <input type="hidden" name="rank" value="0" />
+                  <button
+                    type="submit"
+                    data-confirm="Upgrade '{{ admin.username }}' to superadmin?"
+                    class="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-amber-500/20 transition-colors"
+                  >
+                    <i data-lucide="chevron-up" class="w-3 h-3"></i>
+                    Upgrade
+                  </button>
+                </form>
+                {% endif %}
+                <form
+                  action="/admin/admins/{{ admin.username }}/remove"
+                  method="POST"
+                  class="inline"
+                >
+                  <button
+                    type="submit"
+                    {% if last_super %}disabled{% endif %}
+                    data-confirm="Remove admin '{{ admin.username }}'? This cannot be undone."
+                    class="inline-flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 text-destructive px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-destructive/20 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    <i data-lucide="trash-2" class="w-3 h-3"></i>
+                    Remove
+                  </button>
+                </form>
+                {% else %}
+                <span class="text-xs text-muted-foreground"
+                  >Current account</span
+                >
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %} {% if not admins %}
+          <tr>
+            <td
+              colspan="5"
+              class="px-6 py-12 text-center text-muted-foreground text-sm"
+            >
+              No admin accounts found.
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

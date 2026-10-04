@@ -527,11 +527,18 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
           <div
             class="rounded-lg border border-border bg-muted/30 p-3 space-y-2"
           >
-            <div class="flex items-center justify-between">
-              <span class="font-mono font-semibold text-xs text-foreground"
-                >{{ HelperCreature.ID }}</span
-              >
-              <span class="text-amber-500 text-xs">
+            <div class="flex items-center justify-between gap-2">
+              <div class="min-w-0">
+                <span class="font-mono font-semibold text-xs text-foreground"
+                  >{{ HelperCreature.ID }}</span
+                >
+                {% if HelperCreature.Name %}
+                <span class="text-xs text-muted-foreground"
+                  >&middot; {{ HelperCreature.Name }}</span
+                >
+                {% endif %}
+              </div>
+              <span class="text-amber-500 text-xs shrink-0">
                 {% for i in range(HelperCreature.StarRating) %}&#9733;{% endfor
                 %}
               </span>
@@ -1038,6 +1045,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
                 </th>
                 <th class="h-9 px-3 font-medium">#</th>
                 <th class="h-9 px-4 font-medium">Creature ID</th>
+                <th class="h-9 px-4 font-medium">Name</th>
                 <th class="h-9 px-4 font-medium">XP</th>
                 <th class="h-9 px-4 font-medium">Stars</th>
                 <th class="h-9 px-4 text-right font-medium">Actions</th>
@@ -1065,6 +1073,9 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
                   class="px-4 py-2 font-mono text-xs font-medium text-foreground creature-id-cell"
                 >
                   {{ item.ID }}
+                </td>
+                <td class="px-4 py-2 text-xs text-foreground creature-name-cell">
+                  {{ item.Name or '—' }}
                 </td>
                 <td class="px-4 py-2 font-mono text-xs text-muted-foreground">
                   {{ item.Xp }}
@@ -1114,7 +1125,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
               {% endfor %} {% if not Inventory %}
               <tr>
                 <td
-                  colspan="6"
+                  colspan="7"
                   class="px-4 py-8 text-center text-muted-foreground text-xs"
                 >
                   No creatures in inventory.
@@ -1278,6 +1289,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
                 </th>
                 <th class="h-9 px-3 font-medium">#</th>
                 <th class="h-9 px-4 font-medium">Card ID</th>
+                <th class="h-9 px-4 font-medium">Name</th>
                 <th class="h-9 px-4 text-right font-medium">Action</th>
               </tr>
             </thead>
@@ -1304,6 +1316,9 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
                 >
                   {{ item.ID }}
                 </td>
+                <td class="px-4 py-2 text-xs text-foreground card-name-cell">
+                  {{ item.Name or '—' }}
+                </td>
                 <td class="px-4 py-2 text-right">
                   <div class="flex items-center justify-end gap-1">
                     <button
@@ -1329,7 +1344,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
               {% endfor %} {% if not CardInventory %}
               <tr>
                 <td
-                  colspan="4"
+                  colspan="5"
                   class="px-4 py-8 text-center text-muted-foreground text-xs"
                 >
                   No cards in collection.
@@ -1506,6 +1521,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
                 </th>
                 <th class="h-9 px-3 font-medium">#</th>
                 <th class="h-9 px-4 font-medium">Hero ID</th>
+                <th class="h-9 px-4 font-medium">Hero</th>
                 <th class="h-9 px-4 font-medium">Equipped Skin</th>
                 <th class="h-9 px-4 font-medium">Skins Owned</th>
                 <th class="h-9 px-4 font-medium">Add Skin</th>
@@ -1534,6 +1550,9 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
                   class="px-4 py-2 font-mono text-xs font-medium text-foreground leader-id-cell"
                 >
                   {{ item.ID }}
+                </td>
+                <td class="px-4 py-2 text-xs text-foreground leader-name-cell">
+                  {{ item.Name or '—' }}
                 </td>
                 <td
                   class="px-4 py-2 font-mono text-xs text-muted-foreground leader-skin-cell"
@@ -1589,7 +1608,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
               {% endfor %} {% if not Leaders %}
               <tr>
                 <td
-                  colspan="7"
+                  colspan="8"
                   class="px-4 py-8 text-center text-muted-foreground text-xs"
                 >
                   No heroes found in save.
