@@ -1,0 +1,33 @@
+GET the data
+curl --url 'https://cardwarskingdom.pythonanywhere.com/admin/api/player/4211c5b4-2a23-4720-9f54-5dd208d3a3d8/save' \
+  -H 'Accept: application/json' \
+  -H 'Accept-Language: en-US,en;q=0.9,ar;q=0.8' \
+  -H 'Connection: keep-alive' \
+  -b 'remember_token=Usif|9c3c4f17b3bf539fbb5a70781fedb6a0f850ebdba7d399f745fbaaab98953ed344a8549c7e78276f12f42c5007f82d1217bb587e10921cb027744aafe3d2db5c; session=.eJwljs1qAzEMhF_F6ByKLa9_tE_RS08hBK0lZRe2TYk3p5B3r6GnYZiP4XvB1Xbuq3aYzy9wxwj41t75pnCCz125q9vvN7f9uOPuuLUxumPduvsdzAdc3pfTOHloX2E23ruOugnMoEiSYi4kgdQnNKw5V0-1VRHmWLAu5JspGttkXiWjpgkjsV8MI3rLXiwIVqomLesU1EeZoqXIUiiUiVNKlEurhKGGvGCwHCoppRKH__XZ9fFv89U3g_cf7RxHCQ.arUKbg.uSs_1Hp2usp24g7D1wBdss306-g' \
+  -H 'Referer: https://cardwarskingdom.pythonanywhere.com/neo-admin/' \
+  -H 'Sec-Fetch-Dest: empty' \
+  -H 'Sec-Fetch-Mode: cors' \
+  -H 'Sec-Fetch-Site: same-origin' \
+  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36' \
+  -H 'sec-ch-ua: "Google Chrome";v="153", "Not_A Brand";v="8", "Chromium";v="153"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "macOS"'
+
+
+POST the data
+curl --url 'https://cardwarskingdom.pythonanywhere.com/admin/api/player/4211c5b4-2a23-4720-9f54-5dd208d3a3d8/save' \
+  -H 'Accept: application/json' \
+  -H 'Accept-Language: en-US,en;q=0.9,ar;q=0.8' \
+  -H 'Connection: keep-alive' \
+  -H 'Content-Type: application/json' \
+  -b 'remember_token=Usif|9c3c4f17b3bf539fbb5a70781fedb6a0f850ebdba7d399f745fbaaab98953ed344a8549c7e78276f12f42c5007f82d1217bb587e10921cb027744aafe3d2db5c; session=.eJwljs1qAzEMhF_F6ByKLa9_tE_RS08hBK0lZRe2TYk3p5B3r6GnYZiP4XvB1Xbuq3aYzy9wxwj41t75pnCCz125q9vvN7f9uOPuuLUxumPduvsdzAdc3pfTOHloX2E23ruOugnMoEiSYi4kgdQnNKw5V0-1VRHmWLAu5JspGttkXiWjpgkjsV8MI3rLXiwIVqomLesU1EeZoqXIUiiUiVNKlEurhKGGvGCwHCoppRKH__XZ9fFv89U3g_cf7RxHCQ.arUKbg.uSs_1Hp2usp24g7D1wBdss306-g' \
+  -H 'Origin: https://cardwarskingdom.pythonanywhere.com' \
+  -H 'Referer: https://cardwarskingdom.pythonanywhere.com/neo-admin/' \
+  -H 'Sec-Fetch-Dest: empty' \
+  -H 'Sec-Fetch-Mode: cors' \
+  -H 'Sec-Fetch-Site: same-origin' \
+  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36' \
+  -H 'sec-ch-ua: "Google Chrome";v="153", "Not_A Brand";v="8", "Chromium";v="153"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "macOS"' \
+  --data-raw $'{"json":"{}"}
