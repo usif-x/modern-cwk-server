@@ -189,13 +189,13 @@ with app.app_context():
         required_columns = {
             "redeem_code": [
                 ("reward_item", String(128), None),
-                ("rewards", Text, None),
+                ("rewards", Text(), None),
             ],
-            "bans": [("expires", Integer, 0)],
+            "bans": [("expires", Integer(), 0)],
             "admin": [
                 ("email", String(255), None),
                 ("passkey", String(80), None),
-                ("passkey_enabled", Boolean, False),
+                ("passkey_enabled", Boolean(), False),
             ],
         }
 

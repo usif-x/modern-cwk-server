@@ -89,7 +89,15 @@ def AdminRedeemCodes():
     if not isAdmin(current_user):
         return abort(404)
 
-    codes = RedeemCode.query.order_by(RedeemCode.code).all()
+    codes = [
+        {
+            "code": db_code.code,
+            "enabled": db_code.enabled,
+            "created_by": db_code.created_by,
+            "rewards": ParseRedeemRewards(db_code),
+        }
+        for db_code in RedeemCode.query.order_by(RedeemCode.code).all()
+    ]
 
     creatures = []
     cards = []
@@ -167,43 +175,66 @@ def AdminRedeemCodeAdd():
         return abort(404)
 
     code = request.form.get("code", "").strip().upper()
-    reward_type = request.form.get("reward_type", "").strip()
-    reward_amount = safe_int(request.form.get("reward_amount", ""), 1)
-    reward_item = request.form.get("reward_item", "").strip()
+    if not code:
+        return make_response("Code is required!", 400)
 
-    if not code or not reward_type:
-        return make_response("Code and reward type are required!", 400)
+    raw_rewards = request.form.get("rewards_json", "").strip()
+    try:
+        parsed_rewards = json.loads(raw_rewards) if raw_rewards else []
+    except (ValueError, TypeError):
+        return make_response("Invalid rewards payload!", 400)
+    if not isinstance(parsed_rewards, list) or not parsed_rewards:
+        return make_response("At least one reward is required!", 400)
 
-    # For item rewards, require reward_item
-    if reward_type in ("Creature", "ActionCard", "Leader"):
-        if not reward_item:
-            return make_response(
-                f"Item selection is required for {reward_type} reward!", 400
-            )
-        if reward_type == "Creature":
-            # For creatures, reward_amount acts as star rating (1-5)
-            reward_amount = min(max(reward_amount, 1), 5)
-        elif reward_type == "Leader":
-            reward_amount = 1
-        elif reward_type == "ActionCard":
-            reward_amount = max(reward_amount, 1)
-    else:
-        if reward_amount <= 0:
-            return make_response("Reward amount must be greater than 0!", 400)
-        reward_item = ""
+    rewards = []
+    for entry in parsed_rewards:
+        if not isinstance(entry, dict):
+            continue
+        reward_type = (entry.get("type") or "").strip()
+        if not reward_type:
+            return make_response("Each reward needs a type!", 400)
+        reward_amount = safe_int(entry.get("amount", 1), 1)
+        reward_item = (entry.get("item") or "").strip()
 
+        if reward_type in ("Creature", "ActionCard", "Card", "Leader", "Hero"):
+            if not reward_item:
+                return make_response(
+                    f"Item selection is required for {reward_type} reward!", 400
+                )
+            if reward_type == "Creature":
+                # For creatures, reward_amount acts as star rating (1-5)
+                reward_amount = min(max(reward_amount, 1), 5)
+            elif reward_type in ("Leader", "Hero"):
+                reward_amount = 1
+            else:
+                reward_amount = max(reward_amount, 1)
+        else:
+            if reward_amount <= 0:
+                return make_response("Reward amount must be greater than 0!", 400)
+            reward_item = ""
+
+        rewards.append(
+            {"type": reward_type, "amount": reward_amount, "item": reward_item}
+        )
+
+    if not rewards:
+        return make_response("At least one valid reward is required!", 400)
+
+    primary = rewards[0]
     existing = RedeemCode.query.filter_by(code=code).first()
     if existing:
-        existing.reward_type = reward_type
-        existing.reward_amount = reward_amount
-        existing.reward_item = reward_item if reward_item else None
+        existing.reward_type = primary["type"]
+        existing.reward_amount = primary["amount"]
+        existing.reward_item = primary["item"] or None
+        existing.rewards = json.dumps(rewards)
         existing.enabled = True
     else:
         new_code = RedeemCode(
             code=code,
-            reward_type=reward_type,
-            reward_amount=reward_amount,
-            reward_item=reward_item if reward_item else None,
+            reward_type=primary["type"],
+            reward_amount=primary["amount"],
+            reward_item=primary["item"] or None,
+            rewards=json.dumps(rewards),
             enabled=True,
             created_by=current_user.username,
         )
@@ -213,7 +244,7 @@ def AdminRedeemCodeAdd():
     Log(
         "admin",
         current_user.username
-        + f" added/updated redeem code: {code} ({reward_type} {reward_item} x{reward_amount})",
+        + f" added/updated redeem code: {code} with {len(rewards)} reward(s)",
     )
     return redirect("/admin/redeemcodes")
 

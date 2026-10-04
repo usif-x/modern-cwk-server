@@ -8,6 +8,7 @@ from flask_login import current_user
 from app import db
 from app.models import Player, RedeemCode
 from app.utils import (
+    ApplyRedeemReward,
     DecryptGameData,
     DiscordWebhookMessage,
     EncryptGameData,
@@ -16,6 +17,7 @@ from app.utils import (
     IPFromRequest,
     IsUserBanned,
     Log,
+    ParseRedeemRewards,
     PlayerLog,
     SystemBan,
     safe_int,
@@ -190,110 +192,28 @@ def RedeemCodeAPI():
     if code_upper in used_codes:
         return jsonify({"success": False, "message": "Code already redeemed"})
 
-    reward_type = db_code.reward_type
-    reward_amount = db_code.reward_amount
-    reward_item = (getattr(db_code, "reward_item", None) or "").strip()
+    rewards = ParseRedeemRewards(db_code)
 
-    # Legacy support if stored as Type:ItemID
-    if not reward_item and ":" in reward_type:
-        parts = reward_type.split(":", 1)
-        reward_type = parts[0]
-        reward_item = parts[1]
+    # Validate every reward before touching the save so a partial redeem cannot
+    # hand out only part of a code's contents.
+    for reward in rewards:
+        if reward["type"] in ("Creature", "ActionCard", "Card", "Leader", "Hero"):
+            if not reward["item"]:
+                return jsonify(
+                    {
+                        "success": False,
+                        "message": f"No {reward['type']} specified for this code",
+                    }
+                )
 
-    reward_desc = ""
-
-    if reward_type in ("HardCurrency", "PaidHardCurrency"):
-        game["HardCurrency"] = game.get("HardCurrency", 0) + reward_amount
-        game["PaidHardCurrency"] = game.get("PaidHardCurrency", 0) + reward_amount
-        reward_desc = f"{reward_amount} Gems"
-    elif reward_type == "FreeHardCurrency":
-        game["FreeHardCurrency"] = game.get("FreeHardCurrency", 0) + reward_amount
-        game["HardCurrency"] = game.get("HardCurrency", 0) + reward_amount
-        reward_desc = f"{reward_amount} Free Gems"
-    elif reward_type == "SoftCurrency":
-        game["SoftCurrency"] = game.get("SoftCurrency", 0) + reward_amount
-        reward_desc = f"{reward_amount} Coins"
-    elif reward_type == "PvpCurrency":
-        game["PvpCurrency"] = game.get("PvpCurrency", 0) + reward_amount
-        reward_desc = f"{reward_amount} Wishbones"
-    elif reward_type == "EvolutionShards":
-        game["EvolutionShards"] = game.get("EvolutionShards", 0) + reward_amount
-        reward_desc = f"{reward_amount} Evolution Shards"
-    elif reward_type == "Creature":
-        if not reward_item:
-            return jsonify(
-                {"success": False, "message": "No creature specified for this code"}
-            )
-        if game.get("Inventory") is None:
-            game["Inventory"] = []
-        next_uid = (
-            max(
-                [
-                    item.get("UniqueID", 0)
-                    for item in game["Inventory"]
-                    if item.get("_T") == "CR"
-                ],
-                default=0,
-            )
-            + 1
+    reward_descs = []
+    for reward in rewards:
+        ok, info = ApplyRedeemReward(
+            game, reward["type"], reward["amount"], reward["item"]
         )
-        stars = min(max(reward_amount, 1), 5) if reward_amount else 1
-        game["Inventory"].append(
-            {
-                "_T": "CR",
-                "ID": reward_item,
-                "UniqueID": next_uid,
-                "Xp": 0,
-                "StarRating": stars,
-                "Favorite": 0,
-                "Passive": 1,
-                "PassiveFeeds": 0,
-            }
-        )
-        reward_desc = f"{stars}★ {reward_item} Creature"
-    elif reward_type in ("ActionCard", "Card"):
-        if not reward_item:
-            return jsonify(
-                {"success": False, "message": "No Auguments specified for this code"}
-            )
-        if game.get("CardCollection") is None:
-            game["CardCollection"] = []
-        if not any(c.get("ID") == reward_item for c in game["CardCollection"]):
-            game["CardCollection"].append({"ID": reward_item, "Stat": 1})
-
-        if game.get("Inventory") is None:
-            game["Inventory"] = []
-        count = max(1, reward_amount)
-        for _ in range(count):
-            next_uid = (
-                max([item.get("UniqueID", 0) for item in game["Inventory"]], default=0)
-                + 1
-            )
-            game["Inventory"].append(
-                {
-                    "_T": "CA",
-                    "ID": reward_item,
-                    "UniqueID": next_uid,
-                    "Favorite": 0,
-                    "CreatureUID": -1,
-                    "CreatureSlot": 0,
-                }
-            )
-        reward_desc = f"{count}x {reward_item} Auguments"
-    elif reward_type in ("Leader", "Hero"):
-        if not reward_item:
-            return jsonify(
-                {"success": False, "message": "No leader specified for this code"}
-            )
-        leaders = game.get("Leaders", [])
-        if not any(l.get("ID") == reward_item for l in leaders):
-            leaders.append({"ID": reward_item, "Skin": reward_item, "OwnedSkins": []})
-            game["Leaders"] = leaders
-        reward_desc = f"Leader {reward_item}"
-    else:
-        return jsonify(
-            {"success": False, "message": f"Unsupported reward type: {reward_type}"}
-        )
+        if not ok:
+            return jsonify({"success": False, "message": info})
+        reward_descs.append(info)
 
     used_codes.append(code_upper)
 
@@ -303,12 +223,12 @@ def RedeemCodeAPI():
     PlayerLog(
         IPFromRequest(request),
         player_id,
-        f"Redeemed code: {code_upper} - {reward_type} {reward_item or ''} (+{reward_amount})",
+        f"Redeemed code: {code_upper} - " + ", ".join(reward_descs),
     )
 
     return jsonify(
         {
             "success": True,
-            "message": f"Redeemed {code_upper} for {reward_desc}",
+            "message": f"Redeemed {code_upper} for " + ", ".join(reward_descs),
         }
     )

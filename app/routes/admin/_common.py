@@ -70,6 +70,7 @@ from app.utils import (
     LoadSettings,
     Log,
     MigrateSqliteDatabase,
+    ParseRedeemRewards,
     PlayerLog,
     ReadMiscParam,
     ReadPersistText,
