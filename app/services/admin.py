@@ -149,6 +149,94 @@ def GetPvpBanlist():
     }
 
 
+def BuildPvpBanlistResponse():
+    """The /persist/static/pvp_banlist payload in the production shape.
+
+    The game client reads banned_creatures / banned_leaders / banned_cards /
+    banned_floops / banned_augments / server_time / active_bans. Values come from
+    the admin-managed pvp_banlist.json plus (when the file exists) the seasonal
+    db_PVPBanlist.json, filtered by server time like production.
+    """
+    src = GetPvpBanlist()
+
+    creatures = [c for c in (src.get("banned_creatures") or []) if c]
+    leaders = [l for l in (src.get("banned_leaders") or []) if l]
+    cards = [c for c in (src.get("banned_cards") or []) if c]
+    floops = [f for f in (src.get("banned_floops") or []) if f]
+    augments = [a for a in (src.get("banned_augments") or []) if a]
+
+    # Seasonal blueprint (same source production reads), active by server time.
+    for season in _ReadPvpSeasons():
+        if not _season_active(season):
+            continue
+        for cid in season.get("banned_creatures", []) or []:
+            if cid and cid not in creatures:
+                creatures.append(cid)
+        for lid in season.get("banned_leaders", []) or []:
+            if lid and lid not in leaders:
+                leaders.append(lid)
+        for cid in season.get("banned_cards", []) or []:
+            if cid and cid not in cards:
+                cards.append(cid)
+        for aid in season.get("banned_augments", []) or []:
+            if aid and aid not in augments:
+                augments.append(aid)
+
+    # A banned floop is also a PvP-banned card (production rule for older apps).
+    for cid in floops:
+        if cid not in cards:
+            cards.append(cid)
+
+    active = []
+    for ban in src.get("active_bans") or []:
+        if not isinstance(ban, dict):
+            continue
+        active.append(
+            {
+                "id": ban.get("id", "unknown"),
+                "name": ban.get("name", "Unnamed Ban Period"),
+                "starts": ban.get("starts") or ban.get("start_date") or "",
+                "expires": ban.get("expires") or ban.get("end_date") or "",
+            }
+        )
+
+    return {
+        "banned_creatures": creatures,
+        "banned_leaders": leaders,
+        "banned_cards": cards,
+        "banned_floops": floops,
+        "banned_augments": augments,
+        "server_time": datetime.now(timezone.utc).isoformat(),
+        "active_bans": active,
+    }
+
+
+def _ReadPvpSeasons():
+    try:
+        with open(
+            os.path.join(ROOT_DIR, "data/persist/Blueprints/db_PVPBanlist.json"),
+            "r",
+            encoding="utf-8",
+        ) as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return []
+    seasons = data.get("seasons") if isinstance(data, dict) else None
+    return seasons if isinstance(seasons, list) else []
+
+
+def _season_active(season):
+    if not isinstance(season, dict):
+        return False
+    try:
+        start = datetime.fromisoformat(str(season.get("start_date", "")).replace("Z", "+00:00"))
+        end = datetime.fromisoformat(str(season.get("end_date", "")).replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    now = datetime.now(timezone.utc)
+    return start <= now <= end
+
+
 def SavePvpBanlist(data):
     filepath = os.path.join(ROOT_DIR, "data/persist/pvp_banlist.json")
     os.makedirs(os.path.dirname(filepath), exist_ok=True)

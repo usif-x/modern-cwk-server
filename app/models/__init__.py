@@ -153,3 +153,15 @@ class TradeLog(db.Model):
     action = db.Column(db.String(32), nullable=False)
     actor = db.Column(db.String(80), nullable=True)
     detail = db.Column(db.Text, nullable=True)
+
+
+class RouletteState(db.Model):
+    """Daily Gift roulette cooldown + paid spin tokens (production keeps these on
+    CurrencyState; cwk-server keeps them in their own table so a client save
+    cannot reset them)."""
+
+    __tablename__ = "roulette_state"
+    username = db.Column(db.String(80), primary_key=True)
+    spin_at = db.Column(db.Integer, nullable=False, default=0)
+    spin_tokens = db.Column(db.Integer, nullable=False, default=0)
+    updated_at = db.Column(db.Integer, nullable=True)

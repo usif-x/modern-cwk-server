@@ -5,7 +5,7 @@ from flask import Blueprint, abort, jsonify, make_response, redirect, render_tem
 from flask_login import current_user
 
 from app import maintenance, app, db
-from app.models import Player, UpsightLogs
+from app.models import Player, RouletteState, UpsightLogs
 from app.services.trade_market import ApplyTradeDeltasToGame
 from app.utils import (
     DecryptGameData, EncryptGameData, DiscordWebhookMessage, IPFromRequest,
@@ -13,6 +13,7 @@ from app.utils import (
     GetAllyInfo, GetPlayerWins, SystemBan, get_hash_string, safe_int, GetRankForXP,
     GetPvpBanlist, ReadPersistText, GetLiveStatus, StripLegacyAdminMails,
     PruneDeliveredNewsMail, RollRoulettePrize, ApplyRoulettePrize, PurchasePrice,
+    BuildPvpBanlistResponse,
 )
 game_bp = Blueprint('game_bp', __name__)
 
@@ -90,9 +91,10 @@ def MonthlyStore():
 @game_bp.route("/persist/static/pvp_banlist", methods=["GET", "POST"])
 @game_bp.route("/persist/static/pvp_banlist/", methods=["GET", "POST"])
 def PvpBanlist():
-    data = GetPvpBanlist()
-    data["server_time"] = datetime.now(timezone.utc).isoformat()
-    return jsonify(data)
+    data = BuildPvpBanlistResponse()
+    response = make_response(json.dumps(data))
+    response.headers["Content-Type"] = "application/json"
+    return response
 
 
 
@@ -205,6 +207,10 @@ def UserAction2():
         if evt.lower() == "roulette spin":
             return _RouletteSpin(db_user, pid, handle)
 
+        # Spend wishbones to buy a spin token that bypasses the 24h cooldown.
+        if evt.lower() == "roulette reset":
+            return _RouletteReset(db_user, pid, handle)
+
         # Store purchase: the app names WHAT it buys; the server charges its own
         # price (claims.purchase protocol) and answers reason/cb/cc.
         if evt.lower() == "purchase":
@@ -233,43 +239,94 @@ def UserAction2():
     return jsonify(data)
 
 
+ROULETTE_COOLDOWN = 24 * 60 * 60   # one free spin per day
+ROULETTE_RESET_COST = 1250         # wishbones to buy an extra spin (production)
+
+
+def _RouletteState(pid, create=True):
+    state = RouletteState.query.filter_by(username=pid).first()
+    if state is None and create:
+        state = RouletteState(username=pid, spin_at=0, spin_tokens=0, updated_at=int(time.time()))
+        db.session.add(state)
+    return state
+
+
 def _RouletteSpin(db_user, pid, handle):
     """Roll the Daily Gift roulette, credit the prize and answer like production.
 
-    Returns the same envelope the client parses: {"success": true, "data":
-    "{\\"fields\\": {...}}"}. The winning slice index is `fields.spin`; the granted
-    amounts are gs/gf/gv/ge/gc and the resulting balances level1..level7.
+    Enforces the daily cooldown; a paid reset (`roulette reset`) adds a token that
+    lets one extra spin through. The winning slice index is `fields.spin`; granted
+    amounts are gs/gf/gv/ge/gc and the balances level1..level7.
     """
+    now = int(time.time())
+    state = _RouletteState(pid, create=True)
+
+    if now - int(state.spin_at or 0) >= ROULETTE_COOLDOWN:
+        state.spin_at = now
+    elif int(state.spin_tokens or 0) > 0:
+        state.spin_tokens = int(state.spin_tokens) - 1
+    else:
+        db.session.commit()
+        game = DecryptGameData(db_user.game) if db_user.game else {}
+        if not isinstance(game, dict):
+            game = {}
+        fields = {**_BalanceFields(game, handle), "reason": "ROULETTE_COOLDOWN", "spin": None, "seq": now}
+        return jsonify({"success": True, "data": json.dumps({"fields": fields})})
+
     game = DecryptGameData(db_user.game) if db_user.game else {}
     if not isinstance(game, dict):
         game = {}
 
     prize = RollRoulettePrize()
     granted = ApplyRoulettePrize(game, prize)
+    state.updated_at = now
 
     if db_user.game:
         db_user.game = EncryptGameData(game, pid)
-        db.session.commit()
+    db.session.commit()
 
     fields = {
-        "level1": safe_int(game.get("PaidHardCurrency", 0)),
-        "level2": safe_int(game.get("FreeHardCurrency", 0)),
-        "level4": safe_int(game.get("SoftCurrency", 0)),
-        "level5": safe_int(game.get("PvpCurrency", 0)),
-        "level6": safe_int(game.get("EvolutionShards", 0)),
-        "level7": safe_int(game.get("CraftCurrency", 0)),
+        **_BalanceFields(game, handle),
         "gs": granted["gs"],
         "gf": granted["gf"],
         "gv": granted["gv"],
         "ge": granted["ge"],
         "gc": granted["gc"],
         "reason": "OK" if prize else "NO_ROULETTE",
-        "seq": int(time.time()),
+        "seq": now,
         "spin": prize["index"] if prize else None,
-        "handle": handle,
     }
     Log("admin", "Roulette spin by " + pid + ": " + json.dumps(prize))
     return jsonify({"success": True, "data": json.dumps({"fields": fields})})
+
+
+def _RouletteReset(db_user, pid, handle):
+    """Buy a spin token with wishbones so the next spin bypasses the cooldown.
+
+    Charges ROULETTE_RESET_COST PvP currency (the client debits its own from the
+    returned balance) and answers reason OK / NOT_ENOUGH_PVP like production.
+    """
+    now = int(time.time())
+    game = DecryptGameData(db_user.game) if db_user.game else {}
+    if not isinstance(game, dict):
+        game = {}
+
+    def reply(reason):
+        fields = {**_BalanceFields(game, handle), "reason": reason, "seq": now}
+        return jsonify({"success": True, "data": json.dumps({"fields": fields})})
+
+    pvp = safe_int(game.get("PvpCurrency", 0))
+    if pvp < ROULETTE_RESET_COST:
+        return reply("NOT_ENOUGH_PVP")
+
+    game["PvpCurrency"] = pvp - ROULETTE_RESET_COST
+    state = _RouletteState(pid, create=True)
+    state.spin_tokens = int(state.spin_tokens or 0) + 1
+    state.updated_at = now
+    db_user.game = EncryptGameData(game, pid)
+    db.session.commit()
+    PlayerLog(IPFromRequest(request), pid, f"Roulette reset: charged {ROULETTE_RESET_COST} wishbones (token {state.spin_tokens})")
+    return reply("OK")
 
 
 def _BalanceFields(game, handle):

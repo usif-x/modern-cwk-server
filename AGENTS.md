@@ -482,11 +482,17 @@ applied to the player's save directly.
 winning slice and returns it as `fields.spin` in the envelope
 `{"success": true, "data": "{\"fields\": {...}}"}` (with `gs`/`gf`/`gv`/`ge`/`gc`,
 resulting balances `level1`..`level7`, `reason`, `seq` and `handle`). The wheel is
-`data/persist/Blueprints/db_DailyGift.json`; each slice's chance is
-`max(1, round(10000 / Rarity))` (higher `Rarity` = rarer), matching `claims.py`.
-Helpers: `GetRoulettePrizes`, `RollRoulettePrize`, `ApplyRoulettePrize`
+`data/persist/Blueprints/db_DailyGift.json`; the **odds** come from
+`db_DailyGiftRouletteWeights.json` (its explicit `Weight` per index — a balanced
+wheel), falling back to `db_DailyGift`'s `max(1, round(10000 / Rarity))`. Helpers:
+`GetRoulettePrizes`, `RollRoulettePrize`, `ApplyRoulettePrize`
 (`app/services/game_data.py`). Currency prizes are credited to the save; creature
 prizes are granted by the client from its own pool.
+
+A spin is once per 24h, tracked in the `roulette_state` table (`spin_at`,
+`spin_tokens`). `evt="roulette reset"` spends `ROULETTE_RESET_COST` (1250)
+wishbones from the save's `PvpCurrency` and adds a token so one more spin passes
+the cooldown; it answers `reason` `OK`/`NOT_ENOUGH_PVP`.
 
 ### Store purchases
 
@@ -500,6 +506,15 @@ blueprints (`PurchasePrice`, `app/services/game_data.py`) and replies with
 `gems` debit `FreeHardCurrency` then `PaidHardCurrency`, `coins` debit
 `SoftCurrency`, `pvp` debits `PvpCurrency`; store creatures are granted into
 `Inventory`. Already-owned heroes/skins are never charged twice.
+
+### PVP banlist response
+
+`GET /persist/static/pvp_banlist` answers the production shape:
+`banned_creatures`, `banned_leaders`, `banned_cards`, `banned_floops`,
+`banned_augments`, `server_time`, `active_bans`. Values come from the
+admin-managed `data/persist/pvp_banlist.json`, merged with any time-active seasons
+in `data/persist/Blueprints/db_PVPBanlist.json` (`BuildPvpBanlistResponse`,
+`app/services/admin.py`). A banned floop is also emitted as a banned_card.
 
 ## Anti-Cheat / Security
 

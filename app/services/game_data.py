@@ -185,46 +185,37 @@ def _LoadBlueprint(rel_path):
 def GetRoulettePrizes():
     """[{index, type, qty, name, weight}] for the Daily Gift wheel.
 
-    Uses db_DailyGiftRouletteWeights.json (its explicit Weight field gives a
-    balanced wheel) and falls back to db_DailyGift.json (weight = 10000/Rarity).
+    The slice CONTENTS (and what the client displays) come from
+    db_DailyGift.json; the ODDS come from db_DailyGiftRouletteWeights.json
+    (its explicit Weight per index — a balanced wheel), falling back to
+    db_DailyGift's own 10000/Rarity when a weight is missing.
     """
     now = _time.time()
     if _roulette_cache["gifts"] and now - _roulette_cache["at"] < 900:
         return _roulette_cache["gifts"]
 
-    gifts = []
+    weights = {}
     for row in _LoadBlueprint(_ROULETTE_WEIGHTS_PATH):
+        if isinstance(row, dict) and row.get("Index") is not None:
+            weights[safe_int(row.get("Index"), -1)] = max(1, safe_int(row.get("Weight"), 1) or 1)
+
+    gifts = []
+    for row in _LoadBlueprint(_ROULETTE_GIFTS_PATH):
         if not isinstance(row, dict) or row.get("Index") is None:
             continue
+        index = safe_int(row.get("Index"), 0)
+        rarity = max(1, safe_int(row.get("Rarity"), 1) or 1)
         gifts.append(
             {
-                "index": safe_int(row.get("Index"), 0),
+                "index": index,
                 "type": str(row.get("Type") or ""),
                 "qty": safe_int(row.get("Quantity"), 0),
                 "name": str(row.get("Name") or ""),
-                "weight": max(1, safe_int(row.get("Weight"), 1) or 1),
+                "weight": weights.get(index, max(1, int(round(10000.0 / rarity)))),
             }
         )
-    source = "weights"
-
-    if not gifts:
-        for row in _LoadBlueprint(_ROULETTE_GIFTS_PATH):
-            if not isinstance(row, dict) or row.get("Index") is None:
-                continue
-            rarity = max(1, safe_int(row.get("Rarity"), 1) or 1)
-            gifts.append(
-                {
-                    "index": safe_int(row.get("Index"), 0),
-                    "type": str(row.get("Type") or ""),
-                    "qty": safe_int(row.get("Quantity"), 0),
-                    "name": str(row.get("Name") or ""),
-                    "weight": max(1, int(round(10000.0 / rarity))),
-                }
-            )
-        source = "dailygift"
-
     gifts.sort(key=lambda g: g["index"])
-    _roulette_cache.update(at=now, gifts=gifts, source=source)
+    _roulette_cache.update(at=now, gifts=gifts, source="dailygift")
     return gifts
 
 
