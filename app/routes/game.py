@@ -13,7 +13,7 @@ from app.utils import (
     GetAllyInfo, GetPlayerWins, SystemBan, get_hash_string, safe_int, GetRankForXP,
     GetPvpBanlist, ReadPersistText, GetLiveStatus, StripLegacyAdminMails,
     PruneDeliveredNewsMail, RollRoulettePrize, ApplyRoulettePrize, PurchasePrice,
-    BuildPvpBanlistResponse,
+    BuildPvpBanlistResponse, ReadMiscParam,
 )
 game_bp = Blueprint('game_bp', __name__)
 
@@ -215,6 +215,11 @@ def UserAction2():
         # price (claims.purchase protocol) and answers reason/cb/cc.
         if evt.lower() == "purchase":
             return _HandlePurchase(db_user, pid, clientData, handle)
+
+        # Currency packs bought with gems: buy coins / evolution shards / craft
+        # coins. The app sends df = -gems to spend; the server prices the packs.
+        if evt.lower() in CURRENCY_PURCHASES:
+            return _HandleCurrencyPurchase(db_user, pid, clientData, handle, evt.lower())
 
         FreeHardCurrency = safe_int(clientData.get("fr", 0))
         df = safe_int(clientData.get("df", 0))
@@ -443,6 +448,64 @@ def _HandlePurchase(db_user, pid, clientData, handle):
             "seq": int(time.time()),
         }
     )
+
+
+# Currency packs bought with gems. event -> (cost param, amount param, product,
+# granted key, default cost, default amount). Production: claims.process.
+CURRENCY_PURCHASES = {
+    "buy coins": ("BuySoftCurrencyCost", "BuySoftCurrencyAmount", "SoftCurrency", "gs", 100, 10000),
+    "evolution shards purchase": ("BuyEvolutionShardsCost", "BuyEvolutionShardsAmount", "EvolutionShards", "ge", 6000, 1),
+    "craft coin purchase": ("BuyCraftCurrencyCost", "BuyCraftCurrencyAmount", "CraftCurrency", "gc", 6500, 1),
+}
+
+
+def _HandleCurrencyPurchase(db_user, pid, clientData, handle, evt):
+    """Gem-priced currency packs (buy coins / evolution shards / craft coins).
+
+    The app sends df = -<gems to spend>; the server prices the packs from
+    MiscParams and grants the product, answering reason OK / NOT_ENOUGH_GEMS the
+    same way the production claims.process does.
+    """
+    cost_param, amount_param, product, gkey, cost_default, amount_default = CURRENCY_PURCHASES[evt]
+    cost_each = safe_int(ReadMiscParam(cost_param, cost_default), cost_default) or cost_default
+    amount_each = safe_int(ReadMiscParam(amount_param, amount_default), amount_default) or amount_default
+
+    df = safe_int(clientData.get("df", 0))
+    gems_asked = max(0, -df)
+    packs = gems_asked // cost_each if cost_each > 0 else 0
+
+    game = DecryptGameData(db_user.game) if db_user.game else {}
+    if not isinstance(game, dict):
+        game = {}
+
+    def reply(reason, granted=0):
+        fields = {**_BalanceFields(game, handle), "reason": reason, "seq": int(time.time())}
+        fields[gkey] = granted
+        return jsonify({"success": True, "data": json.dumps({"fields": fields})})
+
+    free = safe_int(game.get("FreeHardCurrency", 0))
+    paid = safe_int(game.get("PaidHardCurrency", 0))
+    if packs <= 0 or (free + paid) < packs * cost_each:
+        return reply("NOT_ENOUGH_GEMS")
+
+    total = packs * cost_each
+    take_free = min(free, total)
+    take_paid = total - take_free
+    game["FreeHardCurrency"] = free - take_free
+    game["PaidHardCurrency"] = paid - take_paid
+    game["HardCurrency"] = game["FreeHardCurrency"] + game["PaidHardCurrency"]
+
+    gained = packs * amount_each
+    game[product] = safe_int(game.get(product, 0)) + gained
+
+    db_user.game = EncryptGameData(game, pid)
+    db.session.commit()
+    PlayerLog(
+        IPFromRequest(request),
+        pid,
+        f"{evt}: {packs} pack(s), spent {total} gems, granted {gained} {product}",
+    )
+    return reply("OK", gained)
 
 
 

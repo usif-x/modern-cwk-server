@@ -507,6 +507,15 @@ blueprints (`PurchasePrice`, `app/services/game_data.py`) and replies with
 `SoftCurrency`, `pvp` debits `PvpCurrency`; store creatures are granted into
 `Inventory`. Already-owned heroes/skins are never charged twice.
 
+Gem-priced currency packs use their own events instead of `purchase`:
+`evt="buy coins"`, `"evolution shards purchase"` and `"craft coin purchase"`,
+with `df = -<gems to spend>`. The server prices the packs from `db_MiscParams.json`
+(`BuySoftCurrencyCost/Amount`, `BuyEvolutionShardsCost/Amount`,
+`BuyCraftCurrencyCost/Amount`), charges gems (free then paid), credits the product
+(coins / `EvolutionShards` / `CraftCurrency`) and answers `reason`
+`OK`/`NOT_ENOUGH_GEMS` with `gs`/`ge`/`gc`. (`CURRENCY_PURCHASES`,
+`_HandleCurrencyPurchase` in `app/routes/game.py`.)
+
 ### PVP banlist response
 
 `GET /persist/static/pvp_banlist` answers the production shape:
