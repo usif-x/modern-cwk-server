@@ -930,6 +930,160 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
     </div>
   </div>
 
+  <!-- Friends Section -->
+  <div
+    class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden"
+  >
+    <div
+      class="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+    >
+      <div>
+        <h2 class="text-base font-semibold tracking-tight">Friends</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">
+          Accounts on this player's friend list
+        </p>
+      </div>
+      <span
+        class="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground"
+      >
+        {{ Friends|length }} friends{% if FriendRequests %} &middot; {{
+        FriendRequests|length }} pending{% endif %}
+      </span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full caption-bottom text-sm">
+        <thead class="[&_tr]:border-b border-border bg-muted/40">
+          <tr class="text-left text-xs font-medium text-muted-foreground">
+            <th class="h-10 px-6 font-medium">Player</th>
+            <th class="h-10 px-6 font-medium">Last Online</th>
+            <th class="h-10 px-6 font-medium">Status</th>
+            <th class="h-10 px-6 text-right font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+          {% for friend in Friends %}
+          <tr class="hover:bg-muted/40 transition-colors">
+            <td class="px-6 py-3">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-semibold text-[11px] text-primary shrink-0"
+                >
+                  {{ (friend.multiplayer_name[0] if friend.multiplayer_name else
+                  'P')|upper }}
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="font-medium text-foreground truncate"
+                    >{{ friend.multiplayer_name }}</span
+                  >
+                  <span class="font-mono text-xs text-muted-foreground truncate"
+                    >{{ friend.username }}</span
+                  >
+                </div>
+              </div>
+            </td>
+            <td
+              class="px-6 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap"
+            >
+              {{ friend.last_online or '—' }}
+            </td>
+            <td class="px-6 py-3">
+              {% if friend.banned %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full border border-destructive/30 bg-destructive/10 text-destructive px-2 py-0.5 text-xs font-medium"
+              >
+                <i data-lucide="ban" class="w-3 h-3"></i> Banned
+              </span>
+              {% else %}
+              <span
+                class="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 text-xs font-medium"
+              >
+                <i data-lucide="check" class="w-3 h-3"></i> Active
+              </span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-3 text-right">
+              <a
+                href="/admin/players/{{ friend.username }}"
+                class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <span>Inspect</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %} {% if not Friends %}
+          <tr>
+            <td
+              colspan="4"
+              class="px-6 py-10 text-center text-muted-foreground text-sm"
+            >
+              No friends on this account.
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if FriendRequests %}
+    <div class="border-t border-border">
+      <div class="px-6 py-3 bg-muted/30 flex items-center justify-between">
+        <span
+          class="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+          >Incoming Requests</span
+        >
+        <span class="text-xs text-muted-foreground"
+          >{{ FriendRequests|length }}</span
+        >
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full caption-bottom text-sm">
+          <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+            {% for req in FriendRequests %}
+            <tr class="hover:bg-muted/40 transition-colors">
+              <td class="px-6 py-3">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-7 h-7 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center font-semibold text-[11px] text-amber-600 shrink-0"
+                  >
+                    {{ (req.multiplayer_name[0] if req.multiplayer_name else
+                    'P')|upper }}
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span class="font-medium text-foreground truncate"
+                      >{{ req.multiplayer_name }}</span
+                    >
+                    <span
+                      class="font-mono text-xs text-muted-foreground truncate"
+                      >{{ req.username }}</span
+                    >
+                  </div>
+                </div>
+              </td>
+              <td
+                class="px-6 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap"
+              >
+                {{ req.last_online or '—' }}
+              </td>
+              <td class="px-6 py-3 text-right">
+                <a
+                  href="/admin/players/{{ req.username }}"
+                  class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  <span>Inspect</span>
+                  <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
   <!-- Creatures Inventory Section -->
   <div
     class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden"

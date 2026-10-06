@@ -1,6 +1,71 @@
 from ._common import *
 
 
+def _ParseIdList(raw):
+    if not raw:
+        return []
+    if isinstance(raw, (bytes, bytearray)):
+        raw = raw.decode("utf-8", "replace")
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return []
+    if not isinstance(raw, list):
+        return []
+    return [str(item) for item in raw if item]
+
+
+def BuildFriendsView(player):
+    """Resolve a player's friends and incoming requests into display rows."""
+    friend_ids = _ParseIdList(player.get("friends"))
+    request_ids = _ParseIdList(player.get("friend_requests"))
+
+    lookup = list(dict.fromkeys(friend_ids + request_ids))
+
+    info = {}
+    if lookup:
+        for row in Player.query.filter(Player.username.in_(lookup)).all():
+            name = row.multiplayer_name
+            if not name and row.game:
+                try:
+                    name = GetNameFromSave(row.game)
+                except Exception:
+                    name = None
+
+            last_online = row.last_online
+            if last_online:
+                try:
+                    last_online = datetime.fromtimestamp(
+                        int(last_online), tz=timezone.utc
+                    ).strftime("%Y-%m-%d %H:%M:%S UTC")
+                except (ValueError, TypeError, OSError):
+                    last_online = str(last_online)
+
+            info[row.username] = {
+                "username": row.username,
+                "multiplayer_name": name or "Unnamed",
+                "last_online": last_online,
+                "banned": IsUserBanned(row.username),
+            }
+
+    def build(ids, is_request):
+        rows = []
+        for uid in ids:
+            entry = info.get(uid) or {
+                "username": uid,
+                "multiplayer_name": "Unknown",
+                "last_online": None,
+                "banned": IsUserBanned(uid),
+            }
+            item = dict(entry)
+            item["is_request"] = is_request
+            rows.append(item)
+        return rows
+
+    return build(friend_ids, False), build(request_ids, True)
+
+
 @admin_bp.route("/admin/players")
 @login_required
 def AdminPlayers():
@@ -177,11 +242,15 @@ def AdminPlayer(player):
         )
         game = None
 
+    Friends, FriendRequests = BuildFriendsView(player)
+
     if game is None:
         return render_template(
             "admin_player.html",
             player=player,
             is_banned=IsUserBanned(player["username"]),
+            Friends=Friends,
+            FriendRequests=FriendRequests,
             save_issues=[
                 "Game save could not be decrypted. Use Import JSON to restore it."
             ],
@@ -391,6 +460,8 @@ def AdminPlayer(player):
         "admin_player.html",
         player=player,
         is_banned=IsUserBanned(player["username"]),
+        Friends=Friends,
+        FriendRequests=FriendRequests,
         save_issues=save_issues,
         SoftCurrency=game.get("SoftCurrency", 0),
         HardCurrency=int(game.get("PaidHardCurrency", 0))
