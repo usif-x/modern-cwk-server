@@ -457,6 +457,24 @@ Player-to-player trading, ported from the production server into `app/`. A
 `app/routes/game.py` to correct a stale upload), `_market_page`, `_market_expire`,
 `PublicId`/`RealId` (hide real ids in the market), `_ttrade_refused` (device check).
 
+**Admin control panel** (`app/routes/admin/market.py`, template `admin_market.html`,
+nav link in `admin_base.html`): `GET /admin/market` lists listings (filter by
+`?status=`), escrow, open offers, trade-coin balances and the trade log, with
+`POST /admin/market/listing/<id>/{remove,delete}`, `/admin/market/offer/<id>/cancel`,
+`/admin/market/escrow/<id>/delete`, `/admin/market/balance/set`, `/admin/market/expire`
+(forced expiry sweep) and `/admin/market/purge` (drop closed listings + orphan escrow).
+
+### Redeem codes
+
+`POST /multiplayer/redeemcodeDW/` (`app/routes/multiplayer.py`) mirrors the
+production server exactly: it reads the `redeemcode` form field (falls back to
+`code`) and the `Player-Id` header, and answers the production JSON shape
+`{"success", "reason", "data", "error"}` plus, on success, `rewards`, `deliver`
+and `fields` (`level1`/`level2`/`gs`/`gf`/`seq`/`reason`). `reason` is one of
+`OK`/`EMPTY`/`INVALID`/`USED`/`BUSY`; refusals carry the legacy `error` text
+("invalid redeemcode" / "maximum reword count reached"). Rewards are still
+applied to the player's save directly.
+
 ## Anti-Cheat / Security
 
 1. **Leader level validation** — Auto-bans if fresh account sets level > 5 or level jumps by > 10

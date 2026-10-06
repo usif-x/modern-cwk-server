@@ -1,0 +1,308 @@
+{% extends "admin_base.html" %}
+{% block title %}Trade Market - CWK Admin{% endblock %}
+{% block breadcrumb %}Trade Market{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Trade Market</h1>
+        <span class="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground">
+          {{ stats.total_listings }} listings
+        </span>
+      </div>
+      <p class="text-sm text-muted-foreground mt-1">Inspect and control player-to-player trades (listings, escrow, offers, trade coins)</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <form method="post" action="/admin/market/expire">
+        <button type="submit" class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent transition-colors">
+          <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+          <span>Run Expiry Sweep</span>
+        </button>
+      </form>
+      <form method="post" action="/admin/market/purge" data-confirm="Delete all closed listings and orphan escrows? This cannot be undone.">
+        <button type="submit" class="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 text-destructive px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-destructive/20 transition-colors">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          <span>Purge Closed</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div class="rounded-xl border border-border bg-card p-4 shadow-xs">
+      <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Active</p>
+      <p class="text-2xl font-bold text-foreground mt-1">{{ stats.active }}</p>
+    </div>
+    <div class="rounded-xl border border-border bg-card p-4 shadow-xs">
+      <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sold</p>
+      <p class="text-2xl font-bold text-foreground mt-1">{{ stats.sold }}</p>
+    </div>
+    <div class="rounded-xl border border-border bg-card p-4 shadow-xs">
+      <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Escrow</p>
+      <p class="text-2xl font-bold text-foreground mt-1">{{ stats.escrows }}</p>
+    </div>
+    <div class="rounded-xl border border-border bg-card p-4 shadow-xs">
+      <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Open Offers</p>
+      <p class="text-2xl font-bold text-foreground mt-1">{{ stats.offers }}</p>
+    </div>
+    <div class="rounded-xl border border-border bg-card p-4 shadow-xs">
+      <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Trade Coins</p>
+      <p class="text-2xl font-bold text-foreground mt-1">{{ stats.coins_in_circulation }}</p>
+    </div>
+    <div class="rounded-xl border border-border bg-card p-4 shadow-xs">
+      <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pending Deltas</p>
+      <p class="text-2xl font-bold text-foreground mt-1">{{ stats.pending_deltas }}</p>
+    </div>
+  </div>
+
+  <!-- Status filter -->
+  <div class="flex flex-wrap items-center gap-1.5 p-1 rounded-lg border border-border bg-muted/40 w-fit">
+    {% for s in ['active', 'sold', 'cancelled', 'expired', 'removed', 'stuck', 'all'] %}
+    <a href="/admin/market?status={{ s }}"
+       class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium capitalize transition-colors {% if status == s %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
+      {{ s }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Listings -->
+  <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden">
+    <div class="p-4 border-b border-border flex items-center justify-between">
+      <h2 class="text-base font-semibold tracking-tight capitalize">{{ status }} Listings</h2>
+      <span class="text-xs text-muted-foreground">{{ listings|length }} shown &middot; max {{ market_cap }} per seller &middot; expire {{ expire_days }}d</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full caption-bottom text-sm">
+        <thead class="[&_tr]:border-b border-border bg-muted/40">
+          <tr class="text-left text-xs font-medium text-muted-foreground">
+            <th class="h-11 px-4 font-medium">#</th>
+            <th class="h-11 px-4 font-medium">Creature</th>
+            <th class="h-11 px-4 font-medium">Seller</th>
+            <th class="h-11 px-4 font-medium">Price</th>
+            <th class="h-11 px-4 font-medium">Status</th>
+            <th class="h-11 px-4 font-medium">Created</th>
+            <th class="h-11 px-4 text-right font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+          {% for l in listings %}
+          <tr class="hover:bg-muted/40 transition-colors">
+            <td class="px-4 py-3 font-mono text-xs">{{ l.id }}</td>
+            <td class="px-4 py-3">
+              <div class="flex flex-col">
+                <span class="font-medium text-foreground">{{ l.creature_name or l.creature_id or '—' }}</span>
+                <span class="font-mono text-[11px] text-muted-foreground">
+                  {{ l.creature_id }}{% if l.star_rating %} &middot; {{ l.star_rating }}★{% endif %}
+                  {% if l.escrow_missing %}<span class="text-destructive"> &middot; escrow missing</span>{% endif %}
+                </span>
+              </div>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex flex-col">
+                <a href="/admin/players/{{ l.seller_id }}" class="font-medium text-foreground hover:underline">{{ l.seller_name }}</a>
+                <span class="font-mono text-[11px] text-muted-foreground truncate max-w-[180px]">{{ l.seller_id }}</span>
+              </div>
+            </td>
+            <td class="px-4 py-3 font-mono text-xs">{{ l.price }}</td>
+            <td class="px-4 py-3">
+              {% set cls = {'active':'text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10','sold':'text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/10','stuck':'text-destructive border-destructive/30 bg-destructive/10'} %}
+              <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize {{ cls.get(l.status, 'text-muted-foreground border-border bg-muted/50') }}">
+                {{ l.status }}
+              </span>
+            </td>
+            <td class="px-4 py-3 font-mono text-[11px] text-muted-foreground whitespace-nowrap">{{ l.created|fmt_ts(utc=True) }}</td>
+            <td class="px-4 py-3 text-right whitespace-nowrap">
+              {% if l.status == 'active' %}
+              <form method="post" action="/admin/market/listing/{{ l.id }}/remove" class="inline" data-confirm="Return listing {{ l.id }} to its seller and close it?">
+                <button type="submit" class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-accent transition-colors">
+                  <i data-lucide="undo-2" class="w-3 h-3"></i> Return
+                </button>
+              </form>
+              {% endif %}
+              <form method="post" action="/admin/market/listing/{{ l.id }}/delete" class="inline" data-confirm="DANGER: delete listing {{ l.id }} AND destroy its escrowed creature? The creature is lost.">
+                <button type="submit" class="inline-flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 text-destructive px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-destructive/20 transition-colors">
+                  <i data-lucide="trash-2" class="w-3 h-3"></i> Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not listings %}
+          <tr><td colspan="7" class="px-4 py-12 text-center text-muted-foreground text-sm">No {{ status }} listings.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Open Offers -->
+  <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden">
+    <div class="p-4 border-b border-border flex items-center justify-between">
+      <h2 class="text-base font-semibold tracking-tight">Open Offers</h2>
+      <span class="text-xs text-muted-foreground">{{ offers|length }} pending</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full caption-bottom text-sm">
+        <thead class="[&_tr]:border-b border-border bg-muted/40">
+          <tr class="text-left text-xs font-medium text-muted-foreground">
+            <th class="h-11 px-4 font-medium">#</th>
+            <th class="h-11 px-4 font-medium">From</th>
+            <th class="h-11 px-4 font-medium">To</th>
+            <th class="h-11 px-4 font-medium">They Give</th>
+            <th class="h-11 px-4 font-medium">They Want</th>
+            <th class="h-11 px-4 font-medium">Created</th>
+            <th class="h-11 px-4 text-right font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+          {% for o in offers %}
+          <tr class="hover:bg-muted/40 transition-colors">
+            <td class="px-4 py-3 font-mono text-xs">{{ o.id }}</td>
+            <td class="px-4 py-3"><a href="/admin/players/{{ o.from_id }}" class="text-foreground hover:underline">{{ o.from_name }}</a></td>
+            <td class="px-4 py-3"><a href="/admin/players/{{ o.to_id }}" class="text-foreground hover:underline">{{ o.to_name }}</a></td>
+            <td class="px-4 py-3 font-mono text-[11px] text-muted-foreground">{{ o.escrow_ids|length }} creature(s) + {{ o.coins }}c</td>
+            <td class="px-4 py-3 font-mono text-[11px] text-muted-foreground">{{ o.want_uids|length }} creature(s) + {{ o.want_coins }}c</td>
+            <td class="px-4 py-3 font-mono text-[11px] text-muted-foreground whitespace-nowrap">{{ o.created|fmt_ts(utc=True) }}</td>
+            <td class="px-4 py-3 text-right">
+              <form method="post" action="/admin/market/offer/{{ o.id }}/cancel" class="inline" data-confirm="Cancel offer {{ o.id }} and return its escrow to the sender?">
+                <button type="submit" class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-accent transition-colors">
+                  <i data-lucide="x" class="w-3 h-3"></i> Cancel
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not offers %}
+          <tr><td colspan="7" class="px-4 py-10 text-center text-muted-foreground text-sm">No open offers.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Escrow -->
+  <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden">
+    <div class="p-4 border-b border-border flex items-center justify-between">
+      <h2 class="text-base font-semibold tracking-tight">Escrow Items</h2>
+      <span class="text-xs text-muted-foreground">{{ escrows|length }} shown &middot; orphaned rows are safe to delete</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full caption-bottom text-sm">
+        <thead class="[&_tr]:border-b border-border bg-muted/40">
+          <tr class="text-left text-xs font-medium text-muted-foreground">
+            <th class="h-11 px-4 font-medium">#</th>
+            <th class="h-11 px-4 font-medium">Owner</th>
+            <th class="h-11 px-4 font-medium">Creature</th>
+            <th class="h-11 px-4 font-medium">Kind</th>
+            <th class="h-11 px-4 font-medium">Created</th>
+            <th class="h-11 px-4 text-right font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+          {% for e in escrows %}
+          <tr class="hover:bg-muted/40 transition-colors">
+            <td class="px-4 py-3 font-mono text-xs">{{ e.id }}</td>
+            <td class="px-4 py-3">
+              <a href="/admin/players/{{ e.player_id }}" class="font-mono text-[11px] text-foreground hover:underline">{{ e.player_id }}</a>
+            </td>
+            <td class="px-4 py-3 font-mono text-[11px] text-muted-foreground">{{ e.creature_id or '—' }}{% if e.star_rating %} &middot; {{ e.star_rating }}★{% endif %}</td>
+            <td class="px-4 py-3 text-xs">{{ e.kind }}</td>
+            <td class="px-4 py-3 font-mono text-[11px] text-muted-foreground whitespace-nowrap">{{ e.created|fmt_ts(utc=True) }}</td>
+            <td class="px-4 py-3 text-right">
+              {% if e.orphan %}
+              <form method="post" action="/admin/market/escrow/{{ e.id }}/delete" class="inline" data-confirm="Delete orphan escrow {{ e.id }}?">
+                <button type="submit" class="inline-flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 text-destructive px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-destructive/20 transition-colors">
+                  <i data-lucide="trash-2" class="w-3 h-3"></i> Delete
+                </button>
+              </form>
+              {% else %}
+              <span class="text-[11px] text-muted-foreground">in use</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not escrows %}
+          <tr><td colspan="6" class="px-4 py-10 text-center text-muted-foreground text-sm">No escrow items.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Trade coin balances -->
+  <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden">
+    <div class="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <h2 class="text-base font-semibold tracking-tight">Trade Coin Balances</h2>
+      <form method="post" action="/admin/market/balance/set" class="flex items-center gap-2">
+        <input type="text" name="player_id" placeholder="Player UUID" required
+               class="h-8 w-56 rounded-md border border-input bg-background px-2.5 text-xs font-mono shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+        <input type="number" name="coins" min="0" value="0" required
+               class="h-8 w-24 rounded-md border border-input bg-background px-2.5 text-xs font-mono shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+        <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-3 h-8 text-xs font-medium shadow-xs hover:bg-primary/90 transition-colors">
+          <i data-lucide="save" class="w-3.5 h-3.5"></i> Set
+        </button>
+      </form>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full caption-bottom text-sm">
+        <thead class="[&_tr]:border-b border-border bg-muted/40">
+          <tr class="text-left text-xs font-medium text-muted-foreground">
+            <th class="h-11 px-4 font-medium">Player</th>
+            <th class="h-11 px-4 font-medium">Trade Coins</th>
+            <th class="h-11 px-4 font-medium">Updated</th>
+          </tr>
+        </thead>
+        <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+          {% for b in balances %}
+          <tr class="hover:bg-muted/40 transition-colors">
+            <td class="px-4 py-3"><a href="/admin/players/{{ b.player_id }}" class="font-mono text-[11px] text-foreground hover:underline">{{ b.player_id }}</a></td>
+            <td class="px-4 py-3 font-mono text-xs font-semibold">{{ b.coins }}</td>
+            <td class="px-4 py-3 font-mono text-[11px] text-muted-foreground whitespace-nowrap">{{ b.updated|fmt_ts(utc=True) }}</td>
+          </tr>
+          {% endfor %}
+          {% if not balances %}
+          <tr><td colspan="3" class="px-4 py-10 text-center text-muted-foreground text-sm">No trade coin balances yet.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Trade log -->
+  <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs overflow-hidden">
+    <div class="p-4 border-b border-border">
+      <h2 class="text-base font-semibold tracking-tight">Recent Trade Log</h2>
+    </div>
+    <div class="overflow-x-auto max-h-[420px] overflow-y-auto">
+      <table class="w-full caption-bottom text-sm">
+        <thead class="[&_tr]:border-b border-border bg-muted/40 sticky top-0">
+          <tr class="text-left text-xs font-medium text-muted-foreground">
+            <th class="h-10 px-4 font-medium">Time</th>
+            <th class="h-10 px-4 font-medium">Action</th>
+            <th class="h-10 px-4 font-medium">Actor</th>
+            <th class="h-10 px-4 font-medium">Detail</th>
+          </tr>
+        </thead>
+        <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
+          {% for lg in logs %}
+          <tr class="hover:bg-muted/40 transition-colors">
+            <td class="px-4 py-2 font-mono text-[11px] text-muted-foreground whitespace-nowrap">{{ lg.ts|fmt_ts(utc=True) }}</td>
+            <td class="px-4 py-2 text-xs font-medium">{{ lg.action }}</td>
+            <td class="px-4 py-2 font-mono text-[11px] text-muted-foreground">{{ lg.actor or '—' }}</td>
+            <td class="px-4 py-2 font-mono text-[11px] text-muted-foreground">{{ lg.detail or '' }}</td>
+          </tr>
+          {% endfor %}
+          {% if not logs %}
+          <tr><td colspan="4" class="px-4 py-10 text-center text-muted-foreground text-sm">No trade activity yet.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

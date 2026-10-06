@@ -443,6 +443,13 @@
               Tools
             </div>
             <a
+              href="/admin/market"
+              class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/market') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
+            >
+              <i data-lucide="store" class="w-4 h-4"></i>
+              <span>Trade Market</span>
+            </a>
+            <a
               href="/admin/redeemcodes"
               class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors {% if request.path.startswith('/admin/redeemcodes') %}bg-secondary text-secondary-foreground font-semibold{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %}"
             >
