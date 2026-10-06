@@ -167,3 +167,31 @@ def LeaderboardFetchEntries():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@analytics_bp.route("/dw_leaderboard/placeme/", methods=["POST"])
+def LeaderboardPlaceMe():
+    return jsonify({"success": True}), 200
+
+
+@analytics_bp.route("/dw_leaderboard/registerresult/", methods=["POST"])
+def LeaderboardRegisterResult():
+    return jsonify({"success": True, "data": 1500}), 200
+
+
+@analytics_bp.route("/dw_leaderboard/hasended/", methods=["POST"])
+def LeaderboardHasEnded():
+    return jsonify({"success": True, "data": 0}), 200
+
+
+@analytics_bp.route("/multiplayer/active_leaderboard/rank/<player_id>", methods=["GET"])
+def MultiplayerActiveLeaderboardRank(player_id):
+    try:
+        rank = "0"
+        for row in _CachedLeaderboard():
+            if row.get("playerid") == player_id:
+                rank = str(row.get("ranking", 0))
+                break
+        return jsonify({"success": True, "data": {"rank": rank}})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500

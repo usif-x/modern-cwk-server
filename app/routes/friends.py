@@ -314,3 +314,41 @@ def PersistFriendsInformationDW():
             data.append(allyinfo)
 
     return jsonify(data)
+
+
+@friends_bp.route("/persist/friends_update_myinfoDW/", methods=["POST"])
+def PersistFriendsUpdateMyInfo():
+    """Reset the caller's accumulated help counts after they collect the assist
+    (Wishbone) reward. The client reads helpcount/anonymoushelpcount fresh from
+    the server, shows the reward, then calls this to clear them (resethelp /
+    resetahelp). Without it the reward re-fired on every login."""
+    clientData = parse_qs(request.get_data().decode("utf-8"))
+    clientData = {k: v[0] if len(v) == 1 else v for k, v in clientData.items()}
+
+    player_id = (
+        clientData.get("player_id")
+        or clientData.get("userid")
+        or clientData.get("user_id")
+        or clientData.get("id")
+    )
+    if not player_id:
+        return jsonify({"success": True})
+
+    db_user = Player.query.filter_by(username=player_id).first()
+    if db_user is None:
+        return make_response("No player found!", 404)
+
+    def _truthy(v):
+        return str(v).strip().lower() in ("1", "true", "yes", "on")
+
+    changed = False
+    if _truthy(clientData.get("resethelp")):
+        db_user.helpcount = 0
+        changed = True
+    if _truthy(clientData.get("resetahelp")):
+        db_user.anonymoushelpcount = 0
+        changed = True
+    if changed:
+        db.session.commit()
+
+    return jsonify({"success": True})
