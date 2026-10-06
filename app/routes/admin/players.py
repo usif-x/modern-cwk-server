@@ -170,6 +170,7 @@ def AdminPlayer(player):
             BannedLeaders=set(),
             HelperCreature=None,
             invalid_creature_count=0,
+            gift_catalog=GetGiftCatalog(),
             rank_xp_json=json.dumps(GetRankXPTable()),
         )
 
@@ -381,6 +382,7 @@ def AdminPlayer(player):
         BannedLeaders=banned_leader_set,
         HelperCreature=helper_creature,
         invalid_creature_count=invalid_creature_count,
+        gift_catalog=GetGiftCatalog(),
         rank_xp_json=json.dumps(GetRankXPTable()),
     )
 
@@ -583,6 +585,101 @@ def AdminPlayerEdit(player):
 
     Log("admin", current_user.username + " edited resources for player: " + player)
     return redirect("/admin/players/" + player)
+
+
+@admin_bp.route("/admin/players/<player>/gift", methods=["POST"])
+@login_required
+def AdminPlayerGift(player):
+    if not isAdmin(current_user):
+        return abort(404)
+
+    db_player = Player.query.filter_by(username=player).first()
+    if db_player is None:
+        return make_response("No player found!", 404)
+
+    game = DecryptGameData(db_player.game)
+    if game is None:
+        return make_response("No game data found!", 400)
+
+    gift_type = request.form.get("gift_type", "").strip()
+    gift_id = request.form.get("gift_id", "").strip()
+    gift_amount = safe_int(request.form.get("gift_amount", 1), 1)
+    gift_title = request.form.get("gift_title", "").strip()
+    gift_body = request.form.get("gift_body", "").strip()
+
+    if gift_type == "Creature" and IsTutorialOnlyCreature(gift_id):
+        return make_response(
+            "This is a tutorial-only creature and cannot be gifted.", 400
+        )
+
+    # Mailable rewards ride the client's db_NewsMail blueprint (per PlayerID).
+    if gift_type in GIFT_MAIL_TYPES:
+        ok, result = AddNewsMailGift(
+            player, gift_type, gift_id, gift_amount, gift_title, gift_body
+        )
+        if not ok:
+            return make_response(result, 400)
+        Log(
+            "admin",
+            current_user.username
+            + f" mailed a {gift_type} gift ({gift_id or 'currency'}) to player: "
+            + player,
+        )
+        return redirect("/admin/players/" + player)
+
+    # Heroes / Auguments / Evolution Shards cannot travel by mail, so they are
+    # granted directly and a reward-less notice is left in the post office.
+    if gift_type in GIFT_DIRECT_TYPES:
+        if gift_type == "Leader":
+            if not gift_id:
+                return make_response("A hero ID is required!", 400)
+            leaders = game.get("Leaders", [])
+            if not isinstance(leaders, list):
+                leaders = []
+            by_id = {l.get("ID"): l for l in leaders if isinstance(l, dict)}
+            base_id = GetLeaderSkinBase(gift_id)
+            if base_id:
+                base_entry = by_id.get(base_id)
+                if base_entry is None:
+                    base_entry = {"ID": base_id, "Skin": base_id, "OwnedSkins": []}
+                    leaders.append(base_entry)
+                owned = base_entry.get("OwnedSkins")
+                if not isinstance(owned, list):
+                    owned = []
+                    base_entry["OwnedSkins"] = owned
+                if gift_id not in owned:
+                    owned.append(gift_id)
+                game["Leaders"] = leaders
+                desc = f"hero skin {gift_id}"
+            elif gift_id not in by_id:
+                leaders.append({"ID": gift_id, "Skin": gift_id, "OwnedSkins": []})
+                game["Leaders"] = leaders
+                desc = f"hero {gift_id}"
+            else:
+                desc = f"hero {gift_id} (already owned)"
+        else:
+            ok, desc = ApplyRedeemReward(game, gift_type, gift_amount, gift_id)
+            if not ok:
+                return make_response(desc, 400)
+
+        StripLegacyAdminMails(game)
+        db_player.game = EncryptGameData(game, player)
+        db.session.commit()
+
+        AddNewsMailNotice(
+            player,
+            gift_title,
+            gift_body or f"An admin gift was added to your account: {desc}.",
+        )
+        Log(
+            "admin",
+            current_user.username
+            + f" granted a {gift_type} gift ({gift_id or 'currency'}) to player: "
+            + player,
+        )
+        return redirect("/admin/players/" + player)
+
+    return make_response("Unsupported reward type!", 400)
 
 
 @admin_bp.route("/admin/players/<player>/add_creature", methods=["POST"])

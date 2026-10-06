@@ -9,7 +9,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
     class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xs"
   >
     <div
-      class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6"
+      class="flex flex-col gap-6"
     >
       <div class="flex items-start sm:items-center gap-4">
         <div
@@ -54,109 +54,118 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
       </div>
 
       <!-- Header Action Controls & Tools -->
-      <div class="flex flex-wrap items-center gap-2">
+      <div
+        class="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2"
+      >
         <!-- Max Resources Shortcut Preset -->
         <form
           action="/admin/players/{{ player.username }}/max_resources"
           method="POST"
-          class="inline"
+          class="contents"
         >
           <button
             type="submit"
-            class="inline-flex items-center gap-1.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-amber-500/25 transition-colors"
+            class="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 px-2 text-xs sm:text-sm font-medium text-center shadow-xs hover:bg-amber-500/25 transition-colors"
             onclick="
               return confirm(
                 'Boost this account with Max Currencies (9,999,999 Coins, 999,999 Gems, 99,999 Wishbones, Level 50)?',
               );
             "
           >
-            <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
-            <span>Max Resources</span>
+            <i
+              data-lucide="sparkles"
+              class="w-4 h-4 shrink-0 text-amber-500"
+            ></i>
+            <span class="truncate">Max Resources</span>
           </button>
         </form>
 
         <!-- Export Save JSON -->
         <a
           href="/admin/players/{{ player.username }}/export_save"
-          class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+          class="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-input bg-background px-2 text-xs sm:text-sm font-medium text-center shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
           title="Download Decrypted JSON Save"
         >
-          <i data-lucide="download" class="w-4 h-4"></i>
-          <span>Export JSON</span>
+          <i data-lucide="download" class="w-4 h-4 shrink-0"></i>
+          <span class="truncate">Export JSON</span>
         </a>
 
         <!-- Toggle Import Save Dialog -->
         <button
           type="button"
-          onclick="
-            document.getElementById('importSaveCard').classList.toggle('hidden')
-          "
-          class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+          data-action-target="importSaveCard"
+          class="action-toggle inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-input bg-background px-2 text-xs sm:text-sm font-medium text-center shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
         >
-          <i data-lucide="upload" class="w-4 h-4"></i>
-          <span>Import JSON</span>
+          <i data-lucide="upload" class="w-4 h-4 shrink-0"></i>
+          <span class="truncate">Import JSON</span>
         </button>
 
         <!-- Toggle Transfer Progress Dialog -->
         <button
           type="button"
-          onclick="
-            document.getElementById('transferCard').classList.toggle('hidden')
-          "
-          class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+          data-action-target="transferCard"
+          class="action-toggle inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-input bg-background px-2 text-xs sm:text-sm font-medium text-center shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
         >
-          <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
-          <span>Transfer Progress</span>
+          <i data-lucide="arrow-right-left" class="w-4 h-4 shrink-0"></i>
+          <span class="truncate">Transfer Progress</span>
+        </button>
+
+        <!-- Toggle Gift / Reward Dialog -->
+        <button
+          type="button"
+          data-action-target="giftCard"
+          class="action-toggle inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-400 border border-fuchsia-500/30 px-2 text-xs sm:text-sm font-medium text-center shadow-xs hover:bg-fuchsia-500/25 transition-colors"
+        >
+          <i data-lucide="gift" class="w-4 h-4 shrink-0"></i>
+          <span class="truncate">Gift / Reward</span>
         </button>
 
         <!-- Ban / Unban -->
         {% if is_banned %}
         <a
           href="/admin/players/{{ player.username }}/unban"
-          class="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 text-white px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-emerald-700 transition-colors"
+          class="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-emerald-600 text-white px-2 text-xs sm:text-sm font-medium text-center shadow-xs hover:bg-emerald-700 transition-colors"
         >
-          <i data-lucide="shield-check" class="w-4 h-4"></i>
-          <span>Unban</span>
+          <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
+          <span class="truncate">Unban</span>
         </a>
         {% else %}
         <button
           type="button"
-          onclick="
-            document.getElementById('banCard').classList.toggle('hidden')
-          "
-          class="inline-flex items-center gap-1.5 rounded-md bg-destructive text-destructive-foreground px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-destructive/90 transition-colors"
+          data-action-target="banCard"
+          class="action-toggle inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground px-2 text-xs sm:text-sm font-medium text-center shadow-xs hover:bg-destructive/90 transition-colors"
         >
-          <i data-lucide="shield-alert" class="w-4 h-4"></i>
-          <span>Ban</span>
+          <i data-lucide="shield-alert" class="w-4 h-4 shrink-0"></i>
+          <span class="truncate">Ban</span>
         </button>
         {% endif %}
 
         <!-- Inspect Raw Save -->
         <a
           href="/admin/players/{{ player.username }}/game"
-          class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+          class="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-input bg-background px-2 text-xs sm:text-sm font-medium text-center shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
         >
-          <i data-lucide="database" class="w-4 h-4"></i>
-          <span>Raw Save</span>
+          <i data-lucide="database" class="w-4 h-4 shrink-0"></i>
+          <span class="truncate">Raw Save</span>
         </a>
 
         <!-- Reset Save Data -->
         <form
           action="/admin/players/{{ player.username }}/reset_save"
           method="POST"
-          class="inline"
+          class="contents"
         >
           <button
             type="submit"
-            class="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 text-destructive px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-destructive/20 transition-colors"
+            class="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 text-destructive px-2 text-xs sm:text-sm font-medium text-center shadow-xs hover:bg-destructive/20 transition-colors"
             onclick="
               return confirm(
                 'WARNING: Are you sure you want to completely RESET/WIPE this player save data back to starter values?',
               );
             "
           >
-            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-            <span>Reset Save</span>
+            <i data-lucide="rotate-ccw" class="w-4 h-4 shrink-0"></i>
+            <span class="truncate">Reset Save</span>
           </button>
         </form>
 
@@ -164,19 +173,19 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
         <form
           action="/admin/players/{{ player.username }}/delete"
           method="POST"
-          class="inline"
+          class="contents"
         >
           <button
             type="submit"
-            class="inline-flex items-center gap-1.5 rounded-md bg-destructive text-destructive-foreground px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-destructive/90 transition-colors"
+            class="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground px-2 text-xs sm:text-sm font-medium text-center shadow-xs hover:bg-destructive/90 transition-colors"
             onclick="
               return confirm(
                 'DANGER: Permanently delete this player account from database?',
               );
             "
           >
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-            <span>Delete Player</span>
+            <i data-lucide="trash-2" class="w-4 h-4 shrink-0"></i>
+            <span class="truncate">Delete Player</span>
           </button>
         </form>
       </div>
@@ -259,6 +268,133 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
             <i data-lucide="arrow-right-left" class="w-3.5 h-3.5"></i>
             <span>Transfer Progress</span>
           </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Gift / Reward Modal / Box (Hidden by default) -->
+    <div id="giftCard" class="hidden mt-6 pt-6 border-t border-border">
+      <div
+        class="p-5 rounded-lg border border-fuchsia-500/30 bg-fuchsia-500/5 max-w-3xl"
+      >
+        <h3 class="text-sm font-semibold text-foreground mb-1">
+          Send a Gift to the Post Office
+        </h3>
+        <p class="text-xs text-muted-foreground mb-4">
+          Currencies, creatures and XP materials are delivered as a claimable
+          mail in the player's post office. Heroes and Auguments can't travel by
+          mail, so they are granted instantly with a mailbox notice. The player
+          must restart the game to see a new mail.
+        </p>
+        <form
+          action="/admin/players/{{ player.username }}/gift"
+          method="POST"
+          id="giftForm"
+          class="space-y-4"
+        >
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div class="sm:col-span-4 space-y-1.5">
+              <label class="text-xs font-medium text-foreground"
+                >Reward Type</label
+              >
+              <select
+                name="gift_type"
+                id="giftType"
+                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <optgroup label="Currencies">
+                  <option value="HardCurrency">Gems (Hard Currency)</option>
+                  <option value="FreeHardCurrency">Free Gems</option>
+                  <option value="SoftCurrency">Coins (Soft Currency)</option>
+                  <option value="PvpCurrency">Wishbones (PVP)</option>
+                  <option value="EvolutionShards">Evolution Shards</option>
+                </optgroup>
+                <optgroup label="Game Items">
+                  <option value="Creature">Creature</option>
+                  <option value="ActionCard">Auguments</option>
+                  <option value="Leader">Hero / Leader / Skin</option>
+                  <option value="XPMaterials">XP Material</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="sm:col-span-5 space-y-1.5" id="giftItemWrap">
+              <label
+                class="text-xs font-medium text-foreground"
+                id="giftItemLabel"
+                >Select Creature</label
+              >
+              <input
+                type="text"
+                name="gift_id"
+                id="giftItem"
+                list="gift_creatures_list"
+                placeholder="Search creature (e.g. CornBall_Base)..."
+                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+            </div>
+            <div class="sm:col-span-3 space-y-1.5">
+              <label
+                class="text-xs font-medium text-foreground"
+                id="giftAmountLabel"
+                >Star Rating (1-5)</label
+              >
+              <input
+                type="number"
+                name="gift_amount"
+                id="giftAmount"
+                min="1"
+                max="5"
+                value="5"
+                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+            </div>
+          </div>
+          <p
+            id="giftDeliveryHint"
+            class="text-[11px] text-muted-foreground flex items-center gap-1"
+          >
+            <i data-lucide="mail" class="w-3.5 h-3.5"></i>
+            <span>Delivered to the post office as a claimable mail.</span>
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="space-y-1.5">
+              <label class="text-xs font-medium text-foreground"
+                >Mail Title (optional)</label
+              >
+              <input
+                type="text"
+                name="gift_title"
+                maxlength="80"
+                placeholder="A Gift For You"
+                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-medium text-foreground"
+                >Mail Message (optional)</label
+              >
+              <input
+                type="text"
+                name="gift_body"
+                maxlength="200"
+                placeholder="Tap to claim your reward!"
+                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+            </div>
+          </div>
+          <div class="pt-1 flex flex-wrap items-center justify-between gap-2">
+            <p class="text-[11px] text-muted-foreground flex items-center gap-1">
+              <i data-lucide="info" class="w-3.5 h-3.5"></i>
+              Delivered to the player's post office as an unclaimed mail.
+            </p>
+            <button
+              type="submit"
+              class="inline-flex items-center justify-center gap-1.5 rounded-md bg-fuchsia-600 text-white px-4 py-2 text-sm font-medium shadow-xs hover:bg-fuchsia-700 transition-colors"
+            >
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>Send Gift</span>
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -2054,7 +2190,126 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
   </div>
 </div>
 
+<datalist id="gift_creatures_list">
+  {% for c in (gift_catalog.creatures if gift_catalog else []) %}
+  <option value="{{ c.id }}">{{ c.name }}</option>
+  {% endfor %}
+</datalist>
+<datalist id="gift_cards_list">
+  {% for c in (gift_catalog.cards if gift_catalog else []) %}
+  <option value="{{ c.id }}">{{ c.name }}</option>
+  {% endfor %}
+</datalist>
+<datalist id="gift_leaders_list">
+  {% for l in (gift_catalog.leaders if gift_catalog else []) %}
+  <option value="{{ l.id }}">{{ l.name }}</option>
+  {% endfor %}
+</datalist>
+<datalist id="gift_xpmaterials_list">
+  {% for m in (gift_catalog.xpmaterials if gift_catalog else []) %}
+  <option value="{{ m.id }}">{{ m.name }}</option>
+  {% endfor %}
+</datalist>
+
 <script>
+  // ==================== GIFT / REWARD COMPOSER ====================
+  (function () {
+      const giftType = document.getElementById('giftType');
+      if (!giftType) return;
+      const itemWrap = document.getElementById('giftItemWrap');
+      const item = document.getElementById('giftItem');
+      const itemLabel = document.getElementById('giftItemLabel');
+      const amount = document.getElementById('giftAmount');
+      const amountLabel = document.getElementById('giftAmountLabel');
+      const hint = document.getElementById('giftDeliveryHint');
+      const hintText = hint ? hint.querySelector('span') : null;
+
+      // delivery: 'mail' rides db_NewsMail (claimable); 'direct' is granted
+      // instantly because the client can't carry it in a mail.
+      const config = {
+          Creature: { list: 'gift_creatures_list', ph: 'Search creature (e.g. CornBall_Base)...', label: 'Select Creature', amount: 'Quantity (1)', max: 1, def: 1, delivery: 'mail' },
+          ActionCard: { list: 'gift_cards_list', ph: 'Search Auguments (e.g. CORN_0001)...', label: 'Select Auguments', amount: 'Copies', max: null, def: 1, delivery: 'direct' },
+          Leader: { list: 'gift_leaders_list', ph: 'Search hero / skin (e.g. Leader_Finn)...', label: 'Select Hero / Skin', amount: 'Count', max: 1, def: 1, delivery: 'direct' },
+          XPMaterials: { list: 'gift_xpmaterials_list', ph: 'Search XP material (e.g. CAKE_T3_Corn)...', label: 'Select XP Material', amount: 'Count', max: null, def: 1, delivery: 'mail' },
+      };
+
+      function setHint(delivery) {
+          if (!hintText) return;
+          if (delivery === 'direct') {
+              hintText.textContent = 'Granted instantly to the player (not mailable) with a mailbox notice.';
+          } else {
+              hintText.textContent = 'Delivered to the post office as a claimable mail.';
+          }
+      }
+
+      function applyGiftType() {
+          const cfg = config[giftType.value];
+          if (cfg) {
+              itemWrap.classList.remove('opacity-50', 'pointer-events-none');
+              item.disabled = false;
+              item.setAttribute('list', cfg.list);
+              item.placeholder = cfg.ph;
+              itemLabel.textContent = cfg.label;
+              amountLabel.textContent = cfg.amount;
+              amount.min = '1';
+              if (cfg.max) {
+                  amount.max = cfg.max;
+              } else {
+                  amount.removeAttribute('max');
+              }
+              item.required = true;
+              amount.value = cfg.def;
+              setHint(cfg.delivery);
+          } else {
+              itemWrap.classList.add('opacity-50', 'pointer-events-none');
+              item.disabled = true;
+              item.value = '';
+              item.removeAttribute('list');
+              item.placeholder = 'N/A for currency';
+              itemLabel.textContent = 'Item Identifier';
+              amountLabel.textContent = 'Amount';
+              amount.min = '1';
+              amount.removeAttribute('max');
+              item.required = false;
+              amount.value = '100';
+              setHint(giftType.value === 'EvolutionShards' ? 'direct' : 'mail');
+          }
+          if (window.lucide) lucide.createIcons();
+      }
+
+      giftType.addEventListener('change', applyGiftType);
+      applyGiftType();
+  })();
+
+  // ==================== PLAYER ACTION BUTTONS ====================
+  (function () {
+      const toggles = document.querySelectorAll('.action-toggle');
+      if (!toggles.length) return;
+      const activeClasses = ['ring-2', 'ring-primary', 'ring-offset-1', 'ring-offset-background'];
+
+      function clearAll() {
+          toggles.forEach(function (btn) {
+              const target = document.getElementById(btn.getAttribute('data-action-target'));
+              if (target) target.classList.add('hidden');
+              btn.classList.remove.apply(btn.classList, activeClasses);
+          });
+      }
+
+      toggles.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+              const target = document.getElementById(btn.getAttribute('data-action-target'));
+              if (!target) return;
+              const willShow = target.classList.contains('hidden');
+              clearAll();
+              if (willShow) {
+                  target.classList.remove('hidden');
+                  btn.classList.add.apply(btn.classList, activeClasses);
+                  target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
+          });
+      });
+  })();
+
   // ==================== TEMPORARY BAN ====================
   function toggleBanCustom() {
       const select = document.getElementById('banDuration');

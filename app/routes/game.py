@@ -10,9 +10,9 @@ from app.utils import (
     DecryptGameData, EncryptGameData, DiscordWebhookMessage, IPFromRequest,
     InvalidUsername, IsUserBanned, Log, PlayerLog, UpdateLastOnline,
     GetAllyInfo, GetPlayerWins, SystemBan, get_hash_string, safe_int, GetRankForXP,
-    GetPvpBanlist, ReadPersistText,
+    GetPvpBanlist, ReadPersistText, GetLiveStatus, StripLegacyAdminMails,
+    PruneDeliveredNewsMail,
 )
-
 game_bp = Blueprint('game_bp', __name__)
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -69,6 +69,12 @@ def BlueprintFile(filename):
         directory=os.path.join(ROOT_DIR, "data/persist/Blueprints"),
         path=filename,
     )
+
+
+@game_bp.route("/persist/static/live", methods=["GET"])
+@game_bp.route("/persist/static/live/", methods=["GET"])
+def PersistLive():
+    return jsonify(GetLiveStatus())
 
 
 @game_bp.route("/persist/static/monthly_store", methods=["GET"])
@@ -374,6 +380,12 @@ def PersistGame(player_id=None):
                     for leader in server_game.get("Leaders", []):
                         if leader.get("ID") not in client_leaders:
                             client_game.setdefault("Leaders", []).append(leader)
+
+                    # 4. Clean up old direct-to-save gift mails and drop the
+                    # db_NewsMail blueprint entries once they have been
+                    # delivered to this save (stops re-claiming after restart).
+                    StripLegacyAdminMails(client_game)
+                    PruneDeliveredNewsMail(client_game)
 
                 data = EncryptGameData(client_game, username)
 

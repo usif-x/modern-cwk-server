@@ -99,7 +99,31 @@ def AdminMaintenance():
     if not isAdmin(current_user):
         return abort(404)
 
-    return render_template("admin_maintenance.html", maintenance=maintenance)
+    live_status = LoadLiveStatus()
+    return render_template(
+        "admin_maintenance.html",
+        maintenance=maintenance,
+        live_status_json=json.dumps(live_status, indent=2, ensure_ascii=False),
+    )
+
+
+@admin_bp.route("/admin/maintenance/live", methods=["POST"])
+@login_required
+def AdminLiveStatusSave():
+    if not isAdmin(current_user):
+        return abort(404)
+
+    raw = request.form.get("live_status_json", "").strip()
+    try:
+        parsed = json.loads(raw)
+        if not isinstance(parsed, dict):
+            raise ValueError("Live status must be a JSON object")
+        SaveLiveStatus(parsed)
+        Log("admin", current_user.username + " updated the live status config")
+    except (ValueError, TypeError) as e:
+        Log("admin", f"Failed to save live status JSON: {e}")
+
+    return redirect("/admin/maintenance")
 
 
 @admin_bp.route("/admin/maintenance/<action>")

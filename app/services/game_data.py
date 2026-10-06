@@ -694,6 +694,243 @@ def ApplyRedeemReward(game, reward_type, reward_amount, reward_item):
     return False, f"Unsupported reward type: {reward_type}"
 
 
+# --- Admin mailbox gifts (Gift / Reward) ------------------------------------
+# The client builds its mailbox from data/persist/Blueprints/db_NewsMail.json,
+# NOT from the save's "Mails" array. An entry may carry a "PlayerID"; the client
+# only applies entries whose PlayerID matches the player (empty = everyone).
+# The client's MailItem only understands a subset of rewards (currencies, XP
+# materials and creatures). Other item types cannot travel through the post
+# office and are granted directly to the save instead.
+NEWS_MAIL_PATH = os.path.join(ROOT_DIR, "data/persist/Blueprints/db_NewsMail.json")
+
+NEWS_MAIL_LOCK = threading.Lock()
+
+# Composer reward type -> client GiftType (db_NewsMail "GiftType").
+GIFT_MAIL_TYPES = {
+    "SoftCurrency": "SoftCurrency",
+    "HardCurrency": "HardCurrency",
+    "FreeHardCurrency": "HardCurrency",
+    "PvpCurrency": "PvPCurrency",
+    "Creature": "Creature",
+    "XPMaterials": "XPMaterials",
+}
+
+# Reward types the post office cannot carry; granted straight to the save.
+GIFT_DIRECT_TYPES = ("EvolutionShards", "ActionCard", "Leader")
+
+# Mail types that need a GiftID.
+GIFT_MAIL_ITEM_TYPES = ("Creature", "XPMaterials")
+
+GIFT_REWARD_TYPES = tuple(GIFT_MAIL_TYPES) + GIFT_DIRECT_TYPES
+
+
+def LoadNewsMail():
+    """Return the db_NewsMail.json list (empty on failure)."""
+    try:
+        with open(NEWS_MAIL_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return data
+    except (OSError, ValueError) as e:
+        Log("admin", f"Failed to load db_NewsMail.json: {e}")
+    return []
+
+
+def _NextAdminMailId(mails):
+    # Timestamp-based so IDs are never reused after a delivered entry is pruned
+    # (the client dedupes mails by ID, so a reused ID would hide a new gift).
+    used = {
+        str(m.get("ID", ""))
+        for m in mails
+        if isinstance(m, dict)
+    }
+    base = f"ADMIN_{int(_time.time())}"
+    seq = 1
+    while f"{base}_{seq}" in used:
+        seq += 1
+    return f"{base}_{seq}"
+
+
+def AddNewsMailGift(player_id, gift_type, gift_id, amount, title, body, show_date=None):
+    """Append a per-player gift entry to db_NewsMail.json.
+
+    The client generates a mailbox item for it and grants the reward on claim.
+    Returns ``(True, mail_id)`` or ``(False, error_message)``.
+    """
+    gift_type = (gift_type or "").strip()
+    gift_id = (gift_id or "").strip()
+    client_type = GIFT_MAIL_TYPES.get(gift_type)
+    if client_type is None:
+        return False, (
+            f"{gift_type or 'This reward type'} cannot be delivered "
+            "through the post office"
+        )
+
+    try:
+        amount = int(amount)
+    except (TypeError, ValueError):
+        amount = 0
+
+    if client_type in GIFT_MAIL_ITEM_TYPES:
+        if not gift_id:
+            return False, "An item ID is required for this gift type"
+        amount = max(1, amount)
+    elif amount < 1:
+        return False, "Amount must be at least 1"
+
+    if not player_id:
+        return False, "A player ID is required"
+
+    if show_date is None:
+        show_date = datetime.now().strftime("%d/%m/%Y")
+
+    entry = {
+        "ID": "",
+        "Name": (title or "A Gift For You").strip(),
+        "BodyText": (
+            body or "You have received a gift. Tap to claim your reward!"
+        ).strip(),
+        "GiftType": client_type,
+        "Quantity": str(amount),
+        "showDate": show_date,
+        "PlayerID": player_id,
+    }
+    if client_type in GIFT_MAIL_ITEM_TYPES:
+        entry["GiftID"] = gift_id
+
+    with NEWS_MAIL_LOCK:
+        mails = LoadNewsMail()
+        entry["ID"] = _NextAdminMailId(mails)
+        mails.append(entry)
+        try:
+            with open(NEWS_MAIL_PATH, "w", encoding="utf-8") as f:
+                json.dump(mails, f, ensure_ascii=False, separators=(",", ":"))
+        except OSError as e:
+            return False, f"Could not write the mail blueprint: {e}"
+
+    return True, entry["ID"]
+
+
+def AddNewsMailNotice(player_id, title, body, show_date=None):
+    """Append a reward-less announcement mail (used for direct-granted items)."""
+    if show_date is None:
+        show_date = datetime.now().strftime("%d/%m/%Y")
+    entry = {
+        "ID": "",
+        "Name": (title or "A Gift For You").strip(),
+        "BodyText": (body or "An admin gift has been added to your account.").strip(),
+        "GiftType": "",
+        "Quantity": "0",
+        "showDate": show_date,
+        "PlayerID": player_id,
+    }
+    with NEWS_MAIL_LOCK:
+        mails = LoadNewsMail()
+        entry["ID"] = _NextAdminMailId(mails)
+        mails.append(entry)
+        try:
+            with open(NEWS_MAIL_PATH, "w", encoding="utf-8") as f:
+                json.dump(mails, f, ensure_ascii=False, separators=(",", ":"))
+        except OSError as e:
+            return False, f"Could not write the mail blueprint: {e}"
+    return True, entry["ID"]
+
+
+def StripLegacyAdminMails(game):
+    """Remove mails written by the old direct-to-save gift format.
+
+    The old format is the only one that stores a ``GiftType`` key in the save;
+    the client's own mails never do, so this keeps genuine mailbox items.
+    """
+    mails = game.get("Mails")
+    if isinstance(mails, list):
+        game["Mails"] = [
+            m
+            for m in mails
+            if not (isinstance(m, dict) and "GiftType" in m)
+        ]
+
+
+def PruneDeliveredNewsMail(game):
+    """Delete db_NewsMail gift entries once they have reached the player's save.
+
+    The client only creates a mail once and keeps it in the save (or marks its
+    ID in ``DeletedMail``), so as soon as an ``ADMIN_*`` entry is referenced by
+    the save the blueprint copy can go. This stops a claimed gift from being
+    re-created (and re-claimed) on the next login.
+    """
+    if not isinstance(game, dict):
+        return
+
+    delivered = set()
+    mails = game.get("Mails")
+    if isinstance(mails, list):
+        for m in mails:
+            if isinstance(m, dict):
+                mid = m.get("ID")
+                if isinstance(mid, str) and mid.startswith("ADMIN_"):
+                    delivered.add(mid)
+    deleted = game.get("DeletedMail")
+    if isinstance(deleted, list):
+        for d in deleted:
+            if isinstance(d, str) and d.startswith("ADMIN_"):
+                delivered.add(d)
+    if not delivered:
+        return
+
+    with NEWS_MAIL_LOCK:
+        mails = LoadNewsMail()
+        remaining = [
+            m
+            for m in mails
+            if not (isinstance(m, dict) and m.get("ID") in delivered)
+        ]
+        if len(remaining) != len(mails):
+            try:
+                with open(NEWS_MAIL_PATH, "w", encoding="utf-8") as f:
+                    json.dump(remaining, f, ensure_ascii=False, separators=(",", ":"))
+            except OSError as e:
+                Log("admin", f"Failed to prune db_NewsMail.json: {e}")
+
+
+def GetGiftCatalog():
+    """Return the item choices for the admin Gift / Reward composer."""
+    catalog = {"creatures": [], "cards": [], "leaders": [], "xpmaterials": []}
+
+    for cid, name in GetCreatureNameMap().items():
+        if not cid or IsTutorialOnlyCreature(cid):
+            continue
+        catalog["creatures"].append({"id": cid, "name": name or cid})
+
+    for cid, name in GetActionCardNameMap().items():
+        if cid:
+            catalog["cards"].append({"id": cid, "name": name or cid})
+
+    for lid, name in GetLeaderNameMap().items():
+        if lid:
+            catalog["leaders"].append({"id": lid, "name": name or lid})
+
+    try:
+        with open(
+            os.path.join(ROOT_DIR, "data/persist/Blueprints/db_XPMaterials.json"), "r"
+        ) as f:
+            for material in json.load(f):
+                mid = material.get("ID")
+                if mid:
+                    catalog["xpmaterials"].append(
+                        {
+                            "id": mid,
+                            "name": FormatBlueprintName(material.get("Name", mid)),
+                        }
+                    )
+    except Exception as e:
+        Log("admin", f"Failed to load db_XPMaterials.json: {e}")
+
+    for key in catalog:
+        catalog[key].sort(key=lambda item: item["name"].lower())
+    return catalog
+
+
 # --- Game save validation & repair -----------------------------------------
 # Known top-level fields a healthy Card Wars Kingdom save should contain, with
 # safe defaults. Used by Fix Save to fill in anything a broken save is missing.

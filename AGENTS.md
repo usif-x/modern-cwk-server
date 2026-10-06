@@ -200,6 +200,24 @@ Each `BattleHistory` entry records only the **opponent's** side of a PVP match:
 - An empty or missing `season` means a friendly match: PVP ban rules do not apply, so `DescribeBattleRecord` never flags those records
 - The admin player page expands each row to show that opponent loadout, highlights anything listed in `pvp_banlist.json`, and screens the player's current Teams the same way
 
+### Post Office (Mails)
+
+The in-game post office is the save's `Mails` array. An entry looks like:
+
+```json
+{"ID": "DAILY_05", "UniqueID": 1, "MailTitle": "Fried-Day!",
+ "MailBody": "...", "HardQuantity": 0, "SoftQuantity": 0, "PVPQuantity": 25,
+ "Repeatable": "Friday", "ShowDate": "01/01/0001 00:00:00",
+ "EndDate": "01/01/0001 00:00:00", "MailType": "Scheduled",
+ "Opened": 1, "Rewarded": 1}
+```
+
+- The save's `Mails` array is **client-owned**. The client rebuilds it from `data/persist/Blueprints/db_NewsMail.json` (`MailController.RetrieveMailsAndAllyInvites`): for every blueprint entry whose `PlayerID` matches the player (or is empty) and whose `showDate`/`endDate`/`Repeats` window is active, and that isn't already in `Mails` or `DeletedMail`, it creates a `MailItem`.
+- The client's `MailItem` only understands these rewards: `SoftCurrency`, `HardCurrency`, `PvPCurrency` (currency quantities), `XPMaterials` (GiftID + quantity) and `Creature` (GiftID). **Heroes, Auguments and Evolution Shards cannot travel by mail.**
+- The admin **Gift / Reward** composer (`POST /admin/players/<uuid>/gift`) appends a per-player entry to `db_NewsMail.json` (`AddNewsMailGift`: unique `ADMIN_*` ID, `GiftType`, optional `GiftID`, `Quantity`, `showDate` = today, `PlayerID` = UUID). Heroes/Auguments/Shards are instead granted directly (`ApplyRedeemReward`, skin-aware for heroes) plus a reward-less notice mail (`AddNewsMailNotice`). The player must restart the game to pick up a new blueprint mail.
+- Never write gift rewards into the save's `Mails` directly — the client ignores unknown fields and rebuilds the array. `StripLegacyAdminMails` removes any leftover `ADMIN_*` entries from saves.
+- `PruneDeliveredNewsMail` deletes a per-player `db_NewsMail` entry once the save references its ID (in `Mails` or `DeletedMail`), so a claimed gift is not re-created on the next login. Blueprint IDs are timestamp-based so they are never reused.
+
 ## Route Reference
 
 ### Game API Routes (`app/routes/game.py`)
@@ -213,6 +231,7 @@ Each `BattleHistory` entry records only the **opponent's** side of a PVP match:
 | GET      | `/persist/static/blueprints`        | All blueprints (v1.18.0+)           |
 | GET      | `/persist/static/Blueprints/<file>` | Individual blueprint                |
 | GET      | `/persist/static/monthly_store`     | Monthly store configuration         |
+| GET      | `/persist/static/live`              | Live status (maintenance/notices, admin-editable `live.json`) |
 | GET/POST | `/persist/static/pvp_banlist`       | PVP ban list & active bans          |
 | GET/PUT  | `/persist/game`                     | Game save (uses `Player-Id` header) |
 | GET/PUT  | `/persist/<uuid>/game`              | Game save by UUID                   |
@@ -304,6 +323,7 @@ Each `BattleHistory` entry records only the **opponent's** side of a PVP match:
 | POST     | `/admin/players/<uuid>/delete_leaders_bulk`      | Multi-delete selected leaders                                                    |
 | POST     | `/admin/players/<uuid>/add_all_skins`            | Attach all skins to the player's owned heroes via `OwnedSkins`                   |
 | POST     | `/admin/players/<uuid>/max_resources`            | Max all currencies preset                                                        |
+| POST     | `/admin/players/<uuid>/gift`                     | Send a Gift/Reward to the player's post office (`db_NewsMail.json`, per `PlayerID`) |
 | POST     | `/admin/players/<uuid>/loadouts/set`             | Set team (loadout) count 1-50; grows with blank team lines                       |
 | POST     | `/admin/players/<uuid>/loadouts/creatures`       | Set creatures per team 1-10; shrinking drops the extra slots                     |
 | GET      | `/admin/players/<uuid>/export_save`              | Download save as JSON                                                            |
@@ -326,6 +346,7 @@ Each `BattleHistory` entry records only the **opponent's** side of a PVP match:
 | POST     | `/admin/pvp_banlist/remove_leader/<id>`          | Remove leader from PVP ban list                                                  |
 | POST     | `/admin/pvp_banlist/edit_raw`                    | Save raw JSON for PVP ban list                                                   |
 | GET      | `/admin/maintenance`                             | Maintenance toggle                                                               |
+| POST     | `/admin/maintenance/live`                        | Save the live status JSON (`data/persist/live.json`)                             |
 | GET      | `/admin/logs`                                    | Player logs (paginated)                                                          |
 | GET      | `/admin/upsight`                                 | Analytics logs (paginated)                                                       |
 | GET      | `/admin/misc`                                    | Misc tools                                                                       |
@@ -362,6 +383,10 @@ Each `BattleHistory` entry records only the **opponent's** side of a PVP match:
 | `FindBrokenSaveIssues(game)`                           | `app/utils.py` | Return list of missing/invalid save fields & duplicate creature IDs        |
 | `RepairGameData(game, username, fallback_name)`        | `app/utils.py` | Fill missing fields / fix duplicate IDs without deleting data              |
 | `BuildTransferredGame(source, target, username, name)` | `app/utils.py` | Copy progress to a target save keeping target name & currencies            |
+| `AddNewsMailGift(player, type, id, amount, title, body)` | `app/utils.py` | Append a per-player gift to `db_NewsMail.json` (claimable mail)          |
+| `AddNewsMailNotice(player, title, body)`               | `app/utils.py` | Append a reward-less notice mail (for direct-granted items)                |
+| `StripLegacyAdminMails(game)`                          | `app/utils.py` | Remove leftover `ADMIN_*` mails from a save (old broken format)            |
+| `GetGiftCatalog()`                                     | `app/utils.py` | Item choices (creatures, Auguments, heroes, XP materials) for the composer |
 | `SetLoadoutCount(game, count)`                         | `app/utils.py` | Resize `game["Loadouts"]` team lines (1-50); pads new teams to match        |
 | `SetTeamCreatureCount(game, count)`                    | `app/utils.py` | Resize `CreatureID0..n` slots on every team (1-10, truncates on shrink)     |
 | `LoadoutCreatureCount(loadout)`                        | `app/utils.py` | How many creature slots a team dict currently exposes                        |
@@ -387,6 +412,8 @@ Each `BattleHistory` entry records only the **opponent's** side of a PVP match:
 | `SendTelegramDocument(path, caption)`                  | `app/utils.py` | Send a file to the admin Telegram chat via bot                             |
 | `SendBackupToTelegram(zip_path)`                       | `app/utils.py` | Send a (latest) backup archive to Telegram                                 |
 | `RunScheduledBackup()`                                 | `app/utils.py` | Run a backup when the configured interval elapsed                          |
+| `GetLiveStatus()`                                      | `app/utils.py` | Live status payload with a fresh `now` timestamp                           |
+| `LoadLiveStatus()` / `SaveLiveStatus(d)`               | `app/utils.py` | Read/write `data/persist/live.json` (maintenance, notices, flags, texts)   |
 
 ## Configuration & Assets
 
@@ -394,6 +421,7 @@ Each `BattleHistory` entry records only the **opponent's** side of a PVP match:
 - **Database**: PostgreSQL `cardwarskingdom` by default (`app/__init__.py::ResolveDatabaseUri` normalises `postgres://` / `postgresql://` / `postgres+psycopg2://` onto `postgresql+psycopg2://` and keeps query strings); `DATABASE_URL=sqlite:///instance/cardwarskingdom.db` opts into SQLite
 - **Migration**: `python migrate_sqlite_to_postgres.py [--sqlite PATH] [--keep] [--dry-run] [--yes]` copies an existing SQLite file into the active DB and resyncs sequences
 - **Runtime settings**: `data/persist/settings.json` — `backup_interval_hours`, `backup_to_telegram`, `last_backup`
+- **Live status**: `data/persist/live.json` — admin-editable payload served at `GET /persist/static/live` (`maintenance`, `maint_ended`, `notices`, `poll`, `flags`, `texts`, `content`, `ui`, `restart`); `now` is injected per request, the file is optional and falls back to defaults in `app/services/live.py`
 - **Auto-backup**: scheduler thread checks every minute in `app/__init__.py::run_scheduler` → `RunScheduledBackup()`; backups go to `backup/*.zip` and optionally Telegram
 - **Restore**: `POST /admin/server/upload_backup` accepts a zip with `cardwarskingdom.sql` (pg_dump) or a legacy `cardwarskingdom.db` (routed through `MigrateSqliteDatabase`), plus `persist/`, after taking a safety snapshot
 

@@ -1,3 +1,5 @@
+import time as _time
+
 from ._common import *
 from .game_data import *
 

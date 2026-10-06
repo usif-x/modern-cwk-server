@@ -64,5 +64,71 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Live Status Card -->
+    <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6 sm:p-8 max-w-4xl">
+        <div class="flex items-start gap-4 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                <i data-lucide="radio" class="w-6 h-6"></i>
+            </div>
+            <div class="space-y-1">
+                <h2 class="text-lg font-bold text-foreground">Live Status</h2>
+                <p class="text-sm text-muted-foreground">
+                    Served to the client as
+                    <code class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">GET /persist/static/live</code>
+                    and polled every <code class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">poll</code>
+                    seconds. The <code class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">now</code>
+                    field is set by the server on every request.
+                </p>
+            </div>
+        </div>
+
+        <form action="/admin/maintenance/live" method="POST" class="space-y-3">
+            <textarea
+                name="live_status_json"
+                id="liveStatusJson"
+                rows="18"
+                spellcheck="false"
+                class="flex w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >{{ live_status_json }}</textarea>
+            <p id="liveStatusError" class="text-xs text-destructive hidden">
+                Invalid JSON — fix it before saving.
+            </p>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <p class="text-xs text-muted-foreground">
+                    Use <code class="font-mono text-[11px] bg-muted px-1 rounded">maintenance</code> /
+                    <code class="font-mono text-[11px] bg-muted px-1 rounded">restart</code> /
+                    <code class="font-mono text-[11px] bg-muted px-1 rounded">notices</code>
+                    to drive live messages.
+                </p>
+                <button
+                    type="submit"
+                    class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors"
+                >
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Save Live Status</span>
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+
+<script>
+    (function () {
+        var form = document.querySelector('form[action="/admin/maintenance/live"]');
+        var textarea = document.getElementById('liveStatusJson');
+        var error = document.getElementById('liveStatusError');
+        if (!form || !textarea) return;
+        form.addEventListener('submit', function (e) {
+            try {
+                JSON.parse(textarea.value);
+                error.classList.add('hidden');
+            } catch (err) {
+                e.preventDefault();
+                error.classList.remove('hidden');
+                if (window.cwkAlert) cwkAlert('Live status must be valid JSON.');
+            }
+        });
+    })();
+</script>
 {% endblock %}

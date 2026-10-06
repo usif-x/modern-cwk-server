@@ -1,3 +1,5 @@
+import time as _time
+
 from ._common import *
 from .backup import *
 from .database import *
