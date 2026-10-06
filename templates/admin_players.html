@@ -19,16 +19,16 @@
         <!-- Sort Controls -->
         <div class="flex flex-wrap items-center gap-1.5 p-1 rounded-lg border border-border bg-muted/40">
             <span class="text-xs font-medium text-muted-foreground px-2">Sort:</span>
-            <a href="/admin/players" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if not request.args.get('sort') %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
+            <a href="/admin/players?per_page={{ per_page }}" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if not request.args.get('sort') %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
                 Creation
             </a>
-            <a href="/admin/players?sort=multiplayer_name" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'multiplayer_name' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
+            <a href="/admin/players?sort=multiplayer_name&per_page={{ per_page }}" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'multiplayer_name' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
                 Name
             </a>
-            <a href="/admin/players?sort=last_online" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'last_online' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
+            <a href="/admin/players?sort=last_online&per_page={{ per_page }}" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'last_online' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
                 Last Online
             </a>
-            <a href="/admin/players?sort=leader_level" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'leader_level' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
+            <a href="/admin/players?sort=leader_level&per_page={{ per_page }}" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'leader_level' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
                 Rank
             </a>
         </div>
@@ -161,6 +161,58 @@
             </div>
         </div>
     </form>
+
+    <!-- Pagination -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <form method="get" action="/admin/players" class="flex items-center gap-2 text-sm text-muted-foreground">
+            {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+            <label for="perPageSelect" class="text-xs">Show</label>
+            <select
+                id="perPageSelect"
+                name="per_page"
+                onchange="this.form.submit()"
+                class="inline-flex h-8 rounded-md border border-input bg-background px-2 py-0.5 text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+                {% for n in [10, 20, 30, 40, 50] %}
+                <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }}</option>
+                {% endfor %}
+            </select>
+            <span class="text-xs">per page</span>
+        </form>
+
+        <div class="flex items-center gap-4">
+            <span class="text-xs text-muted-foreground">
+                Showing {{ start_index }}–{{ end_index }} of {{ player_count }}
+            </span>
+            <div class="flex items-center gap-1">
+                {% if page > 1 %}
+                <a href="/admin/players?page={{ page - 1 }}&per_page={{ per_page }}{% if sort %}&sort={{ sort }}{% endif %}" class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
+                    <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                    <span>Prev</span>
+                </a>
+                {% else %}
+                <span class="inline-flex items-center gap-1 rounded-md border border-input bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground/60 cursor-not-allowed">
+                    <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                    <span>Prev</span>
+                </span>
+                {% endif %}
+
+                <span class="px-2 text-xs font-medium text-foreground whitespace-nowrap">Page {{ page }} of {{ total_pages }}</span>
+
+                {% if page < total_pages %}
+                <a href="/admin/players?page={{ page + 1 }}&per_page={{ per_page }}{% if sort %}&sort={{ sort }}{% endif %}" class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
+                    <span>Next</span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                </a>
+                {% else %}
+                <span class="inline-flex items-center gap-1 rounded-md border border-input bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground/60 cursor-not-allowed">
+                    <span>Next</span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>

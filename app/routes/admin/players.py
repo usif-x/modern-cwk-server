@@ -34,12 +34,44 @@ def AdminPlayers():
     sortQuery = request.args.get("sort")
 
     if sortQuery is not None:
-        players = sorted(players, key=lambda player: player[sortQuery], reverse=True)
+        players = sorted(
+            players,
+            key=lambda player: (
+                player[sortQuery] is None,
+                player[sortQuery] if player[sortQuery] is not None else "",
+            ),
+            reverse=True,
+        )
     else:
         players = players[::-1]
 
+    # Pagination
+    per_page = request.args.get("per_page", 10, type=int)
+    if per_page not in (10, 20, 30, 40, 50):
+        per_page = 10
+
+    total = len(players)
+    total_pages = max(1, (total + per_page - 1) // per_page)
+
+    page = request.args.get("page", 1, type=int)
+    if page < 1:
+        page = 1
+    if page > total_pages:
+        page = total_pages
+
+    start = (page - 1) * per_page
+    page_players = players[start : start + per_page]
+
     return render_template(
-        "admin_players.html", players=players, player_count=len(players)
+        "admin_players.html",
+        players=page_players,
+        player_count=total,
+        page=page,
+        per_page=per_page,
+        total_pages=total_pages,
+        start_index=start + 1 if total else 0,
+        end_index=min(start + per_page, total),
+        sort=sortQuery or "",
     )
 
 

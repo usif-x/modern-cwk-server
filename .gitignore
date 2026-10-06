@@ -169,3 +169,7 @@ discordwebhookurl
 admin-login.txt
 
 backup
+
+player_names.csv
+
+export_names.py

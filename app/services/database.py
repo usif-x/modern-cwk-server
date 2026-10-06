@@ -168,8 +168,19 @@ def _CoerceMigratedValue(value, target_type):
                 continue
         return 0
 
-    if isinstance(target_type, (db.String, db.Text)) and not isinstance(value, str):
-        return str(value)
+    if isinstance(target_type, (db.String, db.Text)):
+        if not isinstance(value, str):
+            value = str(value)
+        # PostgreSQL rejects NUL bytes inside text; SQLite allows them.
+        if "\x00" in value:
+            value = value.replace("\x00", "")
+        # SQLite does not enforce VARCHAR lengths, so malformed rows can carry
+        # values longer than the target column allows. Truncate to fit instead
+        # of aborting the whole migration (TEXT columns have no length).
+        length = getattr(target_type, "length", None)
+        if length and len(value) > length:
+            value = value[:length]
+        return value
 
     return value
 
