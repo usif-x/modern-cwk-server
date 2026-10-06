@@ -87,3 +87,69 @@ class Player(db.Model):
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class TradeCoinBalance(db.Model):
+    __tablename__ = "trade_coin_balance"
+    player_id = db.Column(db.String(80), primary_key=True)
+    coins = db.Column(db.Integer, nullable=False, default=0)
+    updated = db.Column(db.Integer, nullable=False, default=0)
+
+
+class TradeEscrow(db.Model):
+    __tablename__ = "trade_escrow"
+    id = db.Column(db.Integer, primary_key=True)
+    player_id = db.Column(db.String(80), nullable=False, index=True)
+    kind = db.Column(db.String(16), nullable=False, default="creature")
+    item_json = db.Column(db.Text, nullable=False)
+    created = db.Column(db.Integer, nullable=False, default=0)
+
+
+class TradeListing(db.Model):
+    __tablename__ = "trade_listing"
+    id = db.Column(db.Integer, primary_key=True)
+    seller_id = db.Column(db.String(80), nullable=False, index=True)
+    escrow_id = db.Column(db.Integer, nullable=False)
+    price_coins = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(16), nullable=False, default="active", index=True)
+    buyer_id = db.Column(db.String(80), nullable=True)
+    created = db.Column(db.Integer, nullable=False, default=0)
+
+
+class TradeOffer(db.Model):
+    __tablename__ = "trade_offer"
+    id = db.Column(db.Integer, primary_key=True)
+    from_id = db.Column(db.String(80), nullable=False, index=True)
+    to_id = db.Column(db.String(80), nullable=False, index=True)
+    offer_json = db.Column(db.Text, nullable=False)
+    request_json = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(16), nullable=False, default="pending", index=True)
+    created = db.Column(db.Integer, nullable=False, default=0)
+
+
+class TradeDelta(db.Model):
+    """A creature a trade moved into or out of a player's save on the server.
+
+    The app never reloads its save after a trade, so its next upload is the old
+    copy: every upload re-applies the pending deltas until the uploaded save
+    already agrees. Stored in the `trade_pending` table (legacy name).
+    """
+
+    __tablename__ = "trade_pending"
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), nullable=False, index=True)
+    action = db.Column(db.String(8), nullable=False)  # "add" | "remove"
+    unique_id = db.Column(db.Integer, nullable=False)
+    creature_id = db.Column(db.String(128), nullable=False)
+    item_json = db.Column(db.Text, nullable=False)
+    created = db.Column(db.Integer, nullable=False, default=0)
+    done_at = db.Column(db.Integer, nullable=True, index=True)
+
+
+class TradeLog(db.Model):
+    __tablename__ = "trade_log"
+    id = db.Column(db.Integer, primary_key=True)
+    ts = db.Column(db.Integer, nullable=False, default=0)
+    action = db.Column(db.String(32), nullable=False)
+    actor = db.Column(db.String(80), nullable=True)
+    detail = db.Column(db.Text, nullable=True)

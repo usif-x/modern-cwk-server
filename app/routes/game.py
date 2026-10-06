@@ -6,6 +6,7 @@ from flask_login import current_user
 
 from app import maintenance, app, db
 from app.models import Player, UpsightLogs
+from app.services.trade_market import ApplyTradeDeltasToGame
 from app.utils import (
     DecryptGameData, EncryptGameData, DiscordWebhookMessage, IPFromRequest,
     InvalidUsername, IsUserBanned, Log, PlayerLog, UpdateLastOnline,
@@ -386,6 +387,10 @@ def PersistGame(player_id=None):
                     # delivered to this save (stops re-claiming after restart).
                     StripLegacyAdminMails(client_game)
                     PruneDeliveredNewsMail(client_game)
+
+                # Apply any pending trade changes so a stale upload cannot
+                # resurrect sold creatures or drop bought ones.
+                ApplyTradeDeltasToGame(username, client_game)
 
                 data = EncryptGameData(client_game, username)
 

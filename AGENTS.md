@@ -425,6 +425,38 @@ The in-game post office is the save's `Mails` array. An entry looks like:
 - **Auto-backup**: scheduler thread checks every minute in `app/__init__.py::run_scheduler` → `RunScheduledBackup()`; backups go to `backup/*.zip` and optionally Telegram
 - **Restore**: `POST /admin/server/upload_backup` accepts a zip with `cardwarskingdom.sql` (pg_dump) or a legacy `cardwarskingdom.db` (routed through `MigrateSqliteDatabase`), plus `persist/`, after taking a safety snapshot
 
+## Trade Market
+
+Player-to-player trading, ported from the production server into `app/`. A
+`trade_*` request is form-encoded POST and answers `{"success": bool, ...}`.
+
+**Models** (`app/models/__init__.py`): `TradeCoinBalance` (`trade_coin_balance`),
+`TradeEscrow` (`trade_escrow`), `TradeListing` (`trade_listing`),
+`TradeOffer` (`trade_offer`), `TradeDelta` (`trade_pending`), `TradeLog` (`trade_log`).
+
+**Endpoints** (`app/routes/trade.py`, blueprint `trade_bp`):
+
+| Method | Route | Function |
+| ------ | ----- | -------- |
+| POST | `/persist/trade_balanceDW/` | Coin balance |
+| POST | `/persist/trade_syncDW/` | Pending add/remove deltas for the app |
+| POST | `/persist/trade_listDW/` | List a creature (moves it to escrow) |
+| POST | `/persist/trade_browseDW/` | Market list (`v=2` paged/filtered) |
+| POST | `/persist/trade_buyDW/` | Buy a listing |
+| POST | `/persist/trade_cancelDW/` | Cancel own listing (returns creature) |
+| POST | `/persist/trade_buycoinsDW/` | Buy trade coins with gems/coins |
+| POST | `/persist/trade_offerDW/` | Create a trade offer |
+| POST | `/persist/trade_offers_receivedDW/` | Offers addressed to a player |
+| POST | `/persist/trade_inventoryDW/` | Another player's tradeable creatures |
+| POST | `/persist/trade_acceptDW/` | Accept an offer |
+| POST | `/persist/trade_declineDW/` | Decline/cancel an offer |
+
+**Key functions** (`app/services/trade_market.py`): `_tload_save` / `_twrite_save`
+(read/write a player's save; the latter records `TradeDelta` rows and stores via
+`EncryptGameData`), `ApplyTradeDeltasToGame` (called from the save PUT handler in
+`app/routes/game.py` to correct a stale upload), `_market_page`, `_market_expire`,
+`PublicId`/`RealId` (hide real ids in the market), `_ttrade_refused` (device check).
+
 ## Anti-Cheat / Security
 
 1. **Leader level validation** — Auto-bans if fresh account sets level > 5 or level jumps by > 10
