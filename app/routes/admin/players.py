@@ -31,6 +31,18 @@ def AdminPlayers():
         if player["multiplayer_name"] == None:
             player["multiplayer_name"] = GetNameFromSave(player["game"])
 
+    # Server-side search across every account (name or UUID)
+    query = (request.args.get("q") or "").strip()
+
+    if query:
+        needle = query.lower()
+        players = [
+            player
+            for player in players
+            if needle in (player["multiplayer_name"] or "").lower()
+            or needle in (player["username"] or "").lower()
+        ]
+
     sortQuery = request.args.get("sort")
 
     if sortQuery is not None:
@@ -72,6 +84,7 @@ def AdminPlayers():
         start_index=start + 1 if total else 0,
         end_index=min(start + per_page, total),
         sort=sortQuery or "",
+        query=query,
     )
 
 

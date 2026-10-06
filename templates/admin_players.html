@@ -3,6 +3,7 @@
 {% block breadcrumb %}Players{% endblock %}
 
 {% block content %}
+{% set qsuffix = ('&q=' ~ (query | urlencode)) if query else '' %}
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -19,33 +20,56 @@
         <!-- Sort Controls -->
         <div class="flex flex-wrap items-center gap-1.5 p-1 rounded-lg border border-border bg-muted/40">
             <span class="text-xs font-medium text-muted-foreground px-2">Sort:</span>
-            <a href="/admin/players?per_page={{ per_page }}" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if not request.args.get('sort') %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
+            <a href="/admin/players?per_page={{ per_page }}{{ qsuffix }}" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if not request.args.get('sort') %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
                 Creation
             </a>
-            <a href="/admin/players?sort=multiplayer_name&per_page={{ per_page }}" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'multiplayer_name' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
+            <a href="/admin/players?sort=multiplayer_name&per_page={{ per_page }}{{ qsuffix }}" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'multiplayer_name' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
                 Name
             </a>
-            <a href="/admin/players?sort=last_online&per_page={{ per_page }}" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'last_online' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
+            <a href="/admin/players?sort=last_online&per_page={{ per_page }}{{ qsuffix }}" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'last_online' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
                 Last Online
             </a>
-            <a href="/admin/players?sort=leader_level&per_page={{ per_page }}" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'leader_level' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
+            <a href="/admin/players?sort=leader_level&per_page={{ per_page }}{{ qsuffix }}" class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'leader_level' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
                 Rank
             </a>
         </div>
     </div>
 
-    <!-- Search & Filter Card -->
-    <div class="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-xs">
-        <div class="relative">
-            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"></i>
-            <input
-                type="text"
-                id="playerFilter"
-                placeholder="Search players by name or UUID..."
-                class="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-4 py-1 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+    <!-- Search (searches every account) -->
+    <form method="get" action="/admin/players" class="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-xs">
+        {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+        <input type="hidden" name="per_page" value="{{ per_page }}">
+        <div class="flex items-stretch gap-2">
+            <div class="relative flex-1">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"></i>
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ query }}"
+                    placeholder="Search all players by name or UUID..."
+                    class="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-4 py-1 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+            </div>
+            <button
+                type="submit"
+                class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 h-9 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors"
             >
+                <i data-lucide="search" class="w-4 h-4"></i>
+                <span>Search</span>
+            </button>
+            {% if query %}
+            <a
+                href="/admin/players?per_page={{ per_page }}{% if sort %}&sort={{ sort }}{% endif %}"
+                class="inline-flex items-center rounded-md border border-input bg-background px-3 h-9 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+                Clear
+            </a>
+            {% endif %}
         </div>
-    </div>
+        {% if query %}
+        <p class="text-xs text-muted-foreground mt-2">Results for &ldquo;{{ query }}&rdquo; — {{ player_count }} match(es).</p>
+        {% endif %}
+    </form>
 
     <!-- Bulk Actions Toolbar (Visible when 1+ players selected) -->
     <form id="bulkPlayersForm" action="/admin/players/bulk_action" method="POST">
@@ -166,6 +190,7 @@
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
         <form method="get" action="/admin/players" class="flex items-center gap-2 text-sm text-muted-foreground">
             {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+            {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
             <label for="perPageSelect" class="text-xs">Show</label>
             <select
                 id="perPageSelect"
@@ -186,7 +211,7 @@
             </span>
             <div class="flex items-center gap-1">
                 {% if page > 1 %}
-                <a href="/admin/players?page={{ page - 1 }}&per_page={{ per_page }}{% if sort %}&sort={{ sort }}{% endif %}" class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
+                <a href="/admin/players?page={{ page - 1 }}&per_page={{ per_page }}{% if sort %}&sort={{ sort }}{% endif %}{{ qsuffix }}" class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
                     <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
                     <span>Prev</span>
                 </a>
@@ -200,7 +225,7 @@
                 <span class="px-2 text-xs font-medium text-foreground whitespace-nowrap">Page {{ page }} of {{ total_pages }}</span>
 
                 {% if page < total_pages %}
-                <a href="/admin/players?page={{ page + 1 }}&per_page={{ per_page }}{% if sort %}&sort={{ sort }}{% endif %}" class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
+                <a href="/admin/players?page={{ page + 1 }}&per_page={{ per_page }}{% if sort %}&sort={{ sort }}{% endif %}{{ qsuffix }}" class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
                     <span>Next</span>
                     <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
                 </a>
@@ -216,21 +241,6 @@
 </div>
 
 <script>
-// Search filter
-document.getElementById('playerFilter')?.addEventListener('input', function(e) {
-    const val = e.target.value.toLowerCase().trim();
-    const rows = document.querySelectorAll('.player-row');
-    rows.forEach(row => {
-        const name = row.querySelector('.player-name')?.textContent.toLowerCase() || '';
-        const id = row.querySelector('.player-id')?.textContent.toLowerCase() || '';
-        if (name.includes(val) || id.includes(val)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-});
-
 // Multi-select for players
 function updatePlayersSelection() {
     const checked = document.querySelectorAll('.player-cb:checked');
