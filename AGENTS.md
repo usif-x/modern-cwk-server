@@ -475,6 +475,32 @@ and `fields` (`level1`/`level2`/`gs`/`gf`/`seq`/`reason`). `reason` is one of
 ("invalid redeemcode" / "maximum reword count reached"). Rewards are still
 applied to the player's save directly.
 
+### Daily Gift roulette
+
+`POST /persist/user_action2/` (`app/routes/game.py::UserAction2`) now handles the
+`evt="roulette spin"` event the same way production does: the **server** rolls the
+winning slice and returns it as `fields.spin` in the envelope
+`{"success": true, "data": "{\"fields\": {...}}"}` (with `gs`/`gf`/`gv`/`ge`/`gc`,
+resulting balances `level1`..`level7`, `reason`, `seq` and `handle`). The wheel is
+`data/persist/Blueprints/db_DailyGift.json`; each slice's chance is
+`max(1, round(10000 / Rarity))` (higher `Rarity` = rarer), matching `claims.py`.
+Helpers: `GetRoulettePrizes`, `RollRoulettePrize`, `ApplyRoulettePrize`
+(`app/services/game_data.py`). Currency prizes are credited to the save; creature
+prizes are granted by the client from its own pool.
+
+### Store purchases
+
+`POST /persist/user_action2/` with `evt="purchase"` mirrors production's
+`claims.purchase`: the app names what it buys (`ctx = "<kind>:<id>[:<count>]"`,
+e.g. `creature:ElderBruteWoad_Store`, `leader:Leader_Finn`, `gacha:Premium:10`,
+`inventory:`, `stamina:`), and the **server** charges its own price from the
+blueprints (`PurchasePrice`, `app/services/game_data.py`) and replies with
+`fields.reason` (`OK`/`NOT_ENOUGH`/`UNKNOWN_ITEM`), `fields.cb` (bucket) and
+`fields.cc` (charged) plus the resulting balances. Currencies live in the save:
+`gems` debit `FreeHardCurrency` then `PaidHardCurrency`, `coins` debit
+`SoftCurrency`, `pvp` debits `PvpCurrency`; store creatures are granted into
+`Inventory`. Already-owned heroes/skins are never charged twice.
+
 ## Anti-Cheat / Security
 
 1. **Leader level validation** — Auto-bans if fresh account sets level > 5 or level jumps by > 10

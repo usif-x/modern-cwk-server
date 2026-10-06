@@ -12,7 +12,7 @@ from app.utils import (
     InvalidUsername, IsUserBanned, Log, PlayerLog, UpdateLastOnline,
     GetAllyInfo, GetPlayerWins, SystemBan, get_hash_string, safe_int, GetRankForXP,
     GetPvpBanlist, ReadPersistText, GetLiveStatus, StripLegacyAdminMails,
-    PruneDeliveredNewsMail,
+    PruneDeliveredNewsMail, RollRoulettePrize, ApplyRoulettePrize, PurchasePrice,
 )
 game_bp = Blueprint('game_bp', __name__)
 
@@ -184,38 +184,46 @@ def UserAction2():
     clientData = parse_qs(request.get_data().decode("utf-8"))
     clientData = {k: v[0] if len(v) == 1 else v for k, v in clientData.items()}
 
-    if IsUserBanned(clientData["player_id"], IPFromRequest(request)):
+    pid = clientData.get("player_id", "")
+    if IsUserBanned(pid, IPFromRequest(request)):
         return make_response("User is banned!", 400)
 
-    UpdateLastOnline(clientData["player_id"])
+    UpdateLastOnline(pid)
 
     # Check if an event was sent
     if "evt" in clientData:
-        db_user = Player.query.filter_by(username=clientData["player_id"]).first()
+        db_user = Player.query.filter_by(username=pid).first()
         if db_user is None:
             return make_response("No player found!", 404)
 
-        FreeHardCurrency = int(clientData["fr"])
-        df = int(clientData["df"])
+        evt = (clientData.get("evt") or "").strip()
+        key = "5424498w34tiowhtgoae0tu4iksdf4_4" + pid + "650"
+        handle = get_hash_string(pid, key)
+
+        # Daily Gift roulette: the SERVER rolls the winning slice and reports it
+        # as fields.spin (production protocol), so the client wheel works.
+        if evt.lower() == "roulette spin":
+            return _RouletteSpin(db_user, pid, handle)
+
+        # Store purchase: the app names WHAT it buys; the server charges its own
+        # price (claims.purchase protocol) and answers reason/cb/cc.
+        if evt.lower() == "purchase":
+            return _HandlePurchase(db_user, pid, clientData, handle)
+
+        FreeHardCurrency = safe_int(clientData.get("fr", 0))
+        df = safe_int(clientData.get("df", 0))
 
         finalamount = FreeHardCurrency + df
 
         PlayerLog(
             IPFromRequest(request),
-            clientData["player_id"],
-            f"User Action: {clientData['evt']}\nFree Hard Currency: {FreeHardCurrency}\nDF: {df}\nFinal Amount: {finalamount}",
+            pid,
+            f"User Action: {evt}\nFree Hard Currency: {FreeHardCurrency}\nDF: {df}\nFinal Amount: {finalamount}",
         )
-
-        key = "5424498w34tiowhtgoae0tu4iksdf4_4" + clientData["player_id"] + "650"
-        handle = get_hash_string(clientData["player_id"], key)
 
         data = {
             "success": True,
-            "data": '{"fields": {"level2": '
-            + str(finalamount)
-            + ', "handle": "'
-            + handle
-            + '"}}',
+            "data": json.dumps({"fields": {"level2": finalamount, "handle": handle}}),
         }
     else:
         data = {
@@ -223,6 +231,163 @@ def UserAction2():
         }
 
     return jsonify(data)
+
+
+def _RouletteSpin(db_user, pid, handle):
+    """Roll the Daily Gift roulette, credit the prize and answer like production.
+
+    Returns the same envelope the client parses: {"success": true, "data":
+    "{\\"fields\\": {...}}"}. The winning slice index is `fields.spin`; the granted
+    amounts are gs/gf/gv/ge/gc and the resulting balances level1..level7.
+    """
+    game = DecryptGameData(db_user.game) if db_user.game else {}
+    if not isinstance(game, dict):
+        game = {}
+
+    prize = RollRoulettePrize()
+    granted = ApplyRoulettePrize(game, prize)
+
+    if db_user.game:
+        db_user.game = EncryptGameData(game, pid)
+        db.session.commit()
+
+    fields = {
+        "level1": safe_int(game.get("PaidHardCurrency", 0)),
+        "level2": safe_int(game.get("FreeHardCurrency", 0)),
+        "level4": safe_int(game.get("SoftCurrency", 0)),
+        "level5": safe_int(game.get("PvpCurrency", 0)),
+        "level6": safe_int(game.get("EvolutionShards", 0)),
+        "level7": safe_int(game.get("CraftCurrency", 0)),
+        "gs": granted["gs"],
+        "gf": granted["gf"],
+        "gv": granted["gv"],
+        "ge": granted["ge"],
+        "gc": granted["gc"],
+        "reason": "OK" if prize else "NO_ROULETTE",
+        "seq": int(time.time()),
+        "spin": prize["index"] if prize else None,
+        "handle": handle,
+    }
+    Log("admin", "Roulette spin by " + pid + ": " + json.dumps(prize))
+    return jsonify({"success": True, "data": json.dumps({"fields": fields})})
+
+
+def _BalanceFields(game, handle):
+    """The level1..level7 balance block the client assigns onto its own save."""
+    return {
+        "level1": safe_int(game.get("PaidHardCurrency", 0)),
+        "level2": safe_int(game.get("FreeHardCurrency", 0)),
+        "level4": safe_int(game.get("SoftCurrency", 0)),
+        "level5": safe_int(game.get("PvpCurrency", 0)),
+        "level6": safe_int(game.get("EvolutionShards", 0)),
+        "level7": safe_int(game.get("CraftCurrency", 0)),
+        "handle": handle,
+    }
+
+
+def _OwnsLeader(game, key, is_skin):
+    for leader in game.get("Leaders") or []:
+        if not isinstance(leader, dict):
+            continue
+        owned = leader.get("OwnedSkins")
+        if isinstance(owned, list) and key in owned:
+            return True
+        if leader.get("Skin") == key:
+            return True
+        if not is_skin and leader.get("ID") == key:
+            return True
+    return False
+
+
+def _HandlePurchase(db_user, pid, clientData, handle):
+    """Server-authoritative store purchase (production claims.purchase protocol).
+
+    The app names WHAT it buys (`ctx = kind:id[:count]`); the server charges its
+    own price and answers `reason`/`cb` (bucket) / `cc` (charged) plus balances.
+    """
+    ctx = str(clientData.get("ctx", ""))
+    kind, _, rest = ctx.partition(":")
+    key, _, count = rest.partition(":")
+    count = max(1, min(1000, safe_int(count, 1) or 1)) if kind == "gacha" else 1
+
+    game = DecryptGameData(db_user.game) if db_user.game else {}
+    if not isinstance(game, dict):
+        game = {}
+
+    def reply(fields):
+        return jsonify({"success": True, "data": json.dumps({"fields": fields})})
+
+    price = PurchasePrice(kind, key)
+    if price is None:
+        return reply({**_BalanceFields(game, handle), "reason": "UNKNOWN_ITEM", "cb": "", "cc": 0})
+
+    if kind in ("leader", "skin") and _OwnsLeader(game, key, kind == "skin"):
+        return reply({**_BalanceFields(game, handle), "reason": "OK", "cb": price["bucket"], "cc": 0})
+
+    bucket = price["bucket"]
+    total = int(price["amount"]) * count
+
+    free = safe_int(game.get("FreeHardCurrency", 0))
+    paid = safe_int(game.get("PaidHardCurrency", 0))
+    coins = safe_int(game.get("SoftCurrency", 0))
+    pvp = safe_int(game.get("PvpCurrency", 0))
+    have = {"gems": free + paid, "coins": coins, "pvp": pvp}.get(bucket, 0)
+    if have < total:
+        return reply({**_BalanceFields(game, handle), "reason": "NOT_ENOUGH", "cb": bucket, "cc": 0})
+
+    if bucket == "gems":
+        take_free = min(free, total)
+        take_paid = total - take_free
+        game["FreeHardCurrency"] = free - take_free
+        game["PaidHardCurrency"] = paid - take_paid
+        game["HardCurrency"] = game["FreeHardCurrency"] + game["PaidHardCurrency"]
+    elif bucket == "coins":
+        game["SoftCurrency"] = coins - total
+    elif bucket == "pvp":
+        game["PvpCurrency"] = pvp - total
+
+    # Store creatures are granted server-side (the client cannot add them itself).
+    creature_id = price.get("creature")
+    if kind == "creature" and creature_id:
+        inv = game.get("Inventory")
+        if not isinstance(inv, list):
+            inv = []
+            game["Inventory"] = inv
+        nxt = (
+            max(
+                [safe_int(i.get("UniqueID"), 0) for i in inv if isinstance(i, dict)],
+                default=0,
+            )
+            + 1
+        )
+        inv.append(
+            {
+                "_T": "CR",
+                "ID": creature_id,
+                "UniqueID": nxt,
+                "Xp": 0,
+                "StarRating": 1,
+                "Favorite": 0,
+                "Passive": 1,
+                "PassiveFeeds": 0,
+            }
+        )
+
+    db_user.game = EncryptGameData(game, pid)
+    db.session.commit()
+    PlayerLog(IPFromRequest(request), pid, f"Purchase {ctx or kind} charged {total} {bucket}")
+
+    return reply(
+        {
+            **_BalanceFields(game, handle),
+            "reason": "OK",
+            "cb": bucket,
+            "cc": total,
+            "seq": int(time.time()),
+        }
+    )
+
+
 
 
 @game_bp.route("/persist/game", methods=["GET", "PUT"])

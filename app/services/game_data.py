@@ -1,3 +1,4 @@
+import random
 import re
 import time as _time
 
@@ -157,6 +158,171 @@ def safe_int(value, default=0):
         return int(value)
     except (ValueError, TypeError):
         return default
+
+
+# --- Daily Gift roulette --------------------------------------------------
+# The wheel is db_DailyGift.json; each slice's chance is derived from its
+# Rarity (higher Rarity = rarer), exactly like the production claims module
+# (weight = 10000 / Rarity). The server picks the winning index and returns it
+# as `fields.spin`, so the client can animate to it.
+
+_ROULETTE_WEIGHTS_PATH = "data/persist/Blueprints/db_DailyGiftRouletteWeights.json"
+_ROULETTE_GIFTS_PATH = "data/persist/Blueprints/db_DailyGift.json"
+_roulette_cache = {"at": 0, "gifts": [], "source": ""}
+
+
+def _LoadBlueprint(rel_path):
+    try:
+        with open(os.path.join(ROOT_DIR, rel_path), "r") as handle:
+            rows = json.load(handle)
+    except (OSError, ValueError):
+        return []
+    if isinstance(rows, dict):
+        rows = list(rows.values())
+    return rows if isinstance(rows, list) else []
+
+
+def GetRoulettePrizes():
+    """[{index, type, qty, name, weight}] for the Daily Gift wheel.
+
+    Uses db_DailyGiftRouletteWeights.json (its explicit Weight field gives a
+    balanced wheel) and falls back to db_DailyGift.json (weight = 10000/Rarity).
+    """
+    now = _time.time()
+    if _roulette_cache["gifts"] and now - _roulette_cache["at"] < 900:
+        return _roulette_cache["gifts"]
+
+    gifts = []
+    for row in _LoadBlueprint(_ROULETTE_WEIGHTS_PATH):
+        if not isinstance(row, dict) or row.get("Index") is None:
+            continue
+        gifts.append(
+            {
+                "index": safe_int(row.get("Index"), 0),
+                "type": str(row.get("Type") or ""),
+                "qty": safe_int(row.get("Quantity"), 0),
+                "name": str(row.get("Name") or ""),
+                "weight": max(1, safe_int(row.get("Weight"), 1) or 1),
+            }
+        )
+    source = "weights"
+
+    if not gifts:
+        for row in _LoadBlueprint(_ROULETTE_GIFTS_PATH):
+            if not isinstance(row, dict) or row.get("Index") is None:
+                continue
+            rarity = max(1, safe_int(row.get("Rarity"), 1) or 1)
+            gifts.append(
+                {
+                    "index": safe_int(row.get("Index"), 0),
+                    "type": str(row.get("Type") or ""),
+                    "qty": safe_int(row.get("Quantity"), 0),
+                    "name": str(row.get("Name") or ""),
+                    "weight": max(1, int(round(10000.0 / rarity))),
+                }
+            )
+        source = "dailygift"
+
+    gifts.sort(key=lambda g: g["index"])
+    _roulette_cache.update(at=now, gifts=gifts, source=source)
+    return gifts
+
+
+def RollRoulettePrize(rng=None):
+    """Pick a winning slice with the production weighting. None if no wheel data."""
+    gifts = GetRoulettePrizes()
+    if not gifts:
+        return None
+    total = sum(g["weight"] for g in gifts)
+    pick = (rng or random.SystemRandom()).randrange(total) if total > 0 else 0
+    for gift in gifts:
+        pick -= gift["weight"]
+        if pick < 0:
+            return gift
+    return gifts[-1]
+
+
+def ApplyRoulettePrize(game, prize):
+    """Credit the prize's currency to the save. Creature prizes are granted by
+    the client (it owns the pool), so only currency moves here. Returns the
+    granted amounts keyed for the reply: gs/gf/gv/ge/gc."""
+    granted = {"gs": 0, "gf": 0, "gv": 0, "ge": 0, "gc": 0}
+    if not isinstance(game, dict) or not isinstance(prize, dict):
+        return granted
+    qty = safe_int(prize.get("qty"), 0)
+    if qty <= 0:
+        return granted
+    kind = prize.get("type")
+    if kind in ("Gems", "HardCurrency"):
+        game["HardCurrency"] = safe_int(game.get("HardCurrency", 0)) + qty
+        game["FreeHardCurrency"] = safe_int(game.get("FreeHardCurrency", 0)) + qty
+        granted["gf"] = qty
+    elif kind in ("Coins", "SoftCurrency"):
+        game["SoftCurrency"] = safe_int(game.get("SoftCurrency", 0)) + qty
+        granted["gs"] = qty
+    elif kind == "PvpCurrency":
+        game["PvpCurrency"] = safe_int(game.get("PvpCurrency", 0)) + qty
+        granted["gv"] = qty
+    elif kind == "EvoCurrency":
+        game["EvolutionShards"] = safe_int(game.get("EvolutionShards", 0)) + qty
+        granted["ge"] = qty
+    # Stamina / Creature slices are granted by the client itself.
+    return granted
+
+
+# --- server-authoritative store prices ------------------------------------
+# The app names WHAT it is buying (ctx = "<kind>:<id>[:<count>]"); the server
+# charges its own price from the same blueprint files the app reads. Mirrors the
+# production claims.purchase() price book.
+
+_purchase_book = {"at": 0, "prices": {}}
+
+
+def PurchasePrice(kind, key):
+    """{"bucket", "amount", "creature"?, "cardback"?} for a purchase ctx, or None."""
+    now = _time.time()
+    if not _purchase_book["prices"] or now - _purchase_book["at"] > 900:
+        prices = {}
+
+        def add(k, bucket, amount, **extra):
+            if k is not None and amount >= 0:
+                prices[k] = dict(extra, bucket=bucket, amount=int(amount))
+
+        for row in _LoadBlueprint("data/persist/Blueprints/db_StoreBuyCreatures.json"):
+            add("creature:" + str(row.get("ID")), "gems", safe_int(row.get("BuyCost")), creature=row.get("CreatureID"))
+        for row in _LoadBlueprint("data/persist/Blueprints/db_StoreBuyCardBacks.json"):
+            add("cardback:" + str(row.get("ID")), "gems", safe_int(row.get("BuyCost")), cardback=row.get("CardBackID"))
+        for row in _LoadBlueprint("data/persist/Blueprints/db_Leaders.json"):
+            add("leader:" + str(row.get("ID")), "gems", safe_int(row.get("BuyCost")))
+            add("skin:" + str(row.get("ID")), "gems", safe_int(row.get("SkinBuyCost")))
+        for row in _LoadBlueprint("data/persist/Blueprints/db_SpeedUps.json"):
+            add("speedup:" + str(row.get("ID")), "gems", safe_int(row.get("Price")) or 1)
+        for row in _LoadBlueprint("data/persist/Blueprints/db_ExpeditionSlotCosts.json"):
+            add("expslot:" + str(row.get("Slot")), "gems", safe_int(row.get("Cost")))
+        gacha_bucket = {"HardCurrency": "gems", "SoftCurrency": "coins", "SocialCurrency": "pvp"}
+        for row in _LoadBlueprint("data/persist/Blueprints/db_GachaSlots.json"):
+            if gacha_bucket.get(row.get("CurrencyType")):
+                add("gacha:" + str(row.get("ID")), gacha_bucket[row["CurrencyType"]], safe_int(row.get("Cost")))
+
+        misc = {r.get("Parameter"): r.get("Value") for r in _LoadBlueprint("data/persist/Blueprints/db_MiscParams.json")}
+        exp_params = {
+            r.get("Parameter"): r.get("Value")
+            for r in _LoadBlueprint("data/persist/Blueprints/db_ExpeditionParams.json")
+        }
+
+        def mval(param, default):
+            v = misc.get(param)
+            return safe_int(v) if v not in (None, "") else default
+
+        add("inventory:", "gems", mval("InventorySpacePurchaseCost", 1))
+        add("ally:", "gems", mval("AllyBoxPurchaseCost", 1))
+        add("stamina:", "gems", mval("StaminaRefillCost", 1))
+        add("revive:", "gems", mval("ReviveCost", 1))
+        add("dungeons:", "gems", mval("UnlockAllDailyDungeonsGemCost", 100))
+        add("exprefresh:", "gems", safe_int(exp_params.get("RepopulateCost")))
+
+        _purchase_book.update(at=now, prices=prices)
+    return _purchase_book["prices"].get(str(kind) + ":" + str(key))
 
 
 _RANK_XP_CACHE = None
