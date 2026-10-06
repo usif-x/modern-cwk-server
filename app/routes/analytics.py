@@ -1,12 +1,14 @@
-import json, os, time
+import json, os, threading, time
 from datetime import datetime
 from urllib.parse import parse_qs
 from flask import Blueprint, jsonify, make_response, request
 
 from app import db
 from app.models import Player, UpsightLogs
+from app.services.trade_market import PublicId
 from app.utils import (
-    DiscordWebhookMessage, GetPlayerWins, IPFromRequest, SystemBan,
+    CurrentPvpSeason, DecryptGameData, DiscordWebhookMessage, GetPlayerWins,
+    GetPvpRankDetails, IPFromRequest, SystemBan, safe_int,
 )
 
 analytics_bp = Blueprint('analytics_bp', __name__)
@@ -73,52 +75,95 @@ def AnalyticsPVPMatch():
     return make_response("OK", 200)
 
 
-@analytics_bp.route("/dw_leaderboard/fetchentries/", methods=["POST"])
-def LeaderboardFetchEntries():
-    clientData = parse_qs(request.get_data().decode("utf-8"))
-    clientData = {k: v[0] if len(v) == 1 else v for k, v in clientData.items()}
+_leaderboard_cache = {"built": 0.0, "list": None}
+_leaderboard_lock = threading.Lock()
+LEADERBOARD_TTL = 300  # seconds; the board is a slow-moving list
 
-    # go through each players save and sort by ammount of wins
-    allplayers = Player.query.all()
 
-    leaderboard = []
+def _BuildLeaderboard():
+    """Ranked players this PvP season, in the production entry shape.
 
-    for player in allplayers:
-        if (
-            player.multiplayer_name is None
-            or player.multiplayer_name == b""
-            or player.multiplayer_name == b" "
-        ):
-            continue
-        if player.leader_level < 10:
-            continue
-        # check if player has been on in the past 31 days
-        if time.time() - player.last_online > 60 * 60 * 24 * 31:
-            continue
-
-        playerwins = 0
+    Only players who actually played a PvP match this season are ranked (a save
+    keeps last season's rank until its owner opens the app again).
+    """
+    season = CurrentPvpSeason()
+    out = []
+    q = db.session.query(Player.username, Player.game).filter(Player.game.isnot(None))
+    for username, blob in q.yield_per(200):
         try:
-            playerwins = GetPlayerWins(player.username)
+            game = DecryptGameData(blob)
+            if not isinstance(game, dict):
+                continue
+            if season and (game.get("ActivePvpSeason") != season or not game.get("PvpPlayed")):
+                continue
+            level = safe_int(game.get("MultiplayerLevel", 999), 999)
+            points = safe_int(game.get("PointsInMultiplayerLevel", 0))
+            rank_name, sprite_name, rank_id = GetPvpRankDetails(level)
+            out.append(
+                {
+                    "playerid": username,
+                    "playername": game.get("MultiplayerPlayerName") or "Unknown",
+                    "multiplayer_level": level,
+                    "score": points,
+                    "rank_name": rank_name,
+                    "sprite_name": sprite_name,
+                    "rank_id": rank_id,
+                }
+            )
         except Exception:
             continue
+    out.sort(key=lambda x: (x["multiplayer_level"] == -1, x["multiplayer_level"], -x["score"]))
+    for index, item in enumerate(out, start=1):
+        item["ranking"] = index
+    return out
 
-        if playerwins is None or playerwins == 0:
-            continue
-        leaderboard.append(
-            {
-                "playerid": player.username,
-                "playername": player.multiplayer_name,
-                "score": int(playerwins),
-            }
-        )
 
-    # sort leaderboard by score
-    leaderboard = sorted(leaderboard, key=lambda k: k["score"], reverse=True)
+def _CachedLeaderboard():
+    with _leaderboard_lock:
+        now = time.time()
+        if _leaderboard_cache["list"] is None or now - _leaderboard_cache["built"] > LEADERBOARD_TTL:
+            _leaderboard_cache["list"] = _BuildLeaderboard()
+            _leaderboard_cache["built"] = now
+        return list(_leaderboard_cache["list"])
 
-    leaderboard = leaderboard[:50]
 
-    # set "ranking" based on position in leaderboard
-    for i in range(len(leaderboard)):
-        leaderboard[i]["ranking"] = int(i + 1)
+@analytics_bp.route("/dw_leaderboard/fetchentries/", methods=["POST"])
+def LeaderboardFetchEntries():
+    """PVP leaderboard entries, in the production response shape:
+    {"success": true, "data": [ {ranking, playerid, playername, multiplayer_level,
+    score, rank_name, sprite_name, rank_id}, ... ]}."""
+    try:
+        payload = request.get_json(silent=True) or request.form
+        start_pos = safe_int(payload.get("startpos", 1), 1)
+        end_pos = safe_int(payload.get("endpos", 30), 30)
 
-    return jsonify({"success": True, "data": f"{json.dumps(leaderboard)}"})
+        board = _CachedLeaderboard()
+
+        # Pad with bots to the requested window (production does the same).
+        minimum = max(30, end_pos)
+        while len(board) < minimum:
+            index = len(board) + 1
+            fake_points = max(100, 22000 - index * 650)
+            rank_name, sprite_name, rank_id = GetPvpRankDetails(None)
+            board.append(
+                {
+                    "ranking": index,
+                    "playerid": "bot_" + str(index),
+                    "playername": "Bot_" + str(index),
+                    "multiplayer_level": 999,
+                    "score": fake_points,
+                    "rank_name": rank_name,
+                    "sprite_name": sprite_name,
+                    "rank_id": rank_id,
+                }
+            )
+
+        viewer = request.headers.get("Player-Id")
+        data = [
+            dict(e, playerid=PublicId(e.get("playerid"), viewer))
+            for e in board[start_pos - 1 : end_pos]
+        ]
+        return jsonify({"success": True, "data": data})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500

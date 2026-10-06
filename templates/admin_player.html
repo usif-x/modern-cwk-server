@@ -651,6 +651,26 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
               {{ 'YES' if PVPBanned else 'NO' }}
             </span>
           </div>
+          <div class="flex items-center justify-between pt-2 gap-2">
+            <span class="text-muted-foreground text-xs font-medium">Google</span>
+            {% if GoogleEmail %}
+            <div class="flex items-center gap-2 min-w-0">
+              <span
+                class="font-mono text-xs text-foreground truncate max-w-[160px]"
+                title="{{ GoogleEmail }}"
+                >{{ GoogleEmail }}</span
+              >
+              <a
+                href="/admin/players/{{ player.username }}/googleunlink"
+                class="text-[11px] text-destructive hover:underline shrink-0"
+                data-confirm="Remove the Google link for this player?"
+                >Remove</a
+              >
+            </div>
+            {% else %}
+            <span class="text-xs text-muted-foreground">Not linked</span>
+            {% endif %}
+          </div>
         </div>
 
         <!-- Helper Creature Section -->
@@ -758,6 +778,29 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
               type="number"
               name="EvolutionShards"
               value="{{ EvolutionShards }}"
+              class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-foreground"
+              >Crafting Coin</label
+            >
+            <input
+              type="number"
+              name="CraftCurrency"
+              value="{{ CraftCurrency }}"
+              class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-foreground"
+              >Trade Market Coin</label
+            >
+            <input
+              type="number"
+              name="TradeCoins"
+              min="0"
+              value="{{ TradeCoins }}"
               class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
           </div>

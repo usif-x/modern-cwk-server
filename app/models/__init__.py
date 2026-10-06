@@ -165,3 +165,16 @@ class RouletteState(db.Model):
     spin_at = db.Column(db.Integer, nullable=False, default=0)
     spin_tokens = db.Column(db.Integer, nullable=False, default=0)
     updated_at = db.Column(db.Integer, nullable=True)
+
+
+class AccountLink(db.Model):
+    """One row per linked third-party identity (Google). `provider` is kept
+    generic so Apple or anything else can be added later without a schema change."""
+
+    __tablename__ = "account_link"
+    id = db.Column(db.Integer, primary_key=True)
+    provider = db.Column(db.String(32), nullable=False, default="google")
+    provider_sub = db.Column(db.String(255), nullable=False, unique=True, index=True)
+    username = db.Column(db.String(80), nullable=False, index=True)
+    email = db.Column(db.String(255), nullable=True)
+    linked_at = db.Column(db.Integer, nullable=True)

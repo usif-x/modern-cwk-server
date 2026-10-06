@@ -1,4 +1,5 @@
 from ._common import *
+from app.models import AccountLink, TradeCoinBalance
 
 
 def _ParseIdList(raw):
@@ -244,6 +245,12 @@ def AdminPlayer(player):
 
     Friends, FriendRequests = BuildFriendsView(player)
 
+    trade_row = TradeCoinBalance.query.filter_by(player_id=player["username"]).first()
+    TradeCoins = int(trade_row.coins) if trade_row else 0
+
+    google_link = AccountLink.query.filter_by(provider="google", username=player["username"]).first()
+    GoogleEmail = None if google_link is None else (google_link.email or "(linked, no email)")
+
     if game is None:
         return render_template(
             "admin_player.html",
@@ -258,6 +265,9 @@ def AdminPlayer(player):
             HardCurrency=0,
             PvpCurrency=0,
             EvolutionShards=0,
+            CraftCurrency=0,
+            TradeCoins=TradeCoins,
+            GoogleEmail=GoogleEmail,
             InstalledDate="N/A",
             PVPBanned=False,
             MultiplayerLevel=0,
@@ -468,6 +478,9 @@ def AdminPlayer(player):
         + int(game.get("FreeHardCurrency", 0)),
         PvpCurrency=game.get("PvpCurrency", 0),
         EvolutionShards=game.get("EvolutionShards", 0),
+        CraftCurrency=game.get("CraftCurrency", 0),
+        TradeCoins=TradeCoins,
+        GoogleEmail=GoogleEmail,
         InstalledDate=datetime.fromtimestamp(
             game.get("InstalledDate", 0), tz=timezone.utc
         ).strftime("%Y-%m-%d %H:%M:%S UTC"),
@@ -691,6 +704,18 @@ def AdminPlayerEdit(player):
         game["EvolutionShards"] = safe_int(
             request.form["EvolutionShards"], game.get("EvolutionShards", 0)
         )
+    if "CraftCurrency" in request.form:
+        game["CraftCurrency"] = safe_int(
+            request.form["CraftCurrency"], game.get("CraftCurrency", 0)
+        )
+    if "TradeCoins" in request.form:
+        coins = max(0, safe_int(request.form["TradeCoins"], 0))
+        bal = TradeCoinBalance.query.filter_by(player_id=player).first()
+        if bal is None:
+            db.session.add(TradeCoinBalance(player_id=player, coins=coins, updated=int(time.time())))
+        else:
+            bal.coins = coins
+            bal.updated = int(time.time())
     if "Zxcvbnm" in request.form:
         game["Zxcvbnm"] = 1
     else:
@@ -2275,6 +2300,13 @@ def AdminPlayerAction(player, action):
         # remove the ban regardless of its current/expired state
         Bans.query.filter_by(username=player, bantype="userid").delete()
         db.session.commit()
+    elif action == "googleunlink":
+        # The player lost that Google account; the game then asks them to link a
+        # new one (linking again pays no gems - the reward is once per player).
+        link = AccountLink.query.filter_by(provider="google", username=player).first()
+        if link is not None:
+            db.session.delete(link)
+            db.session.commit()
     else:
         return make_response("Invalid action!", 400)
 

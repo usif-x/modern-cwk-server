@@ -13,7 +13,7 @@ from app.utils import (
     GetAllyInfo, GetPlayerWins, SystemBan, get_hash_string, safe_int, GetRankForXP,
     GetPvpBanlist, ReadPersistText, GetLiveStatus, StripLegacyAdminMails,
     PruneDeliveredNewsMail, RollRoulettePrize, ApplyRoulettePrize, PurchasePrice,
-    BuildPvpBanlistResponse, ReadMiscParam,
+    BuildPvpBanlistResponse, ReadMiscParam, SaveReport, REPORT_MAX_BYTES,
 )
 game_bp = Blueprint('game_bp', __name__)
 
@@ -95,6 +95,15 @@ def PvpBanlist():
     response = make_response(json.dumps(data))
     response.headers["Content-Type"] = "application/json"
     return response
+
+
+@game_bp.route("/persist/static/report", methods=["POST"])
+def LiveReport():
+    """Client crash / feedback reports. Saves the body and always answers 204."""
+    length = request.content_length or 0
+    if 0 < length <= REPORT_MAX_BYTES:
+        SaveReport(request.get_data(cache=False, as_text=True), IPFromRequest(request))
+    return ("", 204)
 
 
 

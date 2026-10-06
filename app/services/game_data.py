@@ -403,6 +403,81 @@ def GetPvpRankName(level):
     return _LoadPvpRanks().get(level, "")
 
 
+_PVP_RANK_DETAIL_CACHE = None
+
+PVP_LEVEL_SENTINELS = {-1, 0, 999}
+
+
+def _LoadPvpRankDetails():
+    global _PVP_RANK_DETAIL_CACHE
+    if _PVP_RANK_DETAIL_CACHE is not None:
+        return _PVP_RANK_DETAIL_CACHE
+
+    path = os.path.join(ROOT_DIR, "data/persist/Blueprints/db_PVPRanks.json")
+    mapping = {}
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                for row in json.load(f):
+                    if "Rank" in row:
+                        rank = int(row["Rank"])
+                        mapping[rank] = (
+                            row.get("ShortRankName")
+                            or row.get("RankName")
+                            or ("Rank " + str(rank)),
+                            row.get("LeagueTexture") or "",
+                        )
+        except Exception as e:
+            Log("admin", f"Failed to load db_PVPRanks.json: {e}")
+
+    _PVP_RANK_DETAIL_CACHE = mapping
+    return mapping
+
+
+def GetPvpRankDetails(level):
+    """(rank_name, sprite_name, rank_id) for a MultiplayerLevel (1 = Super Amadeus).
+
+    Unknown/sentinel levels (the client's 999, or -1) get a neutral placeholder,
+    never a fake league. Matches the production get_rank_details_from_json.
+    """
+    try:
+        level = int(level) if level is not None else None
+    except (ValueError, TypeError):
+        level = None
+    if level is None or level < 1 or level in PVP_LEVEL_SENTINELS:
+        return "Unranked", "", 0
+    rows = _LoadPvpRankDetails()
+    if rows and level > max(rows):
+        level = max(rows)
+    row = rows.get(level)
+    if not row:
+        return "Unranked", "", 0
+    return row[0], row[1], level
+
+
+def CurrentPvpSeason():
+    """The season the app treats as current: first (file order) whose EndDate is
+    still ahead, else the last one listed."""
+    try:
+        with open(
+            os.path.join(ROOT_DIR, "data/persist/Blueprints/db_PVPSeasons.json"),
+            "r",
+            encoding="utf-8",
+        ) as f:
+            seasons = [s for s in json.load(f) if "EndDate" in s]
+    except (OSError, ValueError):
+        return None
+    now = _time.time()
+    for s in seasons:
+        try:
+            end = datetime.strptime(s["EndDate"], "%m/%d/%Y").timestamp()
+        except (ValueError, KeyError):
+            continue
+        if now < end:
+            return s["Season"]
+    return seasons[-1]["Season"] if seasons else None
+
+
 _TUTORIAL_CREATURE_CACHE = None
 
 

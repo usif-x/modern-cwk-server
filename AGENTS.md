@@ -525,6 +525,40 @@ admin-managed `data/persist/pvp_banlist.json`, merged with any time-active seaso
 in `data/persist/Blueprints/db_PVPBanlist.json` (`BuildPvpBanlistResponse`,
 `app/services/admin.py`). A banned floop is also emitted as a banned_card.
 
+### PVP leaderboard
+
+`POST /dw_leaderboard/fetchentries/` answers the production shape:
+`{"success": true, "data": [ {ranking, playerid, playername, multiplayer_level,
+score, rank_name, sprite_name, rank_id}, ... ]}`. Only players who played a match
+this season (`ActivePvpSeason` = current season and `PvpPlayed`) are ranked; the
+board is padded with bots to the requested window and built once every 5 minutes
+(`_BuildLeaderboard` / `_CachedLeaderboard`, `app/routes/analytics.py`). Real ids
+are hidden behind `PublicId` except the caller's own. Rank details come from
+`GetPvpRankDetails`, current season from `CurrentPvpSeason`
+(`app/services/game_data.py`).
+
+### Google account linking
+
+`app/routes/google.py` (blueprint `google_bp`) ports the production Google flow.
+Model `AccountLink` (`account_link`). Two flavours:
+- **Token endpoints** — the game proves a Google ID token directly:
+  `POST /account/google/link`, `POST /account/google/login`,
+  `GET|POST /account/google/status`, `POST /account/google/unlink`.
+- **Browser OAuth** — `POST /account/google/begin` opens a ticket and returns an
+  auth URL; Google returns to `GET /account/google/callback`; the game polls
+  `GET /account/google/poll`. `POST /account/google/token` (Android picker) and
+  `POST /account/google/create` (start a new player) finish it. Tickets live in
+  memory (`GSIGN_TTL` 600s).
+
+ID tokens are verified against Google (local `google-auth` library if installed,
+else the `tokeninfo` HTTPS fallback) with the audience checked against
+`CWK_GOOGLE_CLIENT_IDS`; the browser flow also needs `CWK_GOOGLE_WEB_CLIENT_ID` /
+`CWK_GOOGLE_WEB_CLIENT_SECRET`. The admin player page shows the linked Google
+email and a Remove action (`/admin/players/<uuid>/googleunlink`).
+
+`POST /persist/static/report` saves a client crash/feedback body to
+`data/persist/reports/` and answers `204` (`SaveReport`, `app/services/live.py`).
+
 ## Anti-Cheat / Security
 
 1. **Leader level validation** — Auto-bans if fresh account sets level > 5 or level jumps by > 10

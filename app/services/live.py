@@ -112,3 +112,26 @@ def GetLiveStatus():
     status = LoadLiveStatus()
     status["now"] = int(_time.time())
     return status
+
+
+# --- client crash / feedback reports (POST /persist/static/report) ----------
+
+REPORT_MAX_BYTES = 256 * 1024
+
+REPORTS_DIR = os.path.join(ROOT_DIR, "data/persist/reports")
+
+
+def SaveReport(body, ip=None):
+    """Persist one client report to data/persist/reports/. Never raises."""
+    if not body:
+        return False
+    try:
+        os.makedirs(REPORTS_DIR, exist_ok=True)
+        stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M-%S_%f")
+        safe_ip = "".join(c if (c.isalnum() or c in "._-") else "_" for c in str(ip or "unknown"))[:64]
+        path = os.path.join(REPORTS_DIR, f"{stamp}_{safe_ip}.txt")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(body[:REPORT_MAX_BYTES])
+        return True
+    except Exception:
+        return False
