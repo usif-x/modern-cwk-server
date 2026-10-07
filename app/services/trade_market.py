@@ -133,7 +133,11 @@ def _tload_save(player):
                 return d
         except Exception:
             pass
-    d = DecryptGameData(g)
+    d = None
+    try:
+        d = DecryptGameData(g)
+    except Exception:
+        d = None
     if not isinstance(d, dict):
         d = _decode_save(g)
     if not isinstance(d, dict):

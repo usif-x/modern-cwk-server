@@ -184,8 +184,11 @@ def AdminMarket():
     def _creature_by_uid(pid, uid):
         """Resolve a UniqueID in a player's current save (cached per request)."""
         if pid not in _save_cache:
-            p = Player.query.filter_by(username=pid).first()
-            _save_cache[pid] = _tinv(_tload_save(p)) if p is not None else []
+            try:
+                p = Player.query.filter_by(username=pid).first()
+                _save_cache[pid] = _tinv(_tload_save(p)) if p is not None else []
+            except Exception:
+                _save_cache[pid] = []
         for it in _save_cache[pid]:
             try:
                 if (
