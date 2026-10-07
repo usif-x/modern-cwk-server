@@ -178,3 +178,27 @@ class AccountLink(db.Model):
     username = db.Column(db.String(80), nullable=False, index=True)
     email = db.Column(db.String(255), nullable=True)
     linked_at = db.Column(db.Integer, nullable=True)
+
+class AdminGift(db.Model):
+    """A Post Office gift for one player (production 6.1.2+ protocol).
+
+    The app lists unclaimed rows via ``POST /mail/gifts`` and claims each once
+    through ``user_action2`` with ``evt="admin gift"`` (ctx = row id). Currency
+    columns are granted server-side; ``items`` carries a comma-separated list of
+    ``CR:<creature>,CA:<augment>,LD:<leader>,XP:<material>`` tags that the app
+    adds to the save and reports back.
+    """
+
+    __tablename__ = "admin_gift"
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), nullable=False, index=True)
+    gems = db.Column(db.Integer, nullable=False, default=0)
+    coins = db.Column(db.Integer, nullable=False, default=0)
+    pvp = db.Column(db.Integer, nullable=False, default=0)
+    shards = db.Column(db.Integer, nullable=False, default=0)
+    items = db.Column(db.Text, nullable=False, default="")
+    title = db.Column(db.String(80), nullable=False, default="")
+    message = db.Column(db.String(400), nullable=False, default="")
+    sender = db.Column(db.String(80), nullable=False, default="")
+    created_at = db.Column(db.Integer, nullable=False, default=0)
+    claimed_at = db.Column(db.Integer, nullable=True)

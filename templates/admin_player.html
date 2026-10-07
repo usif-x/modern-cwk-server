@@ -281,10 +281,9 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
           Send a Gift to the Post Office
         </h3>
         <p class="text-xs text-muted-foreground mb-4">
-          Currencies, creatures and XP materials are delivered as a claimable
-          mail in the player's post office. Heroes and Auguments can't travel by
-          mail, so they are granted instantly with a mailbox notice. The player
-          must restart the game to see a new mail.
+          Delivered to the player's in-game Post Office; the player claims it
+          there. Currencies, creatures, Auguments, heroes and XP materials are
+          all supported.
         </p>
         <form
           action="/admin/players/{{ player.username }}/gift"
@@ -2432,11 +2431,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
 
       function setHint(delivery) {
           if (!hintText) return;
-          if (delivery === 'direct') {
-              hintText.textContent = 'Granted instantly to the player (not mailable) with a mailbox notice.';
-          } else {
-              hintText.textContent = 'Delivered to the post office as a claimable mail.';
-          }
+          hintText.textContent = 'Delivered to the Post Office; the player claims it in-game.';
       }
 
       function applyGiftType() {

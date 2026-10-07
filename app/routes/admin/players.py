@@ -873,89 +873,74 @@ def AdminPlayerGift(player):
     if db_player is None:
         return make_response("No player found!", 404)
 
-    game = DecryptGameData(db_player.game)
-    if game is None:
-        return make_response("No game data found!", 400)
-
     gift_type = request.form.get("gift_type", "").strip()
     gift_id = request.form.get("gift_id", "").strip()
-    gift_amount = safe_int(request.form.get("gift_amount", 1), 1)
-    gift_title = request.form.get("gift_title", "").strip()
-    gift_body = request.form.get("gift_body", "").strip()
+    gift_amount = max(1, safe_int(request.form.get("gift_amount", 1), 1))
+    gift_title = request.form.get("gift_title", "").strip() or "A Gift For You"
+    gift_body = (
+        request.form.get("gift_body", "").strip()
+        or "You have received a gift from the Post Office."
+    )
 
     if gift_type == "Creature" and IsTutorialOnlyCreature(gift_id):
         return make_response(
             "This is a tutorial-only creature and cannot be gifted.", 400
         )
 
-    # Mailable rewards ride the client's db_NewsMail blueprint (per PlayerID).
-    if gift_type in GIFT_MAIL_TYPES:
-        ok, result = AddNewsMailGift(
-            player, gift_type, gift_id, gift_amount, gift_title, gift_body
-        )
-        if not ok:
-            return make_response(result, 400)
-        Log(
-            "admin",
-            current_user.username
-            + f" mailed a {gift_type} gift ({gift_id or 'currency'}) to player: "
-            + player,
-        )
-        return redirect("/admin/players/" + player)
+    # Post Office gift (production 6.1.2+): currencies are granted server-side
+    # on claim, item tags (CR/CA/LD/XP) are added by the app.
+    gems = coins = pvp = shards = 0
+    items = []
 
-    # Heroes / Auguments / Evolution Shards cannot travel by mail, so they are
-    # granted directly and a reward-less notice is left in the post office.
-    if gift_type in GIFT_DIRECT_TYPES:
-        if gift_type == "Leader":
-            if not gift_id:
-                return make_response("A hero ID is required!", 400)
-            leaders = game.get("Leaders", [])
-            if not isinstance(leaders, list):
-                leaders = []
-            by_id = {l.get("ID"): l for l in leaders if isinstance(l, dict)}
-            base_id = GetLeaderSkinBase(gift_id)
-            if base_id:
-                base_entry = by_id.get(base_id)
-                if base_entry is None:
-                    base_entry = {"ID": base_id, "Skin": base_id, "OwnedSkins": []}
-                    leaders.append(base_entry)
-                owned = base_entry.get("OwnedSkins")
-                if not isinstance(owned, list):
-                    owned = []
-                    base_entry["OwnedSkins"] = owned
-                if gift_id not in owned:
-                    owned.append(gift_id)
-                game["Leaders"] = leaders
-                desc = f"hero skin {gift_id}"
-            elif gift_id not in by_id:
-                leaders.append({"ID": gift_id, "Skin": gift_id, "OwnedSkins": []})
-                game["Leaders"] = leaders
-                desc = f"hero {gift_id}"
-            else:
-                desc = f"hero {gift_id} (already owned)"
-        else:
-            ok, desc = ApplyRedeemReward(game, gift_type, gift_amount, gift_id)
-            if not ok:
-                return make_response(desc, 400)
+    if gift_type in ("HardCurrency", "FreeHardCurrency"):
+        gems = gift_amount
+    elif gift_type == "SoftCurrency":
+        coins = gift_amount
+    elif gift_type == "PvpCurrency":
+        pvp = gift_amount
+    elif gift_type == "EvolutionShards":
+        shards = gift_amount
+    elif gift_type == "Creature":
+        if not gift_id:
+            return make_response("A creature ID is required!", 400)
+        items = [f"CR:{gift_id}"] * gift_amount
+    elif gift_type == "ActionCard":
+        if not gift_id:
+            return make_response("An Auguments ID is required!", 400)
+        items = [f"CA:{gift_id}"] * gift_amount
+    elif gift_type == "Leader":
+        if not gift_id:
+            return make_response("A hero ID is required!", 400)
+        items = [f"LD:{gift_id}"]
+    elif gift_type == "XPMaterials":
+        if not gift_id:
+            return make_response("An XP material ID is required!", 400)
+        items = [f"XP:{gift_id}"] * gift_amount
+    else:
+        return make_response("Unsupported reward type!", 400)
 
-        StripLegacyAdminMails(game)
-        db_player.game = EncryptGameData(game, player)
-        db.session.commit()
+    gift = AdminGift(
+        username=player,
+        gems=gems,
+        coins=coins,
+        pvp=pvp,
+        shards=shards,
+        items=",".join(items),
+        title=gift_title[:80],
+        message=gift_body[:400],
+        sender=current_user.username,
+        created_at=int(time.time()),
+    )
+    db.session.add(gift)
+    db.session.commit()
 
-        AddNewsMailNotice(
-            player,
-            gift_title,
-            gift_body or f"An admin gift was added to your account: {desc}.",
-        )
-        Log(
-            "admin",
-            current_user.username
-            + f" granted a {gift_type} gift ({gift_id or 'currency'}) to player: "
-            + player,
-        )
-        return redirect("/admin/players/" + player)
-
-    return make_response("Unsupported reward type!", 400)
+    Log(
+        "admin",
+        current_user.username
+        + f" sent a {gift_type} Post Office gift to player: "
+        + player,
+    )
+    return redirect("/admin/players/" + player)
 
 
 @admin_bp.route("/admin/players/<player>/add_creature", methods=["POST"])

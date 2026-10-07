@@ -25,7 +25,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 
 from app import app as flask_app
 from app import badcharaters, bcrypt, db, maintenance
-from app.models import Admin, AdminActivity, Bans, Logs, Player, RedeemCode, UpsightLogs
+from app.models import Admin, AdminActivity, AdminGift, Bans, Logs, Player, RedeemCode, UpsightLogs
 from app.utils import (
     DATABASE_DUMP_NAME,
     DEFAULT_LOADOUT_COUNT,

@@ -5,7 +5,7 @@ from flask import Blueprint, abort, jsonify, make_response, redirect, render_tem
 from flask_login import current_user
 
 from app import maintenance, app, db
-from app.models import Player, RouletteState, UpsightLogs
+from app.models import Player, RouletteState, UpsightLogs, AdminGift
 from app.services.trade_market import ApplyTradeDeltasToGame
 from app.utils import (
     DecryptGameData, EncryptGameData, DiscordWebhookMessage, IPFromRequest,
@@ -95,6 +95,48 @@ def PvpBanlist():
     response = make_response(json.dumps(data))
     response.headers["Content-Type"] = "application/json"
     return response
+
+
+@game_bp.route("/mail/gifts", methods=["POST"])
+def MailGifts():
+    """Post Office (6.1.2+): list this player's unclaimed admin gifts.
+
+    Same proof as a save write: the Player-Id header. The app claims each gift
+    once through user_action2 evt "admin gift".
+    """
+    username = request.headers.get("Player-Id")
+    if not username or InvalidUsername(username):
+        return jsonify({"ok": False, "error": "Invalid Username!"}), 400
+    if IsUserBanned(username, IPFromRequest(request)):
+        return jsonify({"ok": False, "error": "User is banned!"}), 403
+    player = Player.query.filter_by(username=username).first()
+    if player is None:
+        return jsonify({"ok": False, "error": "Invalid Username!"}), 400
+
+    rows = (
+        AdminGift.query.filter_by(username=username, claimed_at=None)
+        .order_by(AdminGift.id)
+        .limit(50)
+        .all()
+    )
+    return jsonify(
+        {
+            "ok": True,
+            "gifts": [
+                {
+                    "id": g.id,
+                    "title": g.title or "",
+                    "message": g.message or "",
+                    "gems": g.gems or 0,
+                    "coins": g.coins or 0,
+                    "pvp": g.pvp or 0,
+                    "shards": g.shards or 0,
+                    "items": g.items or "",
+                }
+                for g in rows
+            ],
+        }
+    )
 
 
 @game_bp.route("/persist/static/report", methods=["POST"])
@@ -229,6 +271,11 @@ def UserAction2():
         # coins. The app sends df = -gems to spend; the server prices the packs.
         if evt.lower() in CURRENCY_PURCHASES:
             return _HandleCurrencyPurchase(db_user, pid, clientData, handle, evt.lower())
+
+        # Post Office: claim one admin gift. The server grants the currencies
+        # (save-based wallet); the app adds the gift's items and reports them.
+        if evt.lower() == "admin gift":
+            return _ClaimAdminGift(db_user, pid, clientData, handle)
 
         # The client sends its current balances (pd/fr/cu) plus the deltas it is
         # applying (dp/df/dc) and expects the authoritative results back in
@@ -374,6 +421,75 @@ def _BalanceFields(game, handle):
         "level7": safe_int(game.get("CraftCurrency", 0)),
         "handle": handle,
     }
+
+
+def _ClaimAdminGift(db_user, pid, clientData, handle):
+    """Claim one Post Office admin gift (production 6.1.2+ "admin gift").
+
+    Currencies are granted here (the save is the wallet); the gift's ``items``
+    string is handed to the app, which adds those items to its save. A gift is
+    claimed at most once.
+    """
+    ctx = str(clientData.get("ctx", "") or "").strip()
+    gift = None
+    if ctx.isdigit():
+        gift = AdminGift.query.filter_by(
+            id=int(ctx), username=pid, claimed_at=None
+        ).first()
+
+    game = DecryptGameData(db_user.game) if db_user.game else None
+    if not isinstance(game, dict):
+        game = {}
+
+    if gift is None:
+        fields = {
+            **_BalanceFields(game, handle),
+            "reason": "UNKNOWN_GIFT",
+            "gs": 0,
+            "gf": 0,
+            "gv": 0,
+            "ge": 0,
+            "gc": 0,
+        }
+        return jsonify({"success": True, "data": json.dumps({"fields": fields})})
+
+    gems = max(0, safe_int(gift.gems, 0))
+    coins = max(0, safe_int(gift.coins, 0))
+    pvp = max(0, safe_int(gift.pvp, 0))
+    shards = max(0, safe_int(gift.shards, 0))
+
+    if gems:
+        game["FreeHardCurrency"] = safe_int(game.get("FreeHardCurrency", 0)) + gems
+        game["HardCurrency"] = safe_int(game.get("HardCurrency", 0)) + gems
+    if coins:
+        game["SoftCurrency"] = safe_int(game.get("SoftCurrency", 0)) + coins
+    if pvp:
+        game["PvpCurrency"] = safe_int(game.get("PvpCurrency", 0)) + pvp
+    if shards:
+        game["EvolutionShards"] = safe_int(game.get("EvolutionShards", 0)) + shards
+
+    db_user.game = EncryptGameData(game, pid)
+    gift.claimed_at = int(time.time())
+    db.session.commit()
+
+    PlayerLog(
+        IPFromRequest(request),
+        pid,
+        f"[post] gift {gift.id} claimed: {gems} gems, {coins} coins, "
+        f"{pvp} wishbones, {shards} shards, items={gift.items}",
+    )
+
+    fields = {
+        **_BalanceFields(game, handle),
+        "reason": "OK",
+        "gs": coins,
+        "gf": gems,
+        "gv": pvp,
+        "ge": shards,
+        "gc": 0,
+        "seq": int(time.time()),
+    }
+    return jsonify({"success": True, "data": json.dumps({"fields": fields})})
 
 
 def _OwnsLeader(game, key, is_skin):

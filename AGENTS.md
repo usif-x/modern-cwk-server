@@ -212,11 +212,13 @@ The in-game post office is the save's `Mails` array. An entry looks like:
  "Opened": 1, "Rewarded": 1}
 ```
 
-- The save's `Mails` array is **client-owned**. The client rebuilds it from `data/persist/Blueprints/db_NewsMail.json` (`MailController.RetrieveMailsAndAllyInvites`): for every blueprint entry whose `PlayerID` matches the player (or is empty) and whose `showDate`/`endDate`/`Repeats` window is active, and that isn't already in `Mails` or `DeletedMail`, it creates a `MailItem`.
-- The client's `MailItem` only understands these rewards: `SoftCurrency`, `HardCurrency`, `PvPCurrency` (currency quantities), `XPMaterials` (GiftID + quantity) and `Creature` (GiftID). **Heroes, Auguments and Evolution Shards cannot travel by mail.**
-- The admin **Gift / Reward** composer (`POST /admin/players/<uuid>/gift`) appends a per-player entry to `db_NewsMail.json` (`AddNewsMailGift`: unique `ADMIN_*` ID, `GiftType`, optional `GiftID`, `Quantity`, `showDate` = today, `PlayerID` = UUID). Heroes/Auguments/Shards are instead granted directly (`ApplyRedeemReward`, skin-aware for heroes) plus a reward-less notice mail (`AddNewsMailNotice`). The player must restart the game to pick up a new blueprint mail.
-- Never write gift rewards into the save's `Mails` directly — the client ignores unknown fields and rebuilds the array. `StripLegacyAdminMails` removes any leftover `ADMIN_*` entries from saves.
-- `PruneDeliveredNewsMail` deletes a per-player `db_NewsMail` entry once the save references its ID (in `Mails` or `DeletedMail`), so a claimed gift is not re-created on the next login. Blueprint IDs are timestamp-based so they are never reused.
+- The save's `Mails` array is **client-owned** and rebuilt from `data/persist/Blueprints/db_NewsMail.json` (`db_NewsMail` was the legacy delivery path; it only ever supported currencies, XP materials and creatures, and required a client restart). `strip`/prune helpers (`StripLegacyAdminMails`, `PruneDeliveredNewsMail`) clean up leftover `ADMIN_*` entries from the old format.
+
+**Admin Gift / Reward uses the production Post Office (6.1.2+), not `db_NewsMail`:**
+- Model `AdminGift` (`admin_gift`): `username`, `gems`, `coins`, `pvp`, `shards`, `items`, `title`, `message`, `sender`, `created_at`, `claimed_at`.
+- `POST /mail/gifts` (Player-Id header) lists a player's unclaimed gifts: `{"ok": true, "gifts": [{id, title, message, gems, coins, pvp, shards, items}]}`. `items` is a comma-separated `CR:<id>,CA:<id>,LD:<id>,XP:<id>` list the app adds to its save.
+- The app claims each gift once via `user_action2` with `evt="admin gift"` and `ctx=<gift id>`; `_ClaimAdminGift` grants the currencies server-side (save is the wallet), marks `claimed_at`, and returns the balances plus `reason`/`gs`/`gf`/`gv`/`ge`. **The app adds the item tags itself**, so creatures/augments/heroes work (unlike the old mail path).
+- The admin **Gift / Reward** composer (`POST /admin/players/<uuid>/gift`) creates an `AdminGift` row.
 
 ## Route Reference
 
@@ -240,7 +242,8 @@ The in-game post office is the save's `Mails` array. An entry looks like:
 | GET      | `/persist/getcc/`                   | Country code                        |
 | POST     | `/account/preAuth/`                 | Pre-auth nonce                      |
 | POST     | `/account/gcAuth/`                  | Game Center auth                    |
-| POST     | `/persist/user_action2/`            | User action tracking                |
+| POST     | `/persist/user_action2/`            | User action tracking (also Post Office `admin gift` claim) |
+| POST     | `/mail/gifts`                       | List a player's unclaimed Post Office gifts (Player-Id header) |
 
 ### Friend Routes (`app/routes/friends.py`)
 
