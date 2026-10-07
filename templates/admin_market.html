@@ -62,7 +62,7 @@
 
   <!-- Status filter -->
   <div class="flex flex-wrap items-center gap-1.5 p-1 rounded-lg border border-border bg-muted/40 w-fit">
-    {% for s in ['active', 'sold', 'cancelled', 'expired', 'removed', 'stuck', 'all'] %}
+    {% for s in ['active', 'sold', 'cancelled', 'reverted', 'expired', 'removed', 'stuck', 'all'] %}
     <a href="/admin/market?status={{ s }}"
        class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium capitalize transition-colors {% if status == s %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
       {{ s }}
@@ -184,7 +184,19 @@
             <td class="px-4 py-3 font-mono text-xs">{{ o.id }}</td>
             <td class="px-4 py-3"><a href="/admin/players/{{ o.from_id }}" class="text-foreground hover:underline">{{ o.from_name }}</a></td>
             <td class="px-4 py-3"><a href="/admin/players/{{ o.to_id }}" class="text-foreground hover:underline">{{ o.to_name }}</a></td>
-            <td class="px-4 py-3 font-mono text-[11px] text-muted-foreground">{{ o.escrow_ids|length }} creature(s) + {{ o.coins }}c</td>
+            <td class="px-4 py-3">
+              <div class="flex flex-col gap-0.5">
+                {% for it in o.give_items %}
+                <span class="text-[11px] text-foreground">
+                  {{ it.name or it.id }}
+                  <span class="font-mono text-muted-foreground">{{ it.id }}{% if it.stars %} &middot; {{ it.stars }}★{% endif %}</span>
+                </span>
+                {% else %}
+                <span class="text-[11px] text-muted-foreground">—</span>
+                {% endfor %}
+                {% if o.coins %}<span class="text-[11px] font-medium text-foreground">+ {{ o.coins }} coins</span>{% endif %}
+              </div>
+            </td>
             <td class="px-4 py-3 font-mono text-[11px] text-muted-foreground">{{ o.want_uids|length }} creature(s) + {{ o.want_coins }}c</td>
             <td class="px-4 py-3">
               <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize {% if o.status == 'accepted' %}text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/10{% else %}text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10{% endif %}">

@@ -42,7 +42,7 @@ def AdminMarket():
         return abort(404)
 
     status = request.args.get("status", "active", type=str)
-    if status not in ("active", "sold", "cancelled", "expired", "removed", "stuck", "all"):
+    if status not in ("active", "sold", "cancelled", "expired", "removed", "reverted", "stuck", "all"):
         status = "active"
 
     creature_names = GetCreatureNameMap()
@@ -142,6 +142,36 @@ def AdminMarket():
             req = json.loads(o.request_json)
         except Exception:
             off, req = {}, {}
+        # What the sender gives: pending offers have live escrow rows; accepted
+        # offers moved those creatures into the accepter's save (revert_json).
+        give_items = []
+        if o.status == "pending":
+            source_items = []
+            for eid in off.get("escrow_ids", []):
+                esc = TradeEscrow.query.get(eid)
+                if esc is not None:
+                    try:
+                        source_items.append(json.loads(esc.item_json))
+                    except Exception:
+                        pass
+        elif o.status == "accepted" and o.revert_json:
+            try:
+                source_items = json.loads(o.revert_json).get("accepter", {}).get("items", [])
+            except Exception:
+                source_items = []
+        else:
+            source_items = []
+        for it in source_items:
+            cid = it.get("ID")
+            if cid:
+                give_items.append(
+                    {
+                        "id": cid,
+                        "name": creature_names.get(cid, ""),
+                        "stars": it.get("StarRating"),
+                    }
+                )
+
         offers.append(
             {
                 "id": o.id,
@@ -151,6 +181,7 @@ def AdminMarket():
                 "to_name": names.get(o.to_id, "Unknown"),
                 "coins": off.get("coins", 0),
                 "escrow_ids": off.get("escrow_ids", []),
+                "give_items": give_items,
                 "want_coins": req.get("coins", 0),
                 "want_uids": req.get("unique_ids", []),
                 "created": o.created,
