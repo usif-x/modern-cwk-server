@@ -74,6 +74,78 @@ def _log_creature_for_listing(listing_id):
     return None
 
 
+_OFFER_LOG_RE = re.compile(r"offer=(\d+)")
+
+
+def _accept_times(offer_ids):
+    """offer_id -> accept log timestamp (for older accepted offers)."""
+    ids = {int(i) for i in offer_ids if i}
+    if not ids:
+        return {}
+    out = {}
+    for lg in (
+        TradeLog.query.filter_by(action="accept")
+        .order_by(TradeLog.id.desc())
+        .limit(50000)
+        .all()
+    ):
+        m = _OFFER_LOG_RE.search(lg.detail or "")
+        if m and int(m.group(1)) in ids:
+            out[int(m.group(1))] = lg.ts
+    return out
+
+
+def _reconstruct_offer_snapshot(o, ts):
+    """Rebuild a revert snapshot for an old accepted offer from TradeDelta.
+
+    On accept, ``_twrite_save`` recorded an ``add`` delta for every creature the
+    sender received (the wanted ones) and every creature the accepter received
+    (the escrowed ones), each with the UniqueID it got in the destination save.
+    We pair those deltas by the accept timestamp. Returns ``None`` when the
+    counts don't line up (ambiguous), so we never move the wrong creatures.
+    """
+    if not ts:
+        return None
+    try:
+        off = json.loads(o.offer_json)
+        req = json.loads(o.request_json)
+    except Exception:
+        off, req = {}, {}
+
+    def items_for(pid):
+        rows = (
+            TradeDelta.query.filter(
+                TradeDelta.username == pid,
+                TradeDelta.action == "add",
+                TradeDelta.created >= int(ts) - 3,
+                TradeDelta.created <= int(ts),
+            )
+            .all()
+        )
+        out = []
+        for r in rows:
+            try:
+                it = json.loads(r.item_json)
+            except Exception:
+                continue
+            it["UniqueID"] = r.unique_id
+            out.append(it)
+        return out
+
+    give_expected = len(off.get("escrow_ids", []))
+    want_expected = len(req.get("unique_ids", []))
+    sender_items = items_for(o.from_id)      # wanted creatures now in sender
+    accepter_items = items_for(o.to_id)      # given creatures now in accepter
+    if len(sender_items) != want_expected or len(accepter_items) != give_expected:
+        return None
+    if not sender_items and not accepter_items:
+        return None
+    return {
+        "sender": {"id": o.from_id, "items": sender_items, "coins": int(req.get("coins", 0))},
+        "accepter": {"id": o.to_id, "items": accepter_items, "coins": int(off.get("coins", 0))},
+    }
+
+
 @admin_bp.route("/admin/market")
 @login_required
 def AdminMarket():
@@ -202,6 +274,9 @@ def AdminMarket():
         return None
 
     offers = []
+    accept_ts = _accept_times(
+        [o.id for o in offers_db if o.status == "accepted" and not o.revert_json]
+    )
     for o in offers_db:
         try:
             off = json.loads(o.offer_json)
@@ -213,6 +288,10 @@ def AdminMarket():
             snap = json.loads(o.revert_json) if o.revert_json else None
         except Exception:
             snap = None
+        if snap is None and o.status == "accepted":
+            # Old accepted offer with no stored snapshot: rebuild it from the
+            # TradeDelta rows the accept created.
+            snap = _reconstruct_offer_snapshot(o, accept_ts.get(o.id))
 
         # What the sender gives: pending offers have live escrow rows; accepted
         # offers moved those creatures into the accepter's save (revert_json).
@@ -469,14 +548,24 @@ def AdminMarketOfferRevert(offer_id):
     o = TradeOffer.query.get(offer_id)
     if o is None:
         return make_response("Offer not found!", 404)
-    if o.status != "accepted" or not o.revert_json:
+    if o.status != "accepted":
+        return make_response("Only an accepted offer can be reverted.", 400)
+
+    try:
+        snap = json.loads(o.revert_json) if o.revert_json else None
+    except Exception:
+        snap = None
+    if snap is None:
+        # Old accepted offer: rebuild the snapshot from the TradeDelta rows.
+        accept_ts = _accept_times([o.id])
+        snap = _reconstruct_offer_snapshot(o, accept_ts.get(o.id))
+    if snap is None:
         return make_response(
-            "This offer cannot be reverted (only accepted ones recorded after the update).",
+            "This trade has no stored snapshot and it can't be rebuilt from the log.",
             400,
         )
 
     try:
-        snap = json.loads(o.revert_json)
         sender_id = snap["sender"]["id"]
         accepter_id = snap["accepter"]["id"]
         sender = Player.query.filter_by(username=sender_id).first()
