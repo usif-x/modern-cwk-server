@@ -386,6 +386,29 @@ def AdminPlayer(player):
     google_link = AccountLink.query.filter_by(provider="google", username=player["username"]).first()
     GoogleEmail = None if google_link is None else (google_link.email or "(linked, no email)")
 
+    gift_rows = (
+        AdminGift.query.filter_by(username=player["username"])
+        .order_by(AdminGift.id.desc())
+        .limit(100)
+        .all()
+    )
+    Gifts = [
+        {
+            "id": g.id,
+            "gems": g.gems or 0,
+            "coins": g.coins or 0,
+            "pvp": g.pvp or 0,
+            "shards": g.shards or 0,
+            "items": g.items or "",
+            "title": g.title or "",
+            "message": g.message or "",
+            "sender": g.sender or "",
+            "created_at": g.created_at,
+            "claimed_at": g.claimed_at,
+        }
+        for g in gift_rows
+    ]
+
     if game is None:
         return render_template(
             "admin_player.html",
@@ -403,6 +426,7 @@ def AdminPlayer(player):
             CraftCurrency=0,
             TradeCoins=TradeCoins,
             GoogleEmail=GoogleEmail,
+            Gifts=Gifts,
             InstalledDate="N/A",
             PVPBanned=False,
             MultiplayerLevel=0,
@@ -616,6 +640,7 @@ def AdminPlayer(player):
         CraftCurrency=game.get("CraftCurrency", 0),
         TradeCoins=TradeCoins,
         GoogleEmail=GoogleEmail,
+        Gifts=Gifts,
         InstalledDate=datetime.fromtimestamp(
             game.get("InstalledDate", 0), tz=timezone.utc
         ).strftime("%Y-%m-%d %H:%M:%S UTC"),
@@ -938,6 +963,60 @@ def AdminPlayerGift(player):
         "admin",
         current_user.username
         + f" sent a {gift_type} Post Office gift to player: "
+        + player,
+    )
+    return redirect("/admin/players/" + player)
+
+
+@admin_bp.route(
+    "/admin/players/<player>/gift/<int:gift_id>/edit", methods=["POST"]
+)
+@login_required
+def AdminPlayerGiftEdit(player, gift_id):
+    if not isAdmin(current_user):
+        return abort(404)
+
+    gift = AdminGift.query.filter_by(id=gift_id, username=player).first()
+    if gift is None:
+        return make_response("Gift not found!", 404)
+
+    gift.gems = max(0, safe_int(request.form.get("gems"), 0))
+    gift.coins = max(0, safe_int(request.form.get("coins"), 0))
+    gift.pvp = max(0, safe_int(request.form.get("pvp"), 0))
+    gift.shards = max(0, safe_int(request.form.get("shards"), 0))
+    gift.items = (request.form.get("items") or "").strip()[:2000]
+    gift.title = (request.form.get("title") or "").strip()[:80]
+    gift.message = (request.form.get("message") or "").strip()[:400]
+    db.session.commit()
+
+    Log(
+        "admin",
+        current_user.username
+        + f" edited Post Office gift {gift_id} for player: "
+        + player,
+    )
+    return redirect("/admin/players/" + player)
+
+
+@admin_bp.route(
+    "/admin/players/<player>/gift/<int:gift_id>/delete", methods=["POST"]
+)
+@login_required
+def AdminPlayerGiftDelete(player, gift_id):
+    if not isAdmin(current_user):
+        return abort(404)
+
+    gift = AdminGift.query.filter_by(id=gift_id, username=player).first()
+    if gift is None:
+        return make_response("Gift not found!", 404)
+
+    db.session.delete(gift)
+    db.session.commit()
+
+    Log(
+        "admin",
+        current_user.username
+        + f" deleted Post Office gift {gift_id} for player: "
         + player,
     )
     return redirect("/admin/players/" + player)

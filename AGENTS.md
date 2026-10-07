@@ -155,6 +155,23 @@ cwk-server/
 | `enabled`       | Boolean         | Active status                                                                                                                                    |
 | `created_by`    | String(128)     | Admin who created                                                                                                                                |
 
+### AdminGift
+
+| Field        | Type            | Description                                                              |
+| ------------ | --------------- | ------------------------------------------------------------------------ |
+| `id`         | Integer, PK     | Auto-increment                                                           |
+| `username`   | String(80)      | Target player UUID                                                       |
+| `gems`       | Integer         | Free hard currency granted on claim                                      |
+| `coins`      | Integer         | Soft currency granted on claim                                           |
+| `pvp`        | Integer         | Wishbones granted on claim                                               |
+| `shards`     | Integer         | Evolution shards granted on claim                                        |
+| `items`      | Text            | Comma-separated `CR:<id>,CA:<id>,LD:<id>,XP:<id>` tags the app adds      |
+| `title`      | String(80)      | Mail title                                                               |
+| `message`    | String(400)     | Mail body                                                                |
+| `sender`     | String(80)      | Admin who sent it                                                        |
+| `created_at` | Integer         | Unix timestamp                                                           |
+| `claimed_at` | Integer, NULL   | Unix timestamp when claimed; NULL = unclaimed                            |
+
 ## Game Data Format
 
 Player game data is stored in the `Player.game` column as:
@@ -327,7 +344,9 @@ The in-game post office is the save's `Mails` array. An entry looks like:
 | POST     | `/admin/players/<uuid>/delete_leaders_bulk`      | Multi-delete selected leaders                                                    |
 | POST     | `/admin/players/<uuid>/add_all_skins`            | Attach all skins to the player's owned heroes via `OwnedSkins`                   |
 | POST     | `/admin/players/<uuid>/max_resources`            | Max all currencies preset                                                        |
-| POST     | `/admin/players/<uuid>/gift`                     | Send a Gift/Reward to the player's post office (`db_NewsMail.json`, per `PlayerID`) |
+| POST     | `/admin/players/<uuid>/gift`                     | Create a Post Office gift (`AdminGift`) for the player                          |
+| POST     | `/admin/players/<uuid>/gift/<id>/edit`           | Edit a Post Office gift (amounts, items, title, message)                        |
+| POST     | `/admin/players/<uuid>/gift/<id>/delete`         | Delete a Post Office gift                                                       |
 | POST     | `/admin/players/<uuid>/loadouts/set`             | Set team (loadout) count 1-50; grows with blank team lines                       |
 | POST     | `/admin/players/<uuid>/loadouts/creatures`       | Set creatures per team 1-10; shrinking drops the extra slots                     |
 | GET      | `/admin/players/<uuid>/export_save`              | Download save as JSON                                                            |
