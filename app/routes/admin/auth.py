@@ -45,10 +45,10 @@ def AdminHome():
     if not isAdmin(current_user):
         return abort(404)
 
-    adminActivity = AdminActivity.query.order_by(AdminActivity.time).all()
-
-    # reverse list
-    adminActivity.reverse()
+    # Most recent 100 admin events (newest first).
+    adminActivity = (
+        AdminActivity.query.order_by(AdminActivity.time.desc()).limit(100).all()
+    )
 
     total_players = Player.query.filter(
         Player.game.isnot(None), Player.leader_level.isnot(None)

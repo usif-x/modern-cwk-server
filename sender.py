@@ -13,23 +13,18 @@ import requests
 # ---------------- Configuration ----------------
 URL = (
     "https://cardwarskingdom.pythonanywhere.com/admin/api/player/"
-    "4211c5b4-2a23-4720-9f54-5dd208d3a3d8/save"
+    "272946fd-3a65-457e-ad6c-f7763b36fe4a/save"
 )
 
-INPUT_FILE = "usif.json"  # <-- your local json file
+INPUT_FILE = (
+    "player_28ec0fa0-b011-47eb-8c3f-ce49ec887517_save.json"  # <-- your local json file
+)
 
 COOKIES = {
     "remember_token": (
-        "Usif|9c3c4f17b3bf539fbb5a70781fedb6a0f850ebdba7d399f745fbaaab98953ed3"
-        "44a8549c7e78276f12f42c5007f82d1217bb587e10921cb027744aafe3d2db5c"
+        "Usif|762d77b77dab0812fc2cbc7994bb3f71de8e443048dda48bb5f513a504051ac8ab9bfee6e87d79b5eddf2fbcb3dc5b4089c0d5f1e2759d180639462a963889c4"
     ),
-    "session": (
-        ".eJwljs1qAzEMhF_F6ByKLa9_tE_RS08hBK0lZRe2TYk3p5B3r6GnYZiP4XvB1Xbuq3aY"
-        "zy9wxwj41t75pnCCz125q9vvN7f9uOPuuLUxumPduvsdzAdc3pfTOHloX2E23ruOugnMo"
-        "EiSYi4kgdQnNKw5V0-1VRHmWLAu5JspGttkXiWjpgkjsV8MI3rLXiwIVqomLesU1EeZoq"
-        "XIUiiUiVNKlEurhKGGvGCwHCoppRKH__XZ9fFv89U3g_cf7RxHCQ.arUKbg.uSs_1Hp2u"
-        "sp24g7D1wBdss306-g"
-    ),
+    "session": ".eJztUctqAzEQ-xUz56X4veP9il56CiGMPTPZhW1T4s0p5N9r6C_0WBAIIQkEesJFd-qrdFhOTzDHIPiU3ukqMMH7LtTF7Ler2b7McTPU2jDNsW7dfI_MG5xf03_vT3vnaZxyl77CorR3GXJjWMCxrZZi5CRVmw2ss0fXGG0W3zQ0yja3NsBFq_pAVq3MMbZYvQ84oyVXsNbilEJyhUvzEkNxhJJ9zowlh6TWlYCFs86pzkSYYhRmxLH_8uhy_13z0TeF1w9iCrfT.asUzsA.9jxJqBbyIHTrNJ5uKnjKsnMBKos",
 }
 
 HEADERS = {
