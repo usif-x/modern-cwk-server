@@ -657,7 +657,7 @@
           const isSubmit =
             (el.tagName === "BUTTON" && (el.type === "submit" || el.form)) ||
             (el.tagName === "INPUT" && el.type === "submit");
-          if (isSubmit) return; // handled by the submit listener
+          if (isSubmit || el.tagName === "FORM") return; // handled by the submit listener
 
           e.preventDefault();
           e.stopPropagation();
@@ -673,7 +673,7 @@
         true,
       );
 
-      // Intercept form submits whose submitter (or form) has data-confirm.
+      // Intercept form submits whose form or submitter has data-confirm.
       document.addEventListener(
         "submit",
         function (e) {
@@ -689,18 +689,28 @@
               "button[type=submit][data-confirm], input[type=submit][data-confirm]",
             );
           }
+          // Support data-confirm placed on the <form> itself.
+          if (!el && form.hasAttribute("data-confirm")) {
+            el = form;
+          }
           if (!el) return;
-          if (el.dataset.confirmed === "1") {
-            el.dataset.confirmed = "";
+          if (form.dataset.confirmed === "1") {
+            form.dataset.confirmed = "";
             return;
           }
 
           e.preventDefault();
           cwkConfirm(el.getAttribute("data-confirm")).then(function (ok) {
             if (!ok) return;
-            el.dataset.confirmed = "1";
-            if (e.submitter) {
+            form.dataset.confirmed = "1";
+            if (
+              form.requestSubmit &&
+              e.submitter &&
+              form.contains(e.submitter)
+            ) {
               form.requestSubmit(e.submitter);
+            } else if (form.requestSubmit) {
+              form.requestSubmit();
             } else {
               form.submit();
             }

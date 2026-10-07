@@ -230,20 +230,40 @@ def UserAction2():
         if evt.lower() in CURRENCY_PURCHASES:
             return _HandleCurrencyPurchase(db_user, pid, clientData, handle, evt.lower())
 
-        FreeHardCurrency = safe_int(clientData.get("fr", 0))
+        # The client sends its current balances (pd/fr/cu) plus the deltas it is
+        # applying (dp/df/dc) and expects the authoritative results back in
+        # level1/level2/level3. Return all three so the client never keeps a
+        # stale balance after a mail claim.
+        paid = safe_int(clientData.get("pd", 0))
+        free = safe_int(clientData.get("fr", 0))
+        custom = safe_int(clientData.get("cu", 0))
+        dp = safe_int(clientData.get("dp", 0))
         df = safe_int(clientData.get("df", 0))
+        dc = safe_int(clientData.get("dc", 0))
 
-        finalamount = FreeHardCurrency + df
+        final_paid = paid + dp
+        final_free = free + df
+        final_custom = custom + dc
+        finalamount = final_free
 
         PlayerLog(
             IPFromRequest(request),
             pid,
-            f"User Action: {evt}\nFree Hard Currency: {FreeHardCurrency}\nDF: {df}\nFinal Amount: {finalamount}",
+            f"User Action: {evt}\nFree Hard Currency: {free}\nDF: {df}\nFinal Amount: {finalamount}",
         )
 
         data = {
             "success": True,
-            "data": json.dumps({"fields": {"level2": finalamount, "handle": handle}}),
+            "data": json.dumps(
+                {
+                    "fields": {
+                        "level1": final_paid,
+                        "level2": final_free,
+                        "level3": final_custom,
+                        "handle": handle,
+                    }
+                }
+            ),
         }
     else:
         data = {
