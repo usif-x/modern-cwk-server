@@ -1,6 +1,7 @@
 """Admin control panel for the player-to-player trade market."""
 
 import json
+import re
 
 from ._common import *
 from app.models import (
@@ -35,6 +36,44 @@ def _player_names(ids):
     return {r.username: (r.multiplayer_name or "Unnamed") for r in rows}
 
 
+_LISTING_LOG_RE = re.compile(r"listing=(\d+)[^\n]*?cre=([^\s]+)")
+
+
+def _listing_creature_map(limit=20000):
+    """listing_id -> creature_id recovered from older list/buy trade logs.
+
+    Sold listings deleted their escrow (and, before snapshots existed, had no
+    item_json), but the log line still names the creature.
+    """
+    out = {}
+    rows = (
+        TradeLog.query.filter(TradeLog.action.in_(("list", "buy")))
+        .order_by(TradeLog.id.desc())
+        .limit(limit)
+        .all()
+    )
+    for lg in rows:
+        m = _LISTING_LOG_RE.search(lg.detail or "")
+        if m:
+            out.setdefault(int(m.group(1)), m.group(2))
+    return out
+
+
+def _log_creature_for_listing(listing_id):
+    for lg in (
+        TradeLog.query.filter(
+            TradeLog.detail.like("%listing=" + str(int(listing_id)) + " %")
+        )
+        .order_by(TradeLog.id.desc())
+        .limit(10)
+        .all()
+    ):
+        m = _LISTING_LOG_RE.search(lg.detail or "")
+        if m and int(m.group(1)) == int(listing_id):
+            return m.group(2)
+    return None
+
+
 @admin_bp.route("/admin/market")
 @login_required
 def AdminMarket():
@@ -57,6 +96,7 @@ def AdminMarket():
         [l.seller_id for l in listings_db]
         + [l.buyer_id for l in listings_db if l.buyer_id]
     )
+    log_cre = _listing_creature_map()
 
     listings = []
     for l in listings_db:
@@ -74,6 +114,9 @@ def AdminMarket():
             except Exception:
                 item = {}
         cid = item.get("ID", "")
+        # Fall back to the trade log for older sold listings with no snapshot.
+        if not cid and l.status != "active":
+            cid = log_cre.get(l.id, "")
         # For a sold listing the escrow is intentionally gone, so only flag a
         # missing escrow when the listing is still active (a real problem).
         escrow_missing = esc is None and l.status == "active"
@@ -94,7 +137,7 @@ def AdminMarket():
                 "star_rating": item.get("StarRating"),
                 "revertible": l.status == "sold"
                 and bool(l.buyer_id)
-                and bool(l.item_json),
+                and (bool(l.item_json) or l.id in log_cre),
             }
         )
 
@@ -135,6 +178,26 @@ def AdminMarket():
     names = _player_names(
         [o.from_id for o in offers_db] + [o.to_id for o in offers_db]
     )
+
+    _save_cache = {}
+
+    def _creature_by_uid(pid, uid):
+        """Resolve a UniqueID in a player's current save (cached per request)."""
+        if pid not in _save_cache:
+            p = Player.query.filter_by(username=pid).first()
+            _save_cache[pid] = _tinv(_tload_save(p)) if p is not None else []
+        for it in _save_cache[pid]:
+            try:
+                if (
+                    isinstance(it, dict)
+                    and it.get("_T") == "CR"
+                    and int(it.get("UniqueID", -1)) == int(uid)
+                ):
+                    return it
+            except (TypeError, ValueError):
+                continue
+        return None
+
     offers = []
     for o in offers_db:
         try:
@@ -142,11 +205,16 @@ def AdminMarket():
             req = json.loads(o.request_json)
         except Exception:
             off, req = {}, {}
+
+        try:
+            snap = json.loads(o.revert_json) if o.revert_json else None
+        except Exception:
+            snap = None
+
         # What the sender gives: pending offers have live escrow rows; accepted
         # offers moved those creatures into the accepter's save (revert_json).
-        give_items = []
+        source_items = []
         if o.status == "pending":
-            source_items = []
             for eid in off.get("escrow_ids", []):
                 esc = TradeEscrow.query.get(eid)
                 if esc is not None:
@@ -154,23 +222,34 @@ def AdminMarket():
                         source_items.append(json.loads(esc.item_json))
                     except Exception:
                         pass
-        elif o.status == "accepted" and o.revert_json:
-            try:
-                source_items = json.loads(o.revert_json).get("accepter", {}).get("items", [])
-            except Exception:
-                source_items = []
-        else:
-            source_items = []
-        for it in source_items:
-            cid = it.get("ID")
-            if cid:
-                give_items.append(
-                    {
-                        "id": cid,
-                        "name": creature_names.get(cid, ""),
-                        "stars": it.get("StarRating"),
-                    }
-                )
+        elif snap:
+            source_items = snap.get("accepter", {}).get("items", [])
+        give_items = [
+            {
+                "id": it.get("ID"),
+                "name": creature_names.get(it.get("ID"), ""),
+                "stars": it.get("StarRating"),
+            }
+            for it in source_items
+            if it.get("ID")
+        ]
+
+        # What the sender wants: pending offers still live in the accepter's
+        # save (resolve by UniqueID); accepted ones moved to the sender.
+        want_items = []
+        if o.status == "pending":
+            for uid in req.get("unique_ids", []):
+                it = _creature_by_uid(o.to_id, uid)
+                if it is not None and it.get("ID"):
+                    want_items.append(
+                        {"id": it.get("ID"), "stars": it.get("StarRating")}
+                    )
+        elif snap:
+            for it in snap.get("sender", {}).get("items", []):
+                if it.get("ID"):
+                    want_items.append(
+                        {"id": it.get("ID"), "stars": it.get("StarRating")}
+                    )
 
         offers.append(
             {
@@ -182,11 +261,13 @@ def AdminMarket():
                 "coins": off.get("coins", 0),
                 "escrow_ids": off.get("escrow_ids", []),
                 "give_items": give_items,
+                "want_items": want_items,
                 "want_coins": req.get("coins", 0),
                 "want_uids": req.get("unique_ids", []),
                 "created": o.created,
                 "status": o.status,
-                "revertible": o.status == "accepted" and bool(o.revert_json),
+                "revertible": o.status == "accepted",
+                "revert_snapshot": bool(snap),
             }
         )
 
@@ -316,16 +397,21 @@ def AdminMarketListingRevert(listing_id):
         removed = None
         if lst.buyer_uid is not None:
             removed = _tfind_creature(binv, lst.buyer_uid)
-        if removed is None and lst.item_json:
+
+        cid = None
+        if lst.item_json:
             try:
                 cid = json.loads(lst.item_json).get("ID")
             except Exception:
                 cid = None
-            if cid:
-                for it in list(binv):
-                    if isinstance(it, dict) and it.get("_T") == "CR" and it.get("ID") == cid:
-                        removed = it
-                        break
+        if not cid:
+            # Older sale with no snapshot: recover the creature id from the log.
+            cid = _log_creature_for_listing(lst.id)
+        if removed is None and cid:
+            for it in list(binv):
+                if isinstance(it, dict) and it.get("_T") == "CR" and it.get("ID") == cid:
+                    removed = it
+                    break
         if removed is not None:
             binv.remove(removed)
         _twrite_save(buyer, bsave)
