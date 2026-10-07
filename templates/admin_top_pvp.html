@@ -14,7 +14,15 @@
                 </span>
             </div>
             <p class="text-sm text-muted-foreground mt-1">Players ranked by Multiplayer Level (highest first)</p>
+            <p class="text-xs text-muted-foreground mt-1">
+                {% if cache_age < 60 %}Updated just now{% else %}Updated {{ (cache_age // 60) }} min ago{% endif %}
+                &middot; auto-refreshes every {{ (cache_ttl // 60) }} min
+            </p>
         </div>
+        <a href="/admin/top_pvp?refresh=1" class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            <span>Refresh</span>
+        </a>
     </div>
 
     <!-- Champion Card -->

@@ -1,3 +1,5 @@
+import threading
+
 from ._common import *
 from app.models import AccountLink, TradeCoinBalance
 
@@ -73,110 +75,189 @@ def AdminPlayers():
     if not isAdmin(current_user):
         return abort(404)
 
-    players = Player.query.all()
-
-    # convert player to dict
-    players = [player.as_dict() for player in players]
-
-    # remove any players that do not have a multiplayer name
-    players = [
-        player
-        for player in players
-        if player["game"] != None and player["leader_level"] != None
-    ]
-
-    # remove any player that is banned
-    players = [player for player in players if not IsUserBanned(player["username"])]
-
-    for player in players:
-        player["last_online"] = datetime.fromtimestamp(
-            player["last_online"], tz=timezone.utc
-        ).strftime("%Y-%m-%d %H:%M:%S UTC")
-
-        # if player's multiplayer name is empty, attempt to get it from their game
-        if player["multiplayer_name"] == None:
-            player["multiplayer_name"] = GetNameFromSave(player["game"])
-
-    # Server-side search across every account (name or UUID)
     query = (request.args.get("q") or "").strip()
+    sort_query = request.args.get("sort") or ""
 
-    if query:
-        needle = query.lower()
-        players = [
-            player
-            for player in players
-            if needle in (player["multiplayer_name"] or "").lower()
-            or needle in (player["username"] or "").lower()
-        ]
-
-    sortQuery = request.args.get("sort")
-
-    if sortQuery is not None:
-        players = sorted(
-            players,
-            key=lambda player: (
-                player[sortQuery] is None,
-                player[sortQuery] if player[sortQuery] is not None else "",
-            ),
-            reverse=True,
-        )
-    else:
-        players = players[::-1]
-
-    # Pagination
     per_page = request.args.get("per_page", 10, type=int)
     if per_page not in (10, 20, 30, 40, 50):
         per_page = 10
 
-    total = len(players)
-    total_pages = max(1, (total + per_page - 1) // per_page)
-
     page = request.args.get("page", 1, type=int)
-    if page < 1:
-        page = 1
-    if page > total_pages:
-        page = total_pages
 
-    start = (page - 1) * per_page
-    page_players = players[start : start + per_page]
+    data = _PlayerListPage(query, sort_query, page, per_page)
 
     return render_template(
         "admin_players.html",
-        players=page_players,
-        player_count=total,
-        page=page,
-        per_page=per_page,
-        total_pages=total_pages,
-        start_index=start + 1 if total else 0,
-        end_index=min(start + per_page, total),
-        sort=sortQuery or "",
         query=query,
+        sort=sort_query,
+        **data,
     )
 
 
-@admin_bp.route("/admin/top_pvp")
+@admin_bp.route("/admin/players/list")
 @login_required
-def AdminTopPvp():
+def AdminPlayersList():
+    """Lightweight JSON feed used for refresh-free search / sort / paging."""
     if not isAdmin(current_user):
         return abort(404)
 
+    query = (request.args.get("q") or "").strip()
+    sort_query = request.args.get("sort") or ""
+
+    per_page = request.args.get("per_page", 10, type=int)
+    if per_page not in (10, 20, 30, 40, 50):
+        per_page = 10
+
+    page = request.args.get("page", 1, type=int)
+
+    return jsonify(_PlayerListPage(query, sort_query, page, per_page))
+
+
+# --- Player list query ------------------------------------------------------
+PLAYER_LIST_SORTS = {
+    "multiplayer_name": Player.multiplayer_name,
+    "last_online": Player.last_online,
+    "leader_level": Player.leader_level,
+}
+
+
+def _ActiveBannedUsernames():
+    """Set of usernames with an active (non-expired) user ban."""
+    now = int(time.time())
+    banned = set()
+    for ban in Bans.query.filter_by(bantype="userid").all():
+        expires = ban.expires or 0
+        if expires == 0 or expires > now:
+            banned.add(ban.username)
+    return banned
+
+
+def _PlayerListPage(query, sort_query, page, per_page):
+    """Return one page of the player list using only the needed columns.
+
+    The ``game`` save column (up to tens of MB in total) is never loaded for
+    the whole table; it is only read for the handful of rows on the current
+    page that are still missing a ``multiplayer_name``.
+    """
+    base = (
+        db.session.query(
+            Player.username,
+            Player.multiplayer_name,
+            Player.leader_level,
+            Player.last_online,
+        )
+        .filter(Player.game.isnot(None), Player.leader_level.isnot(None))
+    )
+
+    if query:
+        needle = f"%{query}%"
+        base = base.filter(
+            db.or_(
+                Player.username.ilike(needle),
+                Player.multiplayer_name.ilike(needle),
+            )
+        )
+
+    banned = _ActiveBannedUsernames()
+    if banned:
+        base = base.filter(~Player.username.in_(banned))
+
+    total = base.count()
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = min(max(page, 1), total_pages)
+
+    if sort_query in PLAYER_LIST_SORTS:
+        column = PLAYER_LIST_SORTS[sort_query]
+        ordered = base.order_by(column.desc().nullslast(), Player.username.asc())
+    else:
+        # "Creation" order = newest rows first (physical insert order).
+        order = db.text("ctid DESC") if IsPostgres() else db.text("rowid DESC")
+        ordered = base.order_by(order)
+
+    rows = ordered.limit(per_page).offset((page - 1) * per_page).all()
+
+    # Resolve a display name from the save for page rows missing one.
+    missing = [row.username for row in rows if not row.multiplayer_name]
+    fallback = {}
+    if missing:
+        for username, game in (
+            db.session.query(Player.username, Player.game)
+            .filter(Player.username.in_(missing))
+            .all()
+        ):
+            if game:
+                name = GetNameFromSave(game)
+                if name:
+                    fallback[username] = name
+
+    players = []
+    for row in rows:
+        last_online = row.last_online
+        if last_online:
+            try:
+                last_online = datetime.fromtimestamp(
+                    int(last_online), tz=timezone.utc
+                ).strftime("%Y-%m-%d %H:%M:%S UTC")
+            except (ValueError, TypeError, OSError):
+                last_online = str(last_online)
+        players.append(
+            {
+                "username": row.username,
+                "multiplayer_name": row.multiplayer_name
+                or fallback.get(row.username)
+                or "Unnamed Player",
+                "leader_level": row.leader_level,
+                "last_online": last_online or "",
+            }
+        )
+
+    return {
+        "players": players,
+        "player_count": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": total_pages,
+        "start_index": (page - 1) * per_page + 1 if total else 0,
+        "end_index": min(page * per_page, total),
+    }
+
+
+_TOPPVP_CACHE = {"at": 0.0, "entries": None}
+_TOPPVP_CACHE_TTL = 300  # seconds
+_TOPPVP_LOCK = threading.Lock()
+
+
+def _ComputeTopPvpEntries():
+    """Decrypt every save once to rank players by Multiplayer Level.
+
+    This is expensive, so callers should use ``GetTopPvpEntries`` (cached).
+    Rows are streamed to avoid holding every save in memory at once.
+    """
+    banned = _ActiveBannedUsernames()
+
+    rows = (
+        db.session.query(
+            Player.username,
+            Player.multiplayer_name,
+            Player.leader_level,
+            Player.last_online,
+            Player.game,
+        )
+        .filter(Player.game.isnot(None))
+        .yield_per(500)
+    )
+
     entries = []
-    for player in Player.query.all():
-        if player.game is None or player.game in (b"", b" "):
+    for username, name, leader_level, last_online, game in rows:
+        if not game or game in (b"", b" "):
             continue
         try:
-            game = DecryptGameData(player.game)
+            data = DecryptGameData(game)
         except Exception:
             continue
-        if not isinstance(game, dict):
+        if not isinstance(data, dict):
             continue
 
-        name = (
-            player.multiplayer_name
-            or game.get("MultiplayerPlayerName")
-            or "Unnamed Player"
-        )
-        last_online = player.last_online
         if last_online is not None:
             try:
                 last_online = datetime.fromtimestamp(
@@ -185,17 +266,21 @@ def AdminTopPvp():
             except (ValueError, TypeError, OSError):
                 last_online = str(last_online)
 
-        multiplayer_level = safe_int(game.get("MultiplayerLevel", 0))
+        multiplayer_level = safe_int(data.get("MultiplayerLevel", 0))
         entries.append(
             {
-                "username": player.username,
-                "multiplayer_name": name,
+                "username": username,
+                "multiplayer_name": name
+                or data.get("MultiplayerPlayerName")
+                or "Unnamed Player",
                 "multiplayer_level": multiplayer_level,
                 "pvp_rank_name": GetPvpRankName(multiplayer_level),
-                "leader_level": safe_int(player.leader_level, 0),
-                "best_multiplayer_level": safe_int(game.get("BestMultiplayerLevel", 0)),
-                "rank_xp": safe_int(game.get("RankXP", 0)),
-                "is_banned": IsUserBanned(player.username),
+                "leader_level": safe_int(leader_level, 0),
+                "best_multiplayer_level": safe_int(
+                    data.get("BestMultiplayerLevel", 0)
+                ),
+                "rank_xp": safe_int(data.get("RankXP", 0)),
+                "is_banned": username in banned,
                 "last_online": last_online,
             }
         )
@@ -207,10 +292,44 @@ def AdminTopPvp():
     for index, entry in enumerate(entries):
         entry["ranking"] = index + 1
 
+    return entries
+
+
+def GetTopPvpEntries(force=False):
+    """Return the cached Top PVP ranking, recomputing when stale or forced."""
+    now = time.time()
+    with _TOPPVP_LOCK:
+        if (
+            not force
+            and _TOPPVP_CACHE["entries"] is not None
+            and (now - _TOPPVP_CACHE["at"]) < _TOPPVP_CACHE_TTL
+        ):
+            return _TOPPVP_CACHE["entries"]
+
+    entries = _ComputeTopPvpEntries()
+    with _TOPPVP_LOCK:
+        _TOPPVP_CACHE["entries"] = entries
+        _TOPPVP_CACHE["at"] = time.time()
+    return entries
+
+
+@admin_bp.route("/admin/top_pvp")
+@login_required
+def AdminTopPvp():
+    if not isAdmin(current_user):
+        return abort(404)
+
+    force = request.args.get("refresh") == "1"
+    entries = GetTopPvpEntries(force=force)
+
+    cache_age = int(time.time() - _TOPPVP_CACHE["at"]) if _TOPPVP_CACHE["at"] else 0
+
     return render_template(
         "admin_top_pvp.html",
         players=entries[:50],
         total_players=len(entries),
+        cache_age=cache_age,
+        cache_ttl=_TOPPVP_CACHE_TTL,
     )
 
 
