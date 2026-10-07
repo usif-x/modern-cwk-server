@@ -242,6 +242,9 @@ def TradeBuy():
             sbal.updated = _tnow()
             lst.status = "sold"
             lst.buyer_id = pid
+            # Snapshot so the admin can revert this sale exactly.
+            lst.item_json = json.dumps(item, ensure_ascii=False)
+            lst.buyer_uid = item["UniqueID"]
             db.session.delete(esc)
             _tlog(
                 "buy",
@@ -589,6 +592,8 @@ def TradeAccept():
                 cre2 = dict(cre)
                 cre2["UniqueID"] = _tmax_uid(sinv) + 1
                 sinv.append(cre2)
+            sender_got = [dict(c) for c in sinv[-len(wanted):]] if wanted else []
+            accepter_got = []
             for eid in offer.get("escrow_ids", []):
                 esc = TradeEscrow.query.get(eid)
                 if esc is None:
@@ -596,6 +601,7 @@ def TradeAccept():
                 it = dict(json.loads(esc.item_json))
                 it["UniqueID"] = _tmax_uid(ainv) + 1
                 ainv.append(it)
+                accepter_got.append(dict(it))
                 db.session.delete(esc)
             offer_coins = int(offer.get("coins", 0))
             abal.coins = int(abal.coins) + offer_coins - want_coins
@@ -606,6 +612,14 @@ def TradeAccept():
             _twrite_save(accepter, asave)
             _twrite_save(sender, ssave)
             o.status = "accepted"
+            # Snapshot so the admin can revert this trade exactly.
+            o.revert_json = json.dumps(
+                {
+                    "sender": {"id": frm, "items": sender_got, "coins": want_coins},
+                    "accepter": {"id": pid, "items": accepter_got, "coins": offer_coins},
+                },
+                ensure_ascii=False,
+            )
             _tlog("accept", pid, f"offer={offer_id} from={frm}")
             db.session.commit()
             return _tok({"offer_id": offer_id})

@@ -197,6 +197,11 @@ with app.app_context():
                 ("passkey", String(80), None),
                 ("passkey_enabled", Boolean(), False),
             ],
+            "trade_listing": [
+                ("item_json", Text(), None),
+                ("buyer_uid", Integer(), None),
+            ],
+            "trade_offer": [("revert_json", Text(), None)],
         }
 
         table_names = set(inspector.get_table_names())

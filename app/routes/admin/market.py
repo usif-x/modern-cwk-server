@@ -17,6 +17,8 @@ from app.services.trade_market import (
     MARKET_EXPIRE_SECONDS,
     _market_expire,
     _market_return,
+    _tbalance,
+    _tfind_creature,
     _tinv,
     _tload_save,
     _tmax_uid,
@@ -51,7 +53,10 @@ def AdminMarket():
     listings_db = query.order_by(TradeListing.created.desc()).limit(300).all()
 
     escrows = {e.id: e for e in TradeEscrow.query.all()}
-    sellers = _player_names(l.seller_id for l in listings_db)
+    sellers = _player_names(
+        [l.seller_id for l in listings_db]
+        + [l.buyer_id for l in listings_db if l.buyer_id]
+    )
 
     listings = []
     for l in listings_db:
@@ -62,7 +67,16 @@ def AdminMarket():
                 item = json.loads(esc.item_json)
             except Exception:
                 item = {}
+        elif l.item_json:
+            # sold listings no longer have an escrow; use the sale snapshot
+            try:
+                item = json.loads(l.item_json)
+            except Exception:
+                item = {}
         cid = item.get("ID", "")
+        # For a sold listing the escrow is intentionally gone, so only flag a
+        # missing escrow when the listing is still active (a real problem).
+        escrow_missing = esc is None and l.status == "active"
         listings.append(
             {
                 "id": l.id,
@@ -71,19 +85,26 @@ def AdminMarket():
                 "price": l.price_coins,
                 "status": l.status,
                 "buyer_id": l.buyer_id,
+                "buyer_name": sellers.get(l.buyer_id) if l.buyer_id else None,
                 "created": l.created,
                 "escrow_id": l.escrow_id,
-                "escrow_missing": esc is None,
+                "escrow_missing": escrow_missing,
                 "creature_id": cid,
                 "creature_name": creature_names.get(cid, ""),
                 "star_rating": item.get("StarRating"),
+                "revertible": l.status == "sold"
+                and bool(l.buyer_id)
+                and bool(l.item_json),
             }
         )
 
     # Orphan escrows (not referenced by an active listing or pending offer)
     keep = {l.escrow_id for l in TradeListing.query.filter_by(status="active").all()}
     offers_db = (
-        TradeOffer.query.filter_by(status="pending").order_by(TradeOffer.created.desc()).limit(200).all()
+        TradeOffer.query.filter(TradeOffer.status.in_(("pending", "accepted")))
+        .order_by(TradeOffer.created.desc())
+        .limit(200)
+        .all()
     )
     for o in offers_db:
         try:
@@ -133,6 +154,8 @@ def AdminMarket():
                 "want_coins": req.get("coins", 0),
                 "want_uids": req.get("unique_ids", []),
                 "created": o.created,
+                "status": o.status,
+                "revertible": o.status == "accepted" and bool(o.revert_json),
             }
         )
 
@@ -232,6 +255,160 @@ def AdminMarketListingDelete(listing_id):
     DiscordWebhookMessage(
         f"**{current_user.username}** deleted trade listing `{listing_id}` (escrow destroyed)"
     )
+    return redirect(request.referrer or "/admin/market")
+
+
+@admin_bp.route("/admin/market/listing/<int:listing_id>/revert", methods=["POST"])
+@login_required
+def AdminMarketListingRevert(listing_id):
+    """Undo a completed sale: creature back to the seller, coins back to the buyer."""
+    if not isAdmin(current_user):
+        return abort(404)
+
+    lst = TradeListing.query.get(listing_id)
+    if lst is None:
+        return make_response("Listing not found!", 404)
+    if lst.status != "sold" or not lst.buyer_id:
+        return make_response(
+            "Only a sold listing can be reverted. Use Return for active ones.", 400
+        )
+
+    try:
+        buyer = Player.query.filter_by(username=lst.buyer_id).first()
+        seller = Player.query.filter_by(username=lst.seller_id).first()
+        if buyer is None or seller is None:
+            return make_response("Buyer or seller no longer exists.", 400)
+
+        # 1. Take the creature out of the buyer's save (by UID, else by ID).
+        bsave = _tload_save(buyer)
+        binv = _tinv(bsave)
+        removed = None
+        if lst.buyer_uid is not None:
+            removed = _tfind_creature(binv, lst.buyer_uid)
+        if removed is None and lst.item_json:
+            try:
+                cid = json.loads(lst.item_json).get("ID")
+            except Exception:
+                cid = None
+            if cid:
+                for it in list(binv):
+                    if isinstance(it, dict) and it.get("_T") == "CR" and it.get("ID") == cid:
+                        removed = it
+                        break
+        if removed is not None:
+            binv.remove(removed)
+        _twrite_save(buyer, bsave)
+
+        # 2. Put the creature back into the seller's save.
+        returned = False
+        if removed is not None:
+            ssave = _tload_save(seller)
+            sinv = _tinv(ssave)
+            back = dict(removed)
+            back["UniqueID"] = _tmax_uid(sinv) + 1
+            sinv.append(back)
+            _twrite_save(seller, ssave)
+            returned = True
+
+        # 3. Coins: seller refunds the buyer.
+        price = int(lst.price_coins)
+        sbal = _tbalance(lst.seller_id, create=True)
+        sbal.coins = max(0, int(sbal.coins) - price)
+        sbal.updated = _tnow()
+        bbal = _tbalance(lst.buyer_id, create=True)
+        bbal.coins = int(bbal.coins) + price
+        bbal.updated = _tnow()
+
+        lst.status = "reverted"
+        db.session.commit()
+
+        Log(
+            "admin",
+            current_user.username
+            + f" reverted sale of listing {listing_id}"
+            + ("" if returned else " (creature not found in buyer inventory)"),
+        )
+        DiscordWebhookMessage(
+            f"**{current_user.username}** reverted trade listing `{listing_id}` "
+            f"(refunded {price} coins to buyer, creature returned={returned})"
+        )
+    except Exception as e:
+        db.session.rollback()
+        return make_response(f"Failed to revert listing: {e}", 500)
+
+    return redirect(request.referrer or "/admin/market")
+
+
+@admin_bp.route("/admin/market/offer/<int:offer_id>/revert", methods=["POST"])
+@login_required
+def AdminMarketOfferRevert(offer_id):
+    """Undo an accepted offer: every creature and coin goes back to its owner."""
+    if not isAdmin(current_user):
+        return abort(404)
+
+    o = TradeOffer.query.get(offer_id)
+    if o is None:
+        return make_response("Offer not found!", 404)
+    if o.status != "accepted" or not o.revert_json:
+        return make_response(
+            "This offer cannot be reverted (only accepted ones recorded after the update).",
+            400,
+        )
+
+    try:
+        snap = json.loads(o.revert_json)
+        sender_id = snap["sender"]["id"]
+        accepter_id = snap["accepter"]["id"]
+        sender = Player.query.filter_by(username=sender_id).first()
+        accepter = Player.query.filter_by(username=accepter_id).first()
+        if sender is None or accepter is None:
+            return make_response("A party of this trade no longer exists.", 400)
+
+        ssave = _tload_save(sender)
+        asave = _tload_save(accepter)
+        sinv = _tinv(ssave)
+        ainv = _tinv(asave)
+
+        def move(items, frm_inv, to_inv):
+            for entry in items or []:
+                uid = entry.get("UniqueID")
+                cre = _tfind_creature(frm_inv, uid) if uid is not None else None
+                if cre is None:
+                    continue
+                frm_inv.remove(cre)
+                back = dict(cre)
+                back["UniqueID"] = _tmax_uid(to_inv) + 1
+                to_inv.append(back)
+
+        # accepter's received items go back to the sender, and vice-versa.
+        move(snap["accepter"].get("items"), ainv, sinv)
+        move(snap["sender"].get("items"), sinv, ainv)
+        _twrite_save(sender, ssave)
+        _twrite_save(accepter, asave)
+
+        want_coins = int(snap["sender"].get("coins", 0))   # accepter paid this to sender
+        offer_coins = int(snap["accepter"].get("coins", 0))  # sender paid this to accepter
+        sbal = _tbalance(sender_id, create=True)
+        sbal.coins = max(0, int(sbal.coins) - want_coins + offer_coins)
+        sbal.updated = _tnow()
+        abal = _tbalance(accepter_id, create=True)
+        abal.coins = max(0, int(abal.coins) + want_coins - offer_coins)
+        abal.updated = _tnow()
+
+        o.status = "reverted"
+        db.session.commit()
+
+        Log(
+            "admin",
+            current_user.username + f" reverted accepted trade offer {offer_id}",
+        )
+        DiscordWebhookMessage(
+            f"**{current_user.username}** reverted accepted trade offer `{offer_id}`"
+        )
+    except Exception as e:
+        db.session.rollback()
+        return make_response(f"Failed to revert offer: {e}", 500)
+
     return redirect(request.referrer or "/admin/market")
 
 

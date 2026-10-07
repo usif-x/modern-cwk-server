@@ -114,6 +114,10 @@ class TradeListing(db.Model):
     status = db.Column(db.String(16), nullable=False, default="active", index=True)
     buyer_id = db.Column(db.String(80), nullable=True)
     created = db.Column(db.Integer, nullable=False, default=0)
+    # Snapshot taken when the listing sells, so an admin can revert it: the
+    # creature that was delivered and the UniqueID it got in the buyer's save.
+    item_json = db.Column(db.Text, nullable=True)
+    buyer_uid = db.Column(db.Integer, nullable=True)
 
 
 class TradeOffer(db.Model):
@@ -125,6 +129,9 @@ class TradeOffer(db.Model):
     request_json = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(16), nullable=False, default="pending", index=True)
     created = db.Column(db.Integer, nullable=False, default=0)
+    # Snapshot taken when the offer is accepted, so an admin can revert it:
+    # every creature that moved (with the UniqueID it got) and the coin flow.
+    revert_json = db.Column(db.Text, nullable=True)
 
 
 class TradeDelta(db.Model):
