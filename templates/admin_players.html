@@ -32,6 +32,19 @@
             <a href="/admin/players?sort=leader_level&per_page={{ per_page }}{{ qsuffix }}" data-sort="leader_level" class="players-sort inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-colors {% if request.args.get('sort') == 'leader_level' %}bg-background text-foreground shadow-xs{% else %}text-muted-foreground hover:text-foreground hover:bg-background/50{% endif %}">
                 Rank
             </a>
+            <span class="w-px h-5 bg-border mx-0.5"></span>
+            <select
+                id="playersActiveSelect"
+                class="inline-flex h-7 rounded-md border border-input bg-background px-2 py-0 text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                title="Filter by last online"
+            >
+                <option value="" {% if not active %}selected{% endif %}>Any activity</option>
+                <option value="now" {% if active == 'now' %}selected{% endif %}>Active now (2 min)</option>
+                <option value="5m" {% if active == '5m' %}selected{% endif %}>Last 5 min</option>
+                <option value="1h" {% if active == '1h' %}selected{% endif %}>Last 1 hour</option>
+                <option value="24h" {% if active == '24h' %}selected{% endif %}>Last 24 hours</option>
+                <option value="7d" {% if active == '7d' %}selected{% endif %}>Last 7 days</option>
+            </select>
         </div>
     </div>
 
@@ -308,12 +321,14 @@ function submitBulkPlayerAction(action) {
     const prev = document.getElementById('playersPrev');
     const next = document.getElementById('playersNext');
     const perPage = document.getElementById('perPageSelect');
+    const activeSelect = document.getElementById('playersActiveSelect');
     const master = document.getElementById('selectAllPlayersCheckbox');
     if (!form || !tbody) return;
 
     const state = {
         q: searchInput ? searchInput.value : '',
         sort: {{ sort|tojson }},
+        active: {{ active|tojson }},
         per_page: {{ per_page }},
         page: {{ page }},
         total_pages: {{ total_pages }}
@@ -387,6 +402,7 @@ function submitBulkPlayerAction(action) {
         const params = new URLSearchParams();
         if (state.q) params.set('q', state.q);
         if (state.sort) params.set('sort', state.sort);
+        if (state.active) params.set('active', state.active);
         params.set('per_page', state.per_page);
         params.set('page', state.page);
         return params;
@@ -440,6 +456,14 @@ function submitBulkPlayerAction(action) {
     if (perPage) {
         perPage.addEventListener('change', function () {
             state.per_page = parseInt(perPage.value, 10) || 10;
+            state.page = 1;
+            load();
+        });
+    }
+
+    if (activeSelect) {
+        activeSelect.addEventListener('change', function () {
+            state.active = activeSelect.value || '';
             state.page = 1;
             load();
         });

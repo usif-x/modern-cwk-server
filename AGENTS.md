@@ -294,8 +294,8 @@ The in-game post office is the save's `Mails` array. An entry looks like:
 | POST     | `/admin/server/upload_backup`                    | Upload & restore a backup `.zip`                                                 |
 | GET      | `/admin/server/pull`                             | Git pull                                                                         |
 | GET/POST | `/admin/createadmin`                             | Create admin                                                                     |
-| GET      | `/admin/players`                                 | Player list (sortable)                                                           |
-| GET      | `/admin/players/list`                            | JSON player list feed for refresh-free search / sort / paging                    |
+| GET      | `/admin/players`                                 | Player list (sortable; `active=now\|5m\|1h\|24h\|7d` filter)                     |
+| GET      | `/admin/players/list`                            | JSON player list feed for refresh-free search / sort / paging / activity filter  |
 | GET      | `/admin/top_pvp`                                 | Top PVP players ranked by Multiplayer Level (1 = Super Amadeus best, 25 = Dweeb) |
 | GET      | `/admin/players/<uuid>`                          | Player detail                                                                    |
 | GET      | `/admin/players/<uuid>/game`                     | Game data viewer                                                                 |

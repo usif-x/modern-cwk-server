@@ -77,6 +77,7 @@ def AdminPlayers():
 
     query = (request.args.get("q") or "").strip()
     sort_query = request.args.get("sort") or ""
+    active = request.args.get("active") or ""
 
     per_page = request.args.get("per_page", 10, type=int)
     if per_page not in (10, 20, 30, 40, 50):
@@ -84,12 +85,13 @@ def AdminPlayers():
 
     page = request.args.get("page", 1, type=int)
 
-    data = _PlayerListPage(query, sort_query, page, per_page)
+    data = _PlayerListPage(query, sort_query, page, per_page, active)
 
     return render_template(
         "admin_players.html",
         query=query,
         sort=sort_query,
+        active=active,
         **data,
     )
 
@@ -103,6 +105,7 @@ def AdminPlayersList():
 
     query = (request.args.get("q") or "").strip()
     sort_query = request.args.get("sort") or ""
+    active = request.args.get("active") or ""
 
     per_page = request.args.get("per_page", 10, type=int)
     if per_page not in (10, 20, 30, 40, 50):
@@ -110,7 +113,7 @@ def AdminPlayersList():
 
     page = request.args.get("page", 1, type=int)
 
-    return jsonify(_PlayerListPage(query, sort_query, page, per_page))
+    return jsonify(_PlayerListPage(query, sort_query, page, per_page, active))
 
 
 # --- Player list query ------------------------------------------------------
@@ -118,6 +121,15 @@ PLAYER_LIST_SORTS = {
     "multiplayer_name": Player.multiplayer_name,
     "last_online": Player.last_online,
     "leader_level": Player.leader_level,
+}
+
+# Activity window -> seconds (relative to now).
+PLAYER_ACTIVE_WINDOWS = {
+    "now": 120,
+    "5m": 300,
+    "1h": 3600,
+    "24h": 86400,
+    "7d": 604800,
 }
 
 
@@ -132,7 +144,7 @@ def _ActiveBannedUsernames():
     return banned
 
 
-def _PlayerListPage(query, sort_query, page, per_page):
+def _PlayerListPage(query, sort_query, page, per_page, active=""):
     """Return one page of the player list using only the needed columns.
 
     The ``game`` save column (up to tens of MB in total) is never loaded for
@@ -148,6 +160,10 @@ def _PlayerListPage(query, sort_query, page, per_page):
         )
         .filter(Player.game.isnot(None), Player.leader_level.isnot(None))
     )
+
+    if active in PLAYER_ACTIVE_WINDOWS:
+        cutoff = int(time.time()) - PLAYER_ACTIVE_WINDOWS[active]
+        base = base.filter(Player.last_online >= cutoff)
 
     if query:
         needle = f"%{query}%"

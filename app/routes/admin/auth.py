@@ -55,7 +55,13 @@ def AdminHome():
     ).count()
     total_banned = Bans.query.filter_by(bantype="userid").count()
     total_banned_ips = Bans.query.filter_by(bantype="ip").count()
-    cutoff = int(time.time()) - 86400
+    now = int(time.time())
+    active_now = Player.query.filter(
+        Player.last_online >= now - 120,
+        Player.game.isnot(None),
+        Player.leader_level.isnot(None),
+    ).count()
+    cutoff = now - 86400
     active_24h = Player.query.filter(
         Player.last_online >= cutoff,
         Player.game.isnot(None),
@@ -68,6 +74,7 @@ def AdminHome():
         total_players=total_players,
         total_banned=total_banned,
         total_banned_ips=total_banned_ips,
+        active_now=active_now,
         active_24h=active_24h,
     )
 

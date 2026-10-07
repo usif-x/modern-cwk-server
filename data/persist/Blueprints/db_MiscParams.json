@@ -496,5 +496,6 @@
  {
   "Parameter": "StoreHidden",
   "Value": ""
- }
+ },
+  {"Parameter": "TesterMaxedAccount", "Value": "0"}
 ]

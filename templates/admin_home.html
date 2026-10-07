@@ -62,13 +62,13 @@ endblock %} {% block breadcrumb %}Dashboard{% endblock %} {% block content %}
       </div>
     </div>
 
-    <!-- Active 24h -->
+    <!-- Active Now -->
     <div
       class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xs flex flex-col justify-between"
     >
       <div class="flex items-center justify-between">
         <span class="text-sm font-medium text-muted-foreground"
-          >Active (24h)</span
+          >Active Now</span
         >
         <div
           class="w-8 h-8 rounded-md bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400"
@@ -80,10 +80,11 @@ endblock %} {% block breadcrumb %}Dashboard{% endblock %} {% block content %}
         <div
           class="text-2xl sm:text-3xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400"
         >
-          {{ active_24h }}
+          {{ active_now }}
         </div>
         <p class="text-xs text-muted-foreground mt-1">
-          Connected in last 24 hours
+          Online in the last 2 minutes &middot;
+          <a href="/admin/players?active=24h" class="text-primary hover:underline">{{ active_24h }} in last 24h</a>
         </p>
       </div>
     </div>

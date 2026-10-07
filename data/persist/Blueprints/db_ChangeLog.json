@@ -1,14 +1,14 @@
 [
  {
   "ID": "CHANGELOG",
-  "Version": "Version 6.1.0",
-  "Title": "Halloween Update",
-  "Line1": "- Passives are always at full power;\n  no more passive upgrades in the Lab\n- Angel Of Vanilla: removes 1 debuff\n  a turn, Poison -30%, Burn -20%\n- Sack of Pain: a card on it clears\n  all debuffs next to it\n- Sack-geist: a card on it removes 1\n  debuff nearby (Poison/Burn -15%)\n- Pete Moss, Uncle Drooler: +25%\n  Attack Up every turn\n- Cotton Princess: heals 7%, new cards\n  Ultimate Wish and Cull-uh-bye\n- Spell rarity stars: Rarity 2, 3, 4\n  spells need drag cost 3+, 4+, 8+\n- PvP ban list applies to Unranked too",
-  "Line2": "- Trading: Trade Market and trade\n  offers with friends (Trade Coins)\n- Card Crafting (level 100+) with\n  its own Craft Coins\n- New status: Fear (can't act)\n- Extreme Match: same team for all\n- Google login +500 gems, redeem codes\n- Skip tutorial, faster loading",
-  "Line3": "- League 26 removed (now League 25)\n- PvP freezes on some creatures\n- Floop animation plays again\n- Wishbones pay once per help\n- Monthly store charging twice\n- Failed saves are sent again\n- Server checks gems, coins, trades",
-  "Line4": "- Hero: Marshall Lee (50,000 gems),\n  with his own voice\n- Grim (300,000 gems)\n- Blank-Eyed Girl (250,000 gems)\n- Freak Deer (250,000 gems)\n- Ghostly Tree, Ice Cream Zombie and\n  Fire Wolf in the Premium Chest\n- Cerberus: PvP rank reward\n- New Awakens: Corn Worm, Soft\n  Eyeling and Manowar Elf\n- Spells: Potion of Fear, Midnight\n  Howling, Shape Shifter\n- Halloween town and Ghost Hunter\n  season until November 1",
+  "Version": "Version 6.1.1",
+  "Title": "Fix Update",
+  "Line1": "- Grim, Cerberus, Fire Wolf, Ghostly\n  Tree and Ice Cream Zombie reach\n  their full stats at max level\n- Angel of Dark: her swamp cards again\n- Shape Shifter: each form heals 20%\n- Wall of Vanilla cleans Blind,\n  Berserk and Burn at enemy turn end\n- Angel Of Vanilla: Poison -40%,\n  Burn -30%\n- Thorns 90%, Freeze Ray fixed\n- Sack-geist, Cowmando, Shepherd\n  work as written",
+  "Line2": "- Chat on a new service (200 players)\n- Post Office gifts with Claim\n- Phone notifications (Android)\n- Market: see all, sort, take back\n- Ranked Bans board, new PvP lobby\n- Leaderboard: this season only\n- Daily wheel pays the slot shown",
+  "Line3": "- Feared/frozen creatures can't attack\n- PvP no longer freezes out of step\n- Adventure Claim button works\n- Crashes: allies, quests, chests\n- Shift + Graveyard freeze fixed\n- Google sign-in loop fixed\n- Crafted cards: drag cost 4+ only",
+  "Line4": "- Terracotta Angel (awakened Angel\n  of Sand): new look and passive\n- Trade offers show who sent them\n- 5 card slots on creature screens\n- 'Passive Skill' title",
   "Line5": "[FFC83D][b]Nevermore[/b][-] - the biggest thanks of all!\nKrakenfire115, Norris aka Dark Beast, Lolo, AsH_BorN, Red (Gangdz) and Chill Guy",
-  "Line6": "Last Updated: October 2, 2026",
+  "Line6": "Last Updated: October 6, 2026",
   "Line7": "Join Discord for more updates"
  }
 ]
