@@ -1186,8 +1186,13 @@ def PruneDeliveredNewsMail(game):
 
 
 def GetGiftCatalog():
-    """Return the item choices for the admin Gift / Reward composer."""
-    catalog = {"creatures": [], "cards": [], "leaders": [], "xpmaterials": []}
+    """Return the item choices for the admin Gift / Reward composer.
+
+    Heroes only: a skin lives inside its base hero's ``OwnedSkins`` and can
+    never be granted on its own, so the leader list is the 32 base heroes.
+    XP materials are not giftable either.
+    """
+    catalog = {"creatures": [], "cards": [], "leaders": []}
 
     for cid, name in GetCreatureNameMap().items():
         if not cid or IsTutorialOnlyCreature(cid):
@@ -1199,24 +1204,9 @@ def GetGiftCatalog():
             catalog["cards"].append({"id": cid, "name": name or cid})
 
     for lid, name in GetLeaderNameMap().items():
-        if lid:
-            catalog["leaders"].append({"id": lid, "name": name or lid})
-
-    try:
-        with open(
-            os.path.join(ROOT_DIR, "data/persist/Blueprints/db_XPMaterials.json"), "r"
-        ) as f:
-            for material in json.load(f):
-                mid = material.get("ID")
-                if mid:
-                    catalog["xpmaterials"].append(
-                        {
-                            "id": mid,
-                            "name": FormatBlueprintName(material.get("Name", mid)),
-                        }
-                    )
-    except Exception as e:
-        Log("admin", f"Failed to load db_XPMaterials.json: {e}")
+        if not lid or GetLeaderSkinBase(lid):
+            continue
+        catalog["leaders"].append({"id": lid, "name": name or lid})
 
     for key in catalog:
         catalog[key].sort(key=lambda item: item["name"].lower())

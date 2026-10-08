@@ -26,6 +26,7 @@ cwk-server/
 │   ├── utils/__init__.py           # Shared helpers (encrypt/decrypt, backups, Telegram, bans, logs)
 │   ├── services/                   # Focused helpers (one module per feature)
 │   │   ├── game_data.py            # Blueprints, save codecs, ranks, gift catalog
+│   │   ├── gateway.py              # Gateway status / heartbeat / portal handshake files
 │   │   ├── monthly_store.py        # Monthly Store offers, limits and buy counters
 │   │   ├── live.py                 # Admin-editable live status payload
 │   │   ├── trade_market.py         # Player-to-player trading
@@ -42,6 +43,7 @@ cwk-server/
 ├── flaskkey                        # Flask secret key (fallback; set SECRET_KEY on Heroku)
 ├── requirements.txt                # Python dependencies
 ├── migrate_sqlite_to_postgres.py   # One-off SQLite -> PostgreSQL data migration
+├── gateway_cli.py                  # Gateway runtime CLI (status, heartbeat, portal)
 ├── instance/
 │   └── cardwarskingdom.db          # Legacy SQLite database (pre-migration)
 ├── data/persist/
@@ -258,9 +260,10 @@ The in-game post office is the save's `Mails` array. An entry looks like:
 
 **Admin Gift / Reward uses the production Post Office (6.1.2+), not `db_NewsMail`:**
 - Model `AdminGift` (`admin_gift`): `username`, `gems`, `coins`, `pvp`, `shards`, `items`, `title`, `message`, `sender`, `created_at`, `claimed_at`.
-- `POST /mail/gifts` (Player-Id header) lists a player's unclaimed gifts: `{"ok": true, "gifts": [{id, title, message, gems, coins, pvp, shards, items}]}`. `items` is a comma-separated `CR:<id>,CA:<id>,LD:<id>,XP:<id>` list the app adds to its save.
+- `POST /mail/gifts` (Player-Id header) lists a player's unclaimed gifts: `{"ok": true, "gifts": [{id, title, message, gems, coins, pvp, shards, items}]}`. `items` is a comma-separated `CR:<id>,CA:<id>,LD:<id>` list the app adds to its save (older rows may still carry `XP:<id>`).
 - The app claims each gift once via `user_action2` with `evt="admin gift"` and `ctx=<gift id>`; `_ClaimAdminGift` grants the currencies server-side (save is the wallet), marks `claimed_at`, and returns the balances plus `reason`/`gs`/`gf`/`gv`/`ge`. **The app adds the item tags itself**, so creatures/augments/heroes work (unlike the old mail path).
-- The admin **Gift / Reward** composer (`POST /admin/players/<uuid>/gift`) creates an `AdminGift` row.
+- The admin **Gift / Reward** composer (`POST /admin/players/<uuid>/gift`) builds one `AdminGift` from **several reward lines**: the form posts `gift_type` / `gift_id` / `gift_amount` once per line (max 12 lines, 50 item tags), the currencies are summed into their columns and the item lines are joined into `items` in the order they were added.
+- Rewards are limited to currencies, creatures, Auguments and the **32 base heroes**. XP materials were removed from the composer and skins are refused on purpose - `GetGiftCatalog()` drops both, and a skin ID answers 400 telling the admin to gift the base hero instead (skins only live in a hero's `OwnedSkins`).
 
 ## Route Reference
 
@@ -440,7 +443,7 @@ The in-game post office is the save's `Mails` array. An entry looks like:
 | `AddNewsMailGift(player, type, id, amount, title, body)` | `app/utils.py` | Append a per-player gift to `db_NewsMail.json` (claimable mail)          |
 | `AddNewsMailNotice(player, title, body)`               | `app/utils.py` | Append a reward-less notice mail (for direct-granted items)                |
 | `StripLegacyAdminMails(game)`                          | `app/utils.py` | Remove leftover `ADMIN_*` mails from a save (old broken format)            |
-| `GetGiftCatalog()`                                     | `app/utils.py` | Item choices (creatures, Auguments, heroes, XP materials) for the composer |
+| `GetGiftCatalog()`                                     | `app/utils.py` | Item choices for the gift composer: creatures, Auguments and the 32 base heroes (no XP materials, no skins) |
 | `SetLoadoutCount(game, count)`                         | `app/utils.py` | Resize `game["Loadouts"]` team lines (1-50); pads new teams to match        |
 | `SetTeamCreatureCount(game, count)`                    | `app/utils.py` | Resize `CreatureID0..n` slots on every team (1-10, truncates on shrink)     |
 | `LoadoutCreatureCount(loadout)`                        | `app/utils.py` | How many creature slots a team dict currently exposes                        |
@@ -479,6 +482,7 @@ The in-game post office is the save's `Mails` array. An entry looks like:
 - **Database**: PostgreSQL `cardwarskingdom` by default (`app/__init__.py::ResolveDatabaseUri` normalises `postgres://` / `postgresql://` / `postgres+psycopg2://` onto `postgresql+psycopg2://` and keeps query strings); `DATABASE_URL=sqlite:///instance/cardwarskingdom.db` opts into SQLite
 - **Migration**: `python migrate_sqlite_to_postgres.py [--sqlite PATH] [--keep] [--dry-run] [--yes]` copies an existing SQLite file into the active DB and resyncs sequences
 - **Runtime settings**: `data/persist/settings.json` — `backup_interval_hours`, `backup_to_telegram`, `last_backup`
+- **Gateway runtime**: `data/gateways/<name>/` — `status.json` (curated status), `state.json` (heartbeat/session/task), `portal.log` (handshake); written by `gateway_cli.py` / `app/services/gateway.py`, swept by the scheduler
 - **Live status**: `data/persist/live.json` — admin-editable payload served at `GET /persist/static/live` (`maintenance`, `maint_ended`, `notices`, `poll`, `flags`, `texts`, `content`, `ui`, `restart`); `now` is injected per request, the file is optional and falls back to defaults in `app/services/live.py`
 - **Auto-backup**: scheduler thread checks every minute in `app/__init__.py::run_scheduler` → `RunScheduledBackup()`; backups go to `backup/*.zip` and optionally Telegram
 - **Restore**: `POST /admin/server/upload_backup` accepts a zip with `cardwarskingdom.sql` (pg_dump) or a legacy `cardwarskingdom.db` (routed through `MigrateSqliteDatabase`), plus `persist/`, after taking a safety snapshot
@@ -646,6 +650,56 @@ renders in the store:
   specials, set the per-month buy limits, reroll the rotation and inspect or
   reset purchase counters.
 
+## Gateway runtime
+
+Sidecar files that show what a model instance is doing while it works outside
+the admin panel, plus the handshake two instances use to share one portal (an
+interactive session). No database involved.
+
+Files per gateway (`data/gateways/<name>/`):
+
+- `status.json` — curated status: `online` / `offline` / `busy` /
+  `maintenance`, with `set_by`, `set_at`, `note` and an optional `expires_at`
+  (once it passes the gateway reports `online` again - use it for windows)
+- `state.json` — volatile state: `last_seen` (heartbeat), `session`,
+  `current_task`, `busy`, plus the last 20 events
+- `portal.log` — JSONL handshake: `greet` / `return` / `claim` / `enter` /
+  `exit` / `abort` / `release`
+
+CLI (`gateway_cli.py`; every subcommand takes `--base-dir`, `status`/`scan`
+also `--json`):
+
+```bash
+python gateway_cli.py init mimo-v2.6-flash-free
+python gateway_cli.py set-status mimo-v2.6-flash-free busy --by opencode --task "editing gateway.py" --expires 2h
+python gateway_cli.py heartbeat mimo-v2.6-flash-free --session opencode-4242 --task "..." --interval 30
+python gateway_cli.py status mimo-v2.6-flash-free
+python gateway_cli.py scan
+python gateway_cli.py portal enter mimo-v2.6-flash-free --session opencode-4242 --enter-cmd "python -i session.py"
+python gateway_cli.py portal leave mimo-v2.6-flash-free --session opencode-4242
+python gateway_cli.py portal log mimo-v2.6-flash-free
+```
+
+Portal protocol - both instances call `portal enter`:
+
+1. everyone appends `greet` (at the door) and answers every peer `greet` with
+   a `return` ("greeting returned, go ahead"),
+2. then `claim` to queue: only the earliest claim (`ts`, `session`) may append
+   `enter`, and only while nobody holds the portal, so the log never records
+   two sessions inside at the same time,
+3. `exit` releases the portal, `abort` leaves the queue, `portal release`
+   force-frees a portal held by a crashed session (a hold older than
+   `PORTAL_MAX_HOLD` = 1h stops blocking on its own).
+
+Staleness: nothing heard for `GATEWAY_STALE_SECONDS` (5 min) and `GatewayScan`
+/ `GatewaySweep` writes `offline` with `set_by: "system"`; the next heartbeat
+flips it back to `online`. The scheduler thread runs `GatewaySweep()` once a
+minute (`app/__init__.py::run_scheduler`).
+
+Functions in `app/services/gateway.py`: `GatewayStatus`, `SetGatewayStatus`,
+`GatewayHeartbeat`, `GatewayScan`, `GatewaySweep`, `GatewayList`,
+`PortalEnter`, `PortalLeave`, `PortalRelease`, `PortalEvents`.
+
 ## Anti-Cheat / Security
 
 1. **Leader level validation** — Auto-bans if fresh account sets level > 5 or level jumps by > 10
@@ -672,6 +726,7 @@ renders in the store:
 - **Blueprints**: All routes use Flask Blueprints registered in `app/routes/__init__.py`
 - **File paths**: Always use `ROOT_DIR` for file access (defined in each route file)
 - **Confirm dialogs**: Use SweetAlert2 via `cwkConfirm(message)` / `cwkAlert(message)` (defined in `admin_base.html`); never native `confirm()`/`alert()`. Inline `onclick="return confirm('...')"` is auto-upgraded to a `data-confirm` attribute at load
+- **Gateway heartbeat / portal**: while a session runs, beat `python gateway_cli.py heartbeat <gateway> --session <id> --task "<what>" --interval 30`; share the portal with `python gateway_cli.py portal enter <gateway> --session <id> --enter-cmd "..."` so a second instance of the same gateway greets, waits its turn instead of typing over you, and releases it afterwards. `python gateway_cli.py scan` lists every gateway and marks the silent ones offline
 - **Table paging**: admin tables whose rows are server-rendered (player profile creatures / Auguments, every trade market table) paginate in the browser with `makeTablePager(...)` from `static/admin/table_pager.js` (loaded in `admin_base.html`). Give the data rows a class, add a footer with `Show <100/150/200> per page` + `Prev` / `Page N of M` / `Next` ids, and init one pager per table; the per-page choice is remembered in `localStorage` and the paging composes with the table's search filter
 - **Leader skins**: Add skins via `/admin/players/<uuid>/add_leader` (a skin ID attaches to its base hero's `OwnedSkins`); the player page has a per-hero "Add Skin" picker
 

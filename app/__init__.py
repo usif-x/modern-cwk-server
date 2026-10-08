@@ -160,6 +160,7 @@ def load_user(user_id):
 
 
 def run_scheduler():
+    from app.services.gateway import GatewaySweep
     from app.utils import RunScheduledBackup
 
     while True:
@@ -170,6 +171,11 @@ def run_scheduler():
                 RunScheduledBackup()
         except Exception as e:
             print(f"Scheduler notice: {e}")
+        try:
+            # Gateways without a heartbeat for 5 minutes go offline.
+            GatewaySweep()
+        except Exception as e:
+            print(f"Gateway sweep notice: {e}")
         time.sleep(60)
 
 

@@ -13,11 +13,11 @@ import requests
 # ---------------- Configuration ----------------
 URL = (
     "https://cardwarskingdom.pythonanywhere.com/admin/api/player/"
-    "272946fd-3a65-457e-ad6c-f7763b36fe4a/save"
+    "1d6d9d2f-724e-4449-b84c-1dc9519e8738/save"
 )
 
 INPUT_FILE = (
-    "player_28ec0fa0-b011-47eb-8c3f-ce49ec887517_save.json"  # <-- your local json file
+    "player_606c94de-0c0f-4d8b-9739-1a6d419ec0e7_save.json"  # <-- your local json file
 )
 
 COOKIES = {

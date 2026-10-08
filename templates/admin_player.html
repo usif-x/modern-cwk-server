@@ -337,8 +337,9 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
         </h3>
         <p class="text-xs text-muted-foreground mb-4">
           Delivered to the player's in-game Post Office; the player claims it
-          there. Currencies, creatures, Auguments, heroes and XP materials are
-          all supported.
+          there. One mail can carry several rewards at once: any combination
+          of currencies, creatures, Auguments and heroes (base heroes only -
+          skins and XP materials are not giftable).
         </p>
         <form
           action="/admin/players/{{ player.username }}/gift"
@@ -346,63 +347,78 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
           id="giftForm"
           class="space-y-4"
         >
-          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-            <div class="sm:col-span-4 space-y-1.5">
-              <label class="text-xs font-medium text-foreground"
-                >Reward Type</label
-              >
-              <select
-                name="gift_type"
-                id="giftType"
-                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <optgroup label="Currencies">
-                  <option value="HardCurrency">Gems (Hard Currency)</option>
-                  <option value="FreeHardCurrency">Free Gems</option>
-                  <option value="SoftCurrency">Coins (Soft Currency)</option>
-                  <option value="PvpCurrency">Wishbones (PVP)</option>
-                  <option value="EvolutionShards">Evolution Shards</option>
-                </optgroup>
-                <optgroup label="Game Items">
-                  <option value="Creature">Creature</option>
-                  <option value="ActionCard">Auguments</option>
-                  <option value="Leader">Hero / Leader / Skin</option>
-                  <option value="XPMaterials">XP Material</option>
-                </optgroup>
-              </select>
-            </div>
-            <div class="sm:col-span-5 space-y-1.5" id="giftItemWrap">
-              <label
-                class="text-xs font-medium text-foreground"
-                id="giftItemLabel"
-                >Select Creature</label
-              >
-              <input
-                type="text"
-                name="gift_id"
-                id="giftItem"
-                list="gift_creatures_list"
-                placeholder="Search creature (e.g. CornBall_Base)..."
-                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              />
-            </div>
-            <div class="sm:col-span-3 space-y-1.5">
-              <label
-                class="text-xs font-medium text-foreground"
-                id="giftAmountLabel"
-                >Star Rating (1-5)</label
-              >
-              <input
-                type="number"
-                name="gift_amount"
-                id="giftAmount"
-                min="1"
-                max="5"
-                value="5"
-                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              />
+          <div class="space-y-2" id="giftRows">
+            <div
+              class="gift-row grid grid-cols-1 sm:grid-cols-12 gap-3 items-end"
+              data-gift-row
+            >
+              <div class="sm:col-span-4 space-y-1.5">
+                <label class="text-xs font-medium text-foreground"
+                  >Reward Type</label
+                >
+                <select
+                  name="gift_type"
+                  class="gift-type flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <optgroup label="Currencies">
+                    <option value="HardCurrency">Gems (Hard Currency)</option>
+                    <option value="FreeHardCurrency">Free Gems</option>
+                    <option value="SoftCurrency">Coins (Soft Currency)</option>
+                    <option value="PvpCurrency">Wishbones (PVP)</option>
+                    <option value="EvolutionShards">Evolution Shards</option>
+                  </optgroup>
+                  <optgroup label="Game Items">
+                    <option value="Creature">Creature</option>
+                    <option value="ActionCard">Auguments</option>
+                    <option value="Leader">Hero (Leader)</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="sm:col-span-5 space-y-1.5 gift-item-wrap">
+                <label
+                  class="text-xs font-medium text-foreground gift-item-label"
+                  >Select Creature</label
+                >
+                <input
+                  type="text"
+                  name="gift_id"
+                  class="gift-item flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  list="gift_creatures_list"
+                  placeholder="Search creature (e.g. CornBall_Base)..."
+                />
+              </div>
+              <div class="sm:col-span-2 space-y-1.5">
+                <label
+                  class="text-xs font-medium text-foreground gift-amount-label"
+                  >Amount</label
+                >
+                <input
+                  type="number"
+                  name="gift_amount"
+                  class="gift-amount flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 font-mono text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  min="1"
+                  value="100"
+                />
+              </div>
+              <div class="sm:col-span-1 flex items-center justify-end">
+                <button
+                  type="button"
+                  class="gift-remove hidden h-9 w-9 inline-flex items-center justify-center rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
+                  title="Remove this reward"
+                >
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+              </div>
             </div>
           </div>
+          <button
+            type="button"
+            id="giftAddRow"
+            class="inline-flex items-center gap-1.5 rounded-md border border-dashed border-input px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+          >
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Add reward</span>
+          </button>
           <p
             id="giftDeliveryHint"
             class="text-[11px] text-muted-foreground flex items-center gap-1"
@@ -2811,76 +2827,93 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
   <option value="{{ l.id }}">{{ l.name }}</option>
   {% endfor %}
 </datalist>
-<datalist id="gift_xpmaterials_list">
-  {% for m in (gift_catalog.xpmaterials if gift_catalog else []) %}
-  <option value="{{ m.id }}">{{ m.name }}</option>
-  {% endfor %}
-</datalist>
 
 <script>
   // ==================== GIFT / REWARD COMPOSER ====================
   (function () {
-      const giftType = document.getElementById('giftType');
-      if (!giftType) return;
-      const itemWrap = document.getElementById('giftItemWrap');
-      const item = document.getElementById('giftItem');
-      const itemLabel = document.getElementById('giftItemLabel');
-      const amount = document.getElementById('giftAmount');
-      const amountLabel = document.getElementById('giftAmountLabel');
-      const hint = document.getElementById('giftDeliveryHint');
-      const hintText = hint ? hint.querySelector('span') : null;
+      const rowsBox = document.getElementById('giftRows');
+      if (!rowsBox) return;
+      const addBtn = document.getElementById('giftAddRow');
+      const maxRows = 12;
+      // Captured before any edit so new rows start pristine.
+      const rowHtml = rowsBox.innerHTML;
 
-      // delivery: 'mail' rides db_NewsMail (claimable); 'direct' is granted
-      // instantly because the client can't carry it in a mail.
-      const config = {
-          Creature: { list: 'gift_creatures_list', ph: 'Search creature (e.g. CornBall_Base)...', label: 'Select Creature', amount: 'Quantity (1)', max: 1, def: 1, delivery: 'mail' },
-          ActionCard: { list: 'gift_cards_list', ph: 'Search Auguments (e.g. CORN_0001)...', label: 'Select Auguments', amount: 'Copies', max: null, def: 1, delivery: 'direct' },
-          Leader: { list: 'gift_leaders_list', ph: 'Search hero / skin (e.g. Leader_Finn)...', label: 'Select Hero / Skin', amount: 'Count', max: 1, def: 1, delivery: 'direct' },
-          XPMaterials: { list: 'gift_xpmaterials_list', ph: 'Search XP material (e.g. CAKE_T3_Corn)...', label: 'Select XP Material', amount: 'Count', max: null, def: 1, delivery: 'mail' },
+      // Item rows carry a picker and an amount; currency rows only an amount
+      // (their picker stays in the form, hidden, so every row submits the
+      // same three fields and the server can zip them together).
+      const itemConfig = {
+          Creature: { list: 'gift_creatures_list', ph: 'Search creature (e.g. CornBall_Base)...', label: 'Select Creature', amount: 'Quantity (1)', max: 1, def: 1 },
+          ActionCard: { list: 'gift_cards_list', ph: 'Search Auguments (e.g. CORN_0001)...', label: 'Select Auguments', amount: 'Copies', max: null, def: 1 },
+          Leader: { list: 'gift_leaders_list', ph: 'Search hero (e.g. Leader_Finn)...', label: 'Select Hero (base heroes only)', amount: 'Count (1)', max: 1, def: 1 },
       };
 
-      function setHint(delivery) {
-          if (!hintText) return;
-          hintText.textContent = 'Delivered to the Post Office; the player claims it in-game.';
-      }
+      function applyRow(row) {
+          const type = row.querySelector('.gift-type');
+          const wrap = row.querySelector('.gift-item-wrap');
+          const item = row.querySelector('.gift-item');
+          const itemLabel = row.querySelector('.gift-item-label');
+          const amount = row.querySelector('.gift-amount');
+          const amountLabel = row.querySelector('.gift-amount-label');
+          if (!type || !wrap || !item || !amount) return;
+          const cfg = itemConfig[type.value];
 
-      function applyGiftType() {
-          const cfg = config[giftType.value];
           if (cfg) {
-              itemWrap.classList.remove('opacity-50', 'pointer-events-none');
-              item.disabled = false;
+              wrap.classList.remove('hidden');
               item.setAttribute('list', cfg.list);
               item.placeholder = cfg.ph;
               itemLabel.textContent = cfg.label;
-              amountLabel.textContent = cfg.amount;
-              amount.min = '1';
-              if (cfg.max) {
-                  amount.max = cfg.max;
-              } else {
-                  amount.removeAttribute('max');
-              }
               item.required = true;
-              amount.value = cfg.def;
-              setHint(cfg.delivery);
           } else {
-              itemWrap.classList.add('opacity-50', 'pointer-events-none');
-              item.disabled = true;
-              item.value = '';
+              // Hidden, not disabled: it still posts an empty gift_id.
+              wrap.classList.add('hidden');
               item.removeAttribute('list');
+              item.value = '';
               item.placeholder = 'N/A for currency';
-              itemLabel.textContent = 'Item Identifier';
-              amountLabel.textContent = 'Amount';
-              amount.min = '1';
-              amount.removeAttribute('max');
               item.required = false;
-              amount.value = '100';
-              setHint(giftType.value === 'EvolutionShards' ? 'direct' : 'mail');
           }
+          amountLabel.textContent = cfg ? cfg.amount : 'Amount';
+          amount.min = '1';
+          if (cfg && cfg.max) {
+              amount.max = String(cfg.max);
+          } else {
+              amount.removeAttribute('max');
+          }
+          amount.value = String(cfg ? cfg.def : 100);
           if (window.lucide) lucide.createIcons();
       }
 
-      giftType.addEventListener('change', applyGiftType);
-      applyGiftType();
+      function syncRows() {
+          const rows = rowsBox.querySelectorAll('[data-gift-row]');
+          rows.forEach(function (row) {
+              const remove = row.querySelector('.gift-remove');
+              if (remove) remove.classList.toggle('hidden', rows.length === 1);
+          });
+          if (addBtn) addBtn.classList.toggle('hidden', rows.length >= maxRows);
+      }
+
+      function bindRow(row) {
+          const type = row.querySelector('.gift-type');
+          if (type) type.addEventListener('change', function () { applyRow(row); });
+          const remove = row.querySelector('.gift-remove');
+          if (remove) remove.addEventListener('click', function () {
+              row.remove();
+              syncRows();
+          });
+          applyRow(row);
+      }
+
+      rowsBox.querySelectorAll('[data-gift-row]').forEach(bindRow);
+      syncRows();
+
+      if (addBtn) addBtn.addEventListener('click', function () {
+          rowsBox.insertAdjacentHTML('beforeend', rowHtml);
+          const row = rowsBox.lastElementChild;
+          if (!row || !row.matches('[data-gift-row]')) return;
+          bindRow(row);
+          syncRows();
+          const first = row.querySelector('.gift-type');
+          if (first) first.focus();
+      });
   })();
 
   // ==================== PLAYER ACTION BUTTONS ====================

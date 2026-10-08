@@ -888,6 +888,23 @@ def AdminPlayerEdit(player):
     return redirect("/admin/players/" + player)
 
 
+# One Post Office mail can carry several rewards: the composer posts one
+# gift_type / gift_id / gift_amount trio per line and these maps turn them
+# into the AdminGift columns and item tags.
+GIFT_CURRENCY_FIELDS = {
+    "HardCurrency": "gems",
+    "FreeHardCurrency": "gems",
+    "SoftCurrency": "coins",
+    "PvpCurrency": "pvp",
+    "EvolutionShards": "shards",
+}
+GIFT_ITEM_TAGS = {"Creature": "CR", "ActionCard": "CA", "Leader": "LD"}
+GIFT_MAX_LINES = 12
+GIFT_MAX_ITEM_TAGS = 50
+GIFT_MAX_AMOUNT = 100000000
+GIFT_MAX_ITEMS_CHARS = 2000
+
+
 @admin_bp.route("/admin/players/<player>/gift", methods=["POST"])
 @login_required
 def AdminPlayerGift(player):
@@ -898,61 +915,109 @@ def AdminPlayerGift(player):
     if db_player is None:
         return make_response("No player found!", 404)
 
-    gift_type = request.form.get("gift_type", "").strip()
-    gift_id = request.form.get("gift_id", "").strip()
-    gift_amount = max(1, safe_int(request.form.get("gift_amount", 1), 1))
-    gift_title = request.form.get("gift_title", "").strip() or "A Gift For You"
-    gift_body = (
-        request.form.get("gift_body", "").strip()
-        or "You have received a gift from the Post Office."
-    )
+    # Reward lines: every row posts all three fields, so index i of each list
+    # belongs together. Empty types are rows the composer never filled in.
+    raw_types = request.form.getlist("gift_type")
+    raw_ids = request.form.getlist("gift_id")
+    raw_amounts = request.form.getlist("gift_amount")
+    lines = [
+        (
+            (raw_types[i] or "").strip(),
+            (raw_ids[i] or "").strip() if i < len(raw_ids) else "",
+            raw_amounts[i] if i < len(raw_amounts) else "",
+        )
+        for i in range(len(raw_types))
+    ]
+    lines = [line for line in lines if line[0]]
 
-    if gift_type == "Creature" and IsTutorialOnlyCreature(gift_id):
+    if not lines:
+        return make_response("Add at least one reward!", 400)
+    if len(lines) > GIFT_MAX_LINES:
         return make_response(
-            "This is a tutorial-only creature and cannot be gifted.", 400
+            f"A gift can carry at most {GIFT_MAX_LINES} rewards!", 400
         )
 
-    # Post Office gift (production 6.1.2+): currencies are granted server-side
-    # on claim, item tags (CR/CA/LD/XP) are added by the app.
-    gems = coins = pvp = shards = 0
+    catalog = GetGiftCatalog()
+    known = {
+        "Creature": {c["id"] for c in catalog["creatures"]},
+        "ActionCard": {c["id"] for c in catalog["cards"]},
+        "Leader": {c["id"] for c in catalog["leaders"]},
+    }
+
+    totals = {"gems": 0, "coins": 0, "pvp": 0, "shards": 0}
     items = []
+    heroes = set()
+    summary = []
 
-    if gift_type in ("HardCurrency", "FreeHardCurrency"):
-        gems = gift_amount
-    elif gift_type == "SoftCurrency":
-        coins = gift_amount
-    elif gift_type == "PvpCurrency":
-        pvp = gift_amount
-    elif gift_type == "EvolutionShards":
-        shards = gift_amount
-    elif gift_type == "Creature":
-        if not gift_id:
-            return make_response("A creature ID is required!", 400)
-        items = [f"CR:{gift_id}"] * gift_amount
-    elif gift_type == "ActionCard":
-        if not gift_id:
-            return make_response("An Auguments ID is required!", 400)
-        items = [f"CA:{gift_id}"] * gift_amount
-    elif gift_type == "Leader":
-        if not gift_id:
-            return make_response("A hero ID is required!", 400)
-        items = [f"LD:{gift_id}"]
-    elif gift_type == "XPMaterials":
-        if not gift_id:
-            return make_response("An XP material ID is required!", 400)
-        items = [f"XP:{gift_id}"] * gift_amount
-    else:
-        return make_response("Unsupported reward type!", 400)
+    for gift_type, gift_id, raw_amount in lines:
+        if gift_type in GIFT_CURRENCY_FIELDS:
+            amount = max(1, min(GIFT_MAX_AMOUNT, safe_int(raw_amount, 1)))
+            totals[GIFT_CURRENCY_FIELDS[gift_type]] += amount
+            summary.append(f"{amount} {gift_type}")
+            continue
 
+        if gift_type not in GIFT_ITEM_TAGS:
+            return make_response(
+                "Unsupported reward type! Currencies, creatures, Auguments "
+                "and heroes are supported - XP materials and skins are not.",
+                400,
+            )
+
+        if gift_type == "Creature" and IsTutorialOnlyCreature(gift_id):
+            return make_response(
+                "This is a tutorial-only creature and cannot be gifted.", 400
+            )
+        if not gift_id:
+            return make_response(f"A {gift_type} ID is required!", 400)
+        if gift_id not in known[gift_type]:
+            if gift_type == "Leader" and GetLeaderSkinBase(gift_id):
+                return make_response(
+                    "A skin cannot be gifted on its own; gift the base hero "
+                    "it belongs to instead.",
+                    400,
+                )
+            return make_response(f"Unknown {gift_type} ID: {gift_id}", 400)
+
+        amount = max(1, safe_int(raw_amount, 1))
+        if gift_type == "Leader":
+            # Heroes do not stack: one line grants one hero, once.
+            if gift_id in heroes:
+                return make_response(
+                    "The same hero can only be gifted once per mail.", 400
+                )
+            heroes.add(gift_id)
+            items.append(f"LD:{gift_id}")
+            summary.append(gift_id)
+            continue
+
+        if len(items) + amount > GIFT_MAX_ITEM_TAGS:
+            return make_response(
+                f"A gift can carry at most {GIFT_MAX_ITEM_TAGS} items!", 400
+            )
+        tag = GIFT_ITEM_TAGS[gift_type]
+        items.extend([f"{tag}:{gift_id}"] * amount)
+        summary.append(f"{amount}x {gift_id}")
+
+    items_text = ",".join(items)
+    if len(items_text) > GIFT_MAX_ITEMS_CHARS:
+        return make_response("That is too many items for one mail!", 400)
+
+    # Post Office gift (production 6.1.2+): currencies are granted server-side
+    # on claim, item tags (CR/CA/LD) are added by the app.
     gift = AdminGift(
         username=player,
-        gems=gems,
-        coins=coins,
-        pvp=pvp,
-        shards=shards,
-        items=",".join(items),
-        title=gift_title[:80],
-        message=gift_body[:400],
+        gems=totals["gems"],
+        coins=totals["coins"],
+        pvp=totals["pvp"],
+        shards=totals["shards"],
+        items=items_text,
+        title=(
+            request.form.get("gift_title", "").strip() or "A Gift For You"
+        )[:80],
+        message=(
+            request.form.get("gift_body", "").strip()
+            or "You have received a gift from the Post Office."
+        )[:400],
         sender=current_user.username,
         created_at=int(time.time()),
     )
@@ -962,7 +1027,8 @@ def AdminPlayerGift(player):
     Log(
         "admin",
         current_user.username
-        + f" sent a {gift_type} Post Office gift to player: "
+        + f" sent a Post Office gift ({', '.join(summary) or 'no rewards'}) "
+        + f"to player: "
         + player,
     )
     return redirect("/admin/players/" + player)
