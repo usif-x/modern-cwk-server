@@ -1,0 +1,219 @@
+{% extends "admin_base.html" %}
+{% block title %}Monthly Store - CWK Admin{% endblock %}
+{% block breadcrumb %}Monthly Store{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Monthly Store</h1>
+            <p class="text-sm text-muted-foreground mt-1">
+                Offers served by <span class="font-mono text-xs">GET /persist/static/monthly_store</span>
+                &mdash; saved to <span class="font-mono text-xs">data/persist/{{ config_name }}</span>.
+                Rotation month: <span class="font-mono text-xs">{{ month_key }}</span>.
+            </p>
+        </div>
+        <form action="/admin/monthly_store/reroll" method="POST">
+            <button type="submit" data-confirm="Reroll the whole rotation? The current offer lists are replaced with a fresh random pick."
+                    class="inline-flex items-center justify-center gap-1.5 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
+                <i data-lucide="shuffle" class="w-4 h-4"></i>
+                <span>Reroll rotation</span>
+            </button>
+        </form>
+    </div>
+
+    {% if error %}
+    <div class="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <span class="font-semibold">Not saved:</span> {{ error }}
+    </div>
+    {% endif %}
+
+    <form action="/admin/monthly_store/save" method="POST">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {% for st, spec in store_types.items() %}
+            <div class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6" data-store="{{ st }}">
+                <div class="flex items-center justify-between mb-1">
+                    <h2 class="text-base font-semibold tracking-tight">{{ spec.label }}</h2>
+                    <span class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                        <span data-selected-count="{{ st }}">{{ selected[st].total }}</span> selected
+                    </span>
+                </div>
+                <p class="text-sm text-muted-foreground mb-4">
+                    The app renders <span class="font-semibold">{{ spec.size }}</span> monthly slots.
+                    Everything else marked <span class="font-semibold">Special</span> is shown beside them
+                    and counts against the same monthly buy limit.
+                </p>
+
+                <div class="flex flex-wrap items-end gap-3 mb-3">
+                    <div class="space-y-1 flex-1 min-w-[180px]">
+                        <label class="block text-xs font-medium text-muted-foreground" for="filter_{{ st }}">Filter</label>
+                        <input id="filter_{{ st }}" type="search" placeholder="Name or ID…" data-filter="rows_{{ st }}"
+                               class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-xs font-medium text-muted-foreground" for="limit_{{ st }}">Buys per month</label>
+                        <input id="limit_{{ st }}" name="limit_{{ st }}" type="number" min="1" max="99" value="{{ limits[st] }}"
+                               class="flex h-9 w-24 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                    </div>
+                </div>
+
+                <div class="overflow-auto max-h-[440px] rounded-lg border border-border" data-filter-target="rows_{{ st }}">
+                    <table class="w-full text-sm">
+                        <thead class="sticky top-0 z-10 bg-muted text-[11px] uppercase tracking-wider text-muted-foreground">
+                            <tr>
+                                <th class="px-3 py-2 text-left font-semibold">Offer</th>
+                                <th class="px-3 py-2 text-left font-semibold">Price</th>
+                                <th class="px-3 py-2 text-left font-semibold w-44">Placement</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in catalog[st] %}
+                            {% set mode = "monthly" if row.id in selected[st].monthly else ("special" if row.id in selected[st].special else "") %}
+                            <tr class="border-t border-border" data-search="{{ (row.name ~ ' ' ~ row.id)|lower }}">
+                                <td class="px-3 py-2">
+                                    <div class="font-medium text-foreground">{{ row.name }}</div>
+                                    <div class="text-xs text-muted-foreground font-mono">
+                                        {{ row.id }}{% if row.blueprint_special %} &middot; blueprint special{% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap text-muted-foreground">
+                                    {{ row.cost }} {% if st == "evo" %}wishbones{% else %}gems{% endif %}{% if row.quantity > 1 %} &times;{{ row.quantity }}{% endif %}
+                                </td>
+                                <td class="px-3 py-2">
+                                    <select name="sel_{{ st }}_{{ row.id }}"
+                                            class="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                                        <option value=""{% if mode == "" %} selected{% endif %}>Not offered</option>
+                                        <option value="monthly"{% if mode == "monthly" %} selected{% endif %}>Monthly slot</option>
+                                        <option value="special"{% if mode == "special" %} selected{% endif %}>Special</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 pt-2">
+            <button type="submit"
+                    class="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-xs hover:bg-primary/90 transition-colors">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                <span>Save offers</span>
+            </button>
+            <span class="text-xs text-muted-foreground">
+                Players' buy counters reset with the month; changing the lists does not reset them.
+            </span>
+        </div>
+    </form>
+
+    <!-- Purchase counters -->
+    <div id="purchases" class="rounded-xl border border-border bg-card text-card-foreground shadow-xs p-6 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h2 class="text-base font-semibold tracking-tight">Purchase counters</h2>
+                <p class="text-sm text-muted-foreground">
+                    How many times each player bought an offer this month ({{ month_key }}) &mdash; newest 100.
+                </p>
+            </div>
+            <form action="/admin/monthly_store/reset_counts" method="POST" class="flex flex-wrap items-end gap-2">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-muted-foreground" for="resetPlayer">Player UUID</label>
+                    <input id="resetPlayer" name="player_id" type="text" placeholder="blank = everyone"
+                           class="flex h-9 w-56 rounded-md border border-input bg-background px-3 py-1 text-sm font-mono shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-muted-foreground" for="resetStore">Store</label>
+                    <select id="resetStore" name="store_type"
+                            class="flex h-9 rounded-md border border-input bg-background px-2 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                        <option value="">Both</option>
+                        <option value="action">Action cards</option>
+                        <option value="evo">Evolution materials</option>
+                    </select>
+                </div>
+                <button type="submit" data-confirm="Reset these monthly buy counters? Players will be able to buy again this month."
+                        class="inline-flex items-center justify-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 transition-colors">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    <span>Reset</span>
+                </button>
+            </form>
+        </div>
+
+        <div class="overflow-auto max-h-[420px] rounded-lg border border-border">
+            <table class="w-full text-sm">
+                <thead class="sticky top-0 z-10 bg-muted text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <tr>
+                        <th class="px-3 py-2 text-left font-semibold">Player</th>
+                        <th class="px-3 py-2 text-left font-semibold">Store</th>
+                        <th class="px-3 py-2 text-left font-semibold">Offer</th>
+                        <th class="px-3 py-2 text-left font-semibold">Bought</th>
+                        <th class="px-3 py-2 text-left font-semibold">Month</th>
+                        <th class="px-3 py-2 text-left font-semibold">Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if purchases %}
+                    {% for p in purchases %}
+                    <tr class="border-t border-border">
+                        <td class="px-3 py-2">
+                            <div class="font-medium text-foreground">{{ player_names.get(p.player_id, "Unnamed") }}</div>
+                            <a href="/admin/players/{{ p.player_id }}" class="text-xs text-primary font-mono hover:underline">{{ p.player_id }}</a>
+                        </td>
+                        <td class="px-3 py-2 text-muted-foreground">{{ store_types[p.store_type].label if p.store_type in store_types else p.store_type }}</td>
+                        <td class="px-3 py-2 font-mono text-xs">{{ p.offer_id }}</td>
+                        <td class="px-3 py-2">
+                            <span class="font-semibold">{{ p.buy_count }}</span>
+                            <span class="text-muted-foreground">/ {{ limits.get(p.store_type, default_limits.get(p.store_type, 1)) }}</span>
+                        </td>
+                        <td class="px-3 py-2 font-mono text-xs text-muted-foreground">{{ p.month_key }}</td>
+                        <td class="px-3 py-2 text-xs text-muted-foreground">{{ p.updated_at|fmt_ts }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-3 py-6 text-center text-sm text-muted-foreground">
+                            No monthly store purchases yet this month.
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        function refreshCounts() {
+            document.querySelectorAll("[data-store]").forEach(function (card) {
+                var st = card.getAttribute("data-store");
+                var total = 0;
+                card.querySelectorAll('select[name^="sel_' + st + '_"]').forEach(function (sel) {
+                    if (sel.value) total += 1;
+                });
+                var out = card.querySelector('[data-selected-count="' + st + '"]');
+                if (out) out.textContent = total;
+            });
+        }
+
+        document.querySelectorAll('select[name^="sel_"]').forEach(function (sel) {
+            sel.addEventListener("change", refreshCounts);
+        });
+
+        document.querySelectorAll("[data-filter]").forEach(function (input) {
+            var target = document.querySelector('[data-filter-target="' + input.getAttribute("data-filter") + '"]');
+            if (!target) return;
+            input.addEventListener("input", function () {
+                var query = input.value.trim().toLowerCase();
+                target.querySelectorAll("tr[data-search]").forEach(function (row) {
+                    row.style.display = !query || row.getAttribute("data-search").indexOf(query) !== -1 ? "" : "none";
+                });
+            });
+        });
+
+        refreshCounts();
+    })();
+</script>
+{% endblock %}

@@ -209,3 +209,36 @@ class AdminGift(db.Model):
     sender = db.Column(db.String(80), nullable=False, default="")
     created_at = db.Column(db.Integer, nullable=False, default=0)
     claimed_at = db.Column(db.Integer, nullable=True)
+
+
+class MonthlyStorePurchase(db.Model):
+    """How often a player bought a Monthly Store offer this month.
+
+    Offer lists live in ``data/persist/monthly_store.json`` (admin curated);
+    the counters live here so a client save upload cannot reset them.
+    """
+
+    __tablename__ = "monthly_store_purchase"
+    id = db.Column(db.Integer, primary_key=True)
+    player_id = db.Column(db.String(80), nullable=False, index=True)
+    store_type = db.Column(db.String(32), nullable=False)
+    offer_id = db.Column(db.String(255), nullable=False)
+    month_key = db.Column(db.String(7), nullable=False)
+    buy_count = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.Integer, nullable=False, default=lambda: int(_time.time()))
+    updated_at = db.Column(
+        db.Integer,
+        nullable=False,
+        default=lambda: int(_time.time()),
+        onupdate=lambda: int(_time.time()),
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "player_id",
+            "store_type",
+            "offer_id",
+            "month_key",
+            name="uq_monthly_store_purchase",
+        ),
+    )

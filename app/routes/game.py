@@ -7,6 +7,14 @@ from flask_login import current_user
 from app import maintenance, app, db
 from app.models import Player, RouletteState, UpsightLogs, AdminGift
 from app.services.trade_market import ApplyTradeDeltasToGame
+from app.services.monthly_store import (
+    STORE_TYPES,
+    IncrementBuyCount,
+    LoadStoreConfig,
+    MonthlyStoreResponse,
+    OfferPrice,
+    OffersInRotation,
+)
 from app.utils import (
     DecryptGameData, EncryptGameData, DiscordWebhookMessage, IPFromRequest,
     InvalidUsername, IsUserBanned, Log, PlayerLog, UpdateLastOnline,
@@ -81,11 +89,132 @@ def PersistLive():
 
 @game_bp.route("/persist/static/monthly_store", methods=["GET"])
 def MonthlyStore():
-    return jsonify({
-        "StoreItems": [],
-        "FeaturedItems": [],
-        "ResetTime": 0,
-    })
+    """Monthly Store (6.x): this month's offers plus the player's buy counters."""
+    player_id = (
+        request.args.get("player_id") or request.headers.get("Player-Id") or ""
+    ).strip()
+    if not player_id:
+        return jsonify({"success": False, "error": "MISSING_PLAYER_ID"}), 400
+    try:
+        return jsonify(MonthlyStoreResponse(player_id))
+    except Exception as e:
+        db.session.rollback()
+        Log("persist", f"monthly_store failed: {e}")
+        return jsonify({"success": False, "error": "SERVER_ERROR"}), 500
+
+
+def _request_payload():
+    """Form body, JSON body or query-encoded body - whichever the app used."""
+    data = request.form.to_dict()
+    if data:
+        return data
+    payload = request.get_json(silent=True)
+    if isinstance(payload, dict):
+        return payload
+    body = request.get_data(as_text=True) or ""
+    if body:
+        try:
+            return {k: v[0] for k, v in parse_qs(body).items()}
+        except Exception:
+            pass
+    return {}
+
+
+@game_bp.route("/persist/static/monthly_store/buy", methods=["POST"])
+def BuyMonthlyStore():
+    """Buy one Monthly Store offer: enforce the monthly limit, charge the save.
+
+    The save is the wallet, so the price comes from the same blueprint the app
+    renders and the reply carries ``charged`` plus the resulting balances.
+    """
+    data = _request_payload()
+    player_id = str(
+        data.get("player_id") or request.headers.get("Player-Id") or ""
+    ).strip()
+    store_type = str(data.get("store_type") or "").strip()
+    offer_id = str(data.get("offer_id") or "").strip()
+
+    if not player_id or InvalidUsername(player_id):
+        return jsonify({"success": False, "error": "MISSING_PLAYER_ID"}), 400
+    if store_type not in STORE_TYPES:
+        return jsonify({"success": False, "error": "INVALID_STORE_TYPE"}), 400
+    if not offer_id:
+        return jsonify({"success": False, "error": "MISSING_OFFER_ID"}), 400
+    if IsUserBanned(player_id, IPFromRequest(request)):
+        return jsonify({"success": False, "error": "BANNED"}), 403
+
+    cfg = LoadStoreConfig()
+    if not OffersInRotation(cfg, store_type, offer_id):
+        return jsonify({"success": False, "error": "UNKNOWN_OFFER"}), 400
+
+    price = OfferPrice(store_type, offer_id)
+    if price is None:
+        return jsonify({"success": False, "error": "UNKNOWN_OFFER"}), 400
+
+    player = Player.query.filter_by(username=player_id).first()
+    if player is None:
+        return jsonify({"success": False, "error": "UNKNOWN_PLAYER"}), 404
+
+    game = DecryptGameData(player.game) if player.game else {}
+    if not isinstance(game, dict):
+        game = {}
+
+    cost = int(price["cost"])
+    bucket = price["bucket"]
+    free = safe_int(game.get("FreeHardCurrency", 0))
+    paid = safe_int(game.get("PaidHardCurrency", 0))
+    pvp = safe_int(game.get("PvpCurrency", 0))
+    have = free + paid if bucket == "gems" else pvp if bucket == "pvp" else 0
+    if have < cost:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": "INSUFFICIENT_FUNDS",
+                    "price": cost,
+                    "balance": have,
+                    "currency": price["currency"],
+                }
+            ),
+            400,
+        )
+
+    counted, detail = IncrementBuyCount(player_id, store_type, offer_id)
+    if not counted:
+        return jsonify({"success": False, **detail}), 400
+
+    if bucket == "gems":
+        take_free = min(free, cost)
+        game["FreeHardCurrency"] = free - take_free
+        game["PaidHardCurrency"] = paid - (cost - take_free)
+        game["HardCurrency"] = game["FreeHardCurrency"] + game["PaidHardCurrency"]
+    elif bucket == "pvp":
+        game["PvpCurrency"] = pvp - cost
+
+    player.game = EncryptGameData(game, player_id)
+    db.session.add(player)
+    db.session.commit()
+
+    PlayerLog(
+        IPFromRequest(request),
+        player_id,
+        f"Monthly store {store_type} {offer_id} charged {cost} "
+        f"({detail['buy_count']}/{detail['buy_limit']})",
+    )
+
+    balances = {k: v for k, v in _BalanceFields(game, "").items() if k != "handle"}
+    return jsonify(
+        {
+            "success": True,
+            "store_type": store_type,
+            "offer_id": offer_id,
+            "buy_count": detail["buy_count"],
+            "buy_limit": detail["buy_limit"],
+            "charged": cost,
+            "currency": price["currency"],
+            **balances,
+        }
+    )
 
 
 @game_bp.route("/persist/static/pvp_banlist", methods=["GET", "POST"])
