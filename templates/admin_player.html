@@ -1785,6 +1785,54 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
           </table>
         </div>
       </form>
+
+      <!-- Creatures Table Pagination -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+          <label for="creaturePerPage" class="text-xs">Show</label>
+          <select
+            id="creaturePerPage"
+            class="inline-flex h-8 rounded-md border border-input bg-background px-2 py-0.5 text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="100" selected>100</option>
+            <option value="150">150</option>
+            <option value="200">200</option>
+          </select>
+          <span class="text-xs">per page</span>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <span
+            id="creatureShowing"
+            class="text-xs text-muted-foreground"
+          ></span>
+          <div class="flex items-center gap-1">
+            <button
+              type="button"
+              id="creaturePrev"
+              class="hidden inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+              <span>Prev</span>
+            </button>
+
+            <span
+              id="creaturePageInfo"
+              class="px-2 text-xs font-medium text-foreground whitespace-nowrap"
+              >Page 1 of 1</span
+            >
+
+            <button
+              type="button"
+              id="creatureNext"
+              class="hidden inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              <span>Next</span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2004,6 +2052,51 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
           </table>
         </div>
       </form>
+
+      <!-- Auguments Table Pagination -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+          <label for="cardPerPage" class="text-xs">Show</label>
+          <select
+            id="cardPerPage"
+            class="inline-flex h-8 rounded-md border border-input bg-background px-2 py-0.5 text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="100" selected>100</option>
+            <option value="150">150</option>
+            <option value="200">200</option>
+          </select>
+          <span class="text-xs">per page</span>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <span id="cardShowing" class="text-xs text-muted-foreground"></span>
+          <div class="flex items-center gap-1">
+            <button
+              type="button"
+              id="cardPrev"
+              class="hidden inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+              <span>Prev</span>
+            </button>
+
+            <span
+              id="cardPageInfo"
+              class="px-2 text-xs font-medium text-foreground whitespace-nowrap"
+              >Page 1 of 1</span
+            >
+
+            <button
+              type="button"
+              id="cardNext"
+              class="hidden inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              <span>Next</span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2832,15 +2925,24 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
   }
 
   // ==================== CREATURES FILTER & MULTI-SELECT ====================
+  const creaturePager = makeTablePager({
+      name: 'creatures',
+      rowClass: '.creature-row',
+      cellClass: '.creature-id-cell',
+      cbClass: '.creature-cb',
+      masterId: 'selectAllCreaturesCheckbox',
+      perPageId: 'creaturePerPage',
+      prevId: 'creaturePrev',
+      nextId: 'creatureNext',
+      pageInfoId: 'creaturePageInfo',
+      showingId: 'creatureShowing',
+      defaultPerPage: 100,
+  });
+
   const searchCreaturesInput = document.getElementById('searchCreaturesInput');
   if (searchCreaturesInput) {
-      searchCreaturesInput.addEventListener('input', function(e) {
-          const query = e.target.value.toLowerCase().trim();
-          const rows = document.querySelectorAll('.creature-row');
-          rows.forEach(row => {
-              const idText = row.querySelector('.creature-id-cell')?.textContent.toLowerCase() || '';
-              row.style.display = idText.includes(query) ? '' : 'none';
-          });
+      searchCreaturesInput.addEventListener('input', function (e) {
+          creaturePager.setQuery(e.target.value);
       });
   }
 
@@ -2857,6 +2959,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
               bar.classList.add('hidden');
           }
       }
+      creaturePager.sync();
   }
 
   function toggleSelectAllCreatures(masterCheckbox) {
@@ -2887,15 +2990,24 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
   }
 
   // ==================== CARDS FILTER & MULTI-SELECT ====================
+  const cardPager = makeTablePager({
+      name: 'cards',
+      rowClass: '.card-row',
+      cellClass: '.card-id-cell',
+      cbClass: '.card-cb',
+      masterId: 'selectAllCardsCheckbox',
+      perPageId: 'cardPerPage',
+      prevId: 'cardPrev',
+      nextId: 'cardNext',
+      pageInfoId: 'cardPageInfo',
+      showingId: 'cardShowing',
+      defaultPerPage: 100,
+  });
+
   const searchCardsInput = document.getElementById('searchCardsInput');
   if (searchCardsInput) {
-      searchCardsInput.addEventListener('input', function(e) {
-          const query = e.target.value.toLowerCase().trim();
-          const rows = document.querySelectorAll('.card-row');
-          rows.forEach(row => {
-              const idText = row.querySelector('.card-id-cell')?.textContent.toLowerCase() || '';
-              row.style.display = idText.includes(query) ? '' : 'none';
-          });
+      searchCardsInput.addEventListener('input', function (e) {
+          cardPager.setQuery(e.target.value);
       });
   }
 
@@ -2912,6 +3024,7 @@ player.username }} - CWK Admin{% endblock %} {% block breadcrumb %}
               bar.classList.add('hidden');
           }
       }
+      cardPager.sync();
   }
 
   function toggleSelectAllCards(masterCheckbox) {

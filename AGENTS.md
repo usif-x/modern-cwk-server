@@ -50,7 +50,7 @@ cwk-server/
 │   ├── manifest.json               # Client manifest
 │   ├── Blueprints/                 # Game data JSON files (creatures, cards, etc.)
 │   └── logs/                       # Daily log files (YYYY-MM-DD.txt)
-├── static/admin/                   # Bootstrap CSS/JS assets (legacy)
+├── static/admin/                   # Bootstrap CSS/JS assets (legacy) + table_pager.js
 ├── templates/                      # 25 Jinja2 admin templates
 │   ├── admin_base.html             # Base layout (Tailwind + shadcn/ui sidebar & theme toggle)
 │   ├── admin_login.html            # Login page (username/password + passkey)
@@ -672,6 +672,7 @@ renders in the store:
 - **Blueprints**: All routes use Flask Blueprints registered in `app/routes/__init__.py`
 - **File paths**: Always use `ROOT_DIR` for file access (defined in each route file)
 - **Confirm dialogs**: Use SweetAlert2 via `cwkConfirm(message)` / `cwkAlert(message)` (defined in `admin_base.html`); never native `confirm()`/`alert()`. Inline `onclick="return confirm('...')"` is auto-upgraded to a `data-confirm` attribute at load
+- **Table paging**: admin tables whose rows are server-rendered (player profile creatures / Auguments, every trade market table) paginate in the browser with `makeTablePager(...)` from `static/admin/table_pager.js` (loaded in `admin_base.html`). Give the data rows a class, add a footer with `Show <100/150/200> per page` + `Prev` / `Page N of M` / `Next` ids, and init one pager per table; the per-page choice is remembered in `localStorage` and the paging composes with the table's search filter
 - **Leader skins**: Add skins via `/admin/players/<uuid>/add_leader` (a skin ID attaches to its base hero's `OwnedSkins`); the player page has a per-hero "Add Skin" picker
 
 ## Running

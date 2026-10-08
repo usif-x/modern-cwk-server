@@ -3,6 +3,52 @@
 {% block breadcrumb %}Trade Market{% endblock %}
 
 {% block content %}
+{% macro table_pager(name) %}
+    <div class="p-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2 text-sm text-muted-foreground">
+        <label for="{{ name }}PerPage" class="text-xs">Show</label>
+        <select
+          id="{{ name }}PerPage"
+          class="inline-flex h-8 rounded-md border border-input bg-background px-2 py-0.5 text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <option value="100" selected>100</option>
+          <option value="150">150</option>
+          <option value="200">200</option>
+        </select>
+        <span class="text-xs">per page</span>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <span id="{{ name }}Showing" class="text-xs text-muted-foreground"></span>
+        <div class="flex items-center gap-1">
+          <button
+            type="button"
+            id="{{ name }}Prev"
+            class="hidden inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+          >
+            <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+            <span>Prev</span>
+          </button>
+
+          <span
+            id="{{ name }}PageInfo"
+            class="px-2 text-xs font-medium text-foreground whitespace-nowrap"
+            >Page 1 of 1</span
+          >
+
+          <button
+            type="button"
+            id="{{ name }}Next"
+            class="hidden inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+          >
+            <span>Next</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+{% endmacro %}
+
 <div class="space-y-6">
   <!-- Header -->
   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -92,7 +138,7 @@
         </thead>
         <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
           {% for l in listings %}
-          <tr class="hover:bg-muted/40 transition-colors">
+          <tr class="hover:bg-muted/40 transition-colors marketListings-row">
             <td class="px-4 py-3 font-mono text-xs">{{ l.id }}</td>
             <td class="px-4 py-3">
               <div class="flex flex-col">
@@ -156,6 +202,7 @@
         </tbody>
       </table>
     </div>
+    {{ table_pager('marketListings') }}
   </div>
 
   <!-- Offers -->
@@ -180,7 +227,7 @@
         </thead>
         <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
           {% for o in offers %}
-          <tr class="hover:bg-muted/40 transition-colors">
+          <tr class="hover:bg-muted/40 transition-colors marketOffers-row">
             <td class="px-4 py-3 font-mono text-xs">{{ o.id }}</td>
             <td class="px-4 py-3"><a href="/admin/players/{{ o.from_id }}" class="text-foreground hover:underline">{{ o.from_name }}</a></td>
             <td class="px-4 py-3"><a href="/admin/players/{{ o.to_id }}" class="text-foreground hover:underline">{{ o.to_name }}</a></td>
@@ -237,6 +284,7 @@
         </tbody>
       </table>
     </div>
+    {{ table_pager('marketOffers') }}
   </div>
 
   <!-- Escrow -->
@@ -259,7 +307,7 @@
         </thead>
         <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
           {% for e in escrows %}
-          <tr class="hover:bg-muted/40 transition-colors">
+          <tr class="hover:bg-muted/40 transition-colors marketEscrow-row">
             <td class="px-4 py-3 font-mono text-xs">{{ e.id }}</td>
             <td class="px-4 py-3">
               <a href="/admin/players/{{ e.player_id }}" class="font-mono text-[11px] text-foreground hover:underline">{{ e.player_id }}</a>
@@ -286,6 +334,7 @@
         </tbody>
       </table>
     </div>
+    {{ table_pager('marketEscrow') }}
   </div>
 
   <!-- Trade coin balances -->
@@ -313,7 +362,7 @@
         </thead>
         <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
           {% for b in balances %}
-          <tr class="hover:bg-muted/40 transition-colors">
+          <tr class="hover:bg-muted/40 transition-colors marketBalances-row">
             <td class="px-4 py-3"><a href="/admin/players/{{ b.player_id }}" class="font-mono text-[11px] text-foreground hover:underline">{{ b.player_id }}</a></td>
             <td class="px-4 py-3 font-mono text-xs font-semibold">{{ b.coins }}</td>
             <td class="px-4 py-3 font-mono text-[11px] text-muted-foreground whitespace-nowrap">{{ b.updated|fmt_ts(utc=True) }}</td>
@@ -325,6 +374,7 @@
         </tbody>
       </table>
     </div>
+    {{ table_pager('marketBalances') }}
   </div>
 
   <!-- Trade log -->
@@ -344,7 +394,7 @@
         </thead>
         <tbody class="[&_tr:last-child]:border-0 divide-y divide-border">
           {% for lg in logs %}
-          <tr class="hover:bg-muted/40 transition-colors">
+          <tr class="hover:bg-muted/40 transition-colors marketLog-row">
             <td class="px-4 py-2 font-mono text-[11px] text-muted-foreground whitespace-nowrap">{{ lg.ts|fmt_ts(utc=True) }}</td>
             <td class="px-4 py-2 text-xs font-medium">{{ lg.action }}</td>
             <td class="px-4 py-2 font-mono text-[11px] text-muted-foreground">{{ lg.actor or '—' }}</td>
@@ -357,6 +407,22 @@
         </tbody>
       </table>
     </div>
+    {{ table_pager('marketLog') }}
   </div>
 </div>
+
+  <script>
+    ['marketListings', 'marketOffers', 'marketEscrow', 'marketBalances', 'marketLog'].forEach(function (name) {
+      makeTablePager({
+        name: name,
+        rowClass: '.' + name + '-row',
+        perPageId: name + 'PerPage',
+        prevId: name + 'Prev',
+        nextId: name + 'Next',
+        pageInfoId: name + 'PageInfo',
+        showingId: name + 'Showing',
+        defaultPerPage: 100,
+      });
+    });
+  </script>
 {% endblock %}

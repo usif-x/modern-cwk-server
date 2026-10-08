@@ -1,3 +1,5 @@
+import re
+
 from ._common import *
 from .game_data import Log
 
@@ -88,6 +90,80 @@ def DumpDatabase(dest_dir):
     return SQLITE_DUMP_NAME
 
 
+# A pg_dump line that sets a session parameter: `SET name = value;` (pg_dump
+# also writes `SET name TO value;`).
+_SET_LINE = re.compile(r"^\s*SET\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:=|TO)\s", re.IGNORECASE)
+
+# The first schema statement of a dump: everything before it is the header
+# where the session settings live, so function bodies further down are never
+# touched.
+_HEADER_END = re.compile(r"^\s*(CREATE|ALTER|COPY|INSERT|DROP)\b", re.IGNORECASE)
+
+
+def _ServerAcceptsSetting(name, psql_prefix, dbname, env):
+    """True when the target server knows `SHOW <name>`.
+
+    A dump carries the settings of the server it was taken from, so one made
+    on a newer major (PostgreSQL 17 added `transaction_timeout`) contains
+    parameters an older server rejects.
+    """
+    try:
+        proc = subprocess.run(
+            [*psql_prefix, "-c", "SHOW " + name, dbname],
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        return True  # psql is missing; the restore itself reports that
+    return proc.returncode == 0
+
+
+def _StripUnknownSettings(sql_path, psql_prefix, dbname, env):
+    """Copy a pg_dump without the `SET <param> = ...` lines the server rejects.
+
+    Such a line aborts an `ON_ERROR_STOP=1` restore even though dropping it is
+    harmless - the parameter keeps its default for the session. Returns
+    ``(path_to_restore, removed_line_count)``, the original path when nothing
+    had to go.
+    """
+    accepted = {}
+    cleaned_path = str(sql_path) + ".clean"
+    removed = 0
+    in_header = True
+    try:
+        with open(sql_path, "r", encoding="utf-8", errors="replace") as src, open(
+            cleaned_path, "w", encoding="utf-8"
+        ) as dst:
+            for line in src:
+                if in_header:
+                    if _HEADER_END.match(line):
+                        in_header = False
+                    else:
+                        match = _SET_LINE.match(line)
+                        if match:
+                            name = match.group(1)
+                            if name not in accepted:
+                                accepted[name] = _ServerAcceptsSetting(
+                                    name, psql_prefix, dbname, env
+                                )
+                            if not accepted[name]:
+                                removed += 1
+                                continue
+                dst.write(line)
+    except OSError as e:
+        Log("admin", f"restore: could not filter the dump ({e}); restoring it as-is")
+        return sql_path, 0
+
+    if not removed:
+        try:
+            os.remove(cleaned_path)
+        except OSError:
+            pass
+        return sql_path, 0
+    return cleaned_path, removed
+
+
 def RestoreDatabaseSql(sql_path):
     """Replace the active PostgreSQL database with a pg_dump SQL file."""
     if not IsPostgres():
@@ -102,17 +178,20 @@ def RestoreDatabaseSql(sql_path):
 
     env = _PgCliEnv()
     env["PGOPTIONS"] = "-c lock_timeout=30000 -c statement_timeout=600000"
+    dbname = str(db.engine.url.database)
+    psql_prefix = ["psql", "-v", "ON_ERROR_STOP=1", "-q", *_PgCliArgs()]
 
-    cmd = [
-        "psql",
-        "-v",
-        "ON_ERROR_STOP=1",
-        "-q",
-        "-f",
-        sql_path,
-        *_PgCliArgs(),
-        str(db.engine.url.database),
-    ]
+    # A dump from a newer PostgreSQL (e.g. `SET transaction_timeout = 0;` from
+    # 17) would abort the restore on this server, so drop what it rejects.
+    dump_path, removed = _StripUnknownSettings(sql_path, psql_prefix, dbname, env)
+    if removed:
+        Log(
+            "admin",
+            f"restore: dropped {removed} SET line(s) this server does not know "
+            f"({os.path.basename(sql_path)})",
+        )
+
+    cmd = [*psql_prefix, "-f", dump_path, dbname]
     try:
         subprocess.run(cmd, env=env, check=True, capture_output=True, text=True)
     except FileNotFoundError:
