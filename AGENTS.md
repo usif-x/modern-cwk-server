@@ -617,6 +617,35 @@ email and a Remove action (`/admin/players/<uuid>/googleunlink`).
 `POST /persist/static/report` saves a client crash/feedback body to
 `data/persist/reports/` and answers `204` (`SaveReport`, `app/services/live.py`).
 
+## Monthly Store
+
+`GET /persist/static/monthly_store?player_id=<uuid>` answers the payload the app
+renders in the store:
+
+```json
+{"action_cards": ["NICE_0026_Store", "..."], "action_card_special": ["NICE_0053_Store"],
+ "evo_materials": ["Store_MAT_WED_T3", "..."], "evo_special": [],
+ "buy_counts": {"action": {"NICE_0026_Store": 0}, "evo": {"Store_MAT_WED_T3": 0}},
+ "buy_limits": {"action": 3, "evo": 1}, "success": true}
+```
+
+- The offer lists and buy limits live in the single `monthly_store_config` row
+  (`app/services/monthly_store.py`); the first read seeds a random rotation out of
+  `db_StoreBuyActionCards.json` / `db_StoreBuyEvoMaterials.json` - 6 monthly action
+  cards, 4 evo materials, plus every offer the blueprint marks `IsSpecial`.
+- `buy_counts` are per player and per month, stored in `monthly_store_purchase`;
+  they reset with `YYYY-MM` and survive both save uploads and dyno restarts.
+- `POST /persist/static/monthly_store/buy` takes `player_id`, `store_type`
+  (`action`/`evo`) and `offer_id`; it refuses unknown offers, `BUY_LIMIT_REACHED`
+  and `INSUFFICIENT_FUNDS`, then debits the save (action cards cost **gems**, evo
+  materials **wishbones**, both priced from the blueprints) and answers
+  `buy_count`, `buy_limit`, `charged`, `currency` (`gems`/`PvpCurrency`) plus the
+  `level1..level7` balance block.
+- Admin page **Tools -> Monthly Store** (`/admin/monthly_store`, module
+  `app/routes/admin/store.py`): choose which offers are monthly slots or
+  specials, set the per-month buy limits, reroll the rotation and inspect or
+  reset purchase counters.
+
 ## Anti-Cheat / Security
 
 1. **Leader level validation** — Auto-bans if fresh account sets level > 5 or level jumps by > 10
