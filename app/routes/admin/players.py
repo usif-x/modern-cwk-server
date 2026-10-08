@@ -2058,17 +2058,25 @@ def AdminPlayerMaxResources(player):
         return make_response("No player found!", 404)
 
     game = DecryptGameData(db_player.game)
-    if game is None:
+    if not isinstance(game, dict):
         return make_response("No game data found!", 400)
 
-    target_rank = 50
+    def copies_of(field):
+        return max(1, min(50, safe_int(request.form.get(field), 1)))
+
+    creature_copies = copies_of("creature_copies")
+    augment_copies = copies_of("augment_copies")
+
+    # --- Currencies, rank/level and slots ---
+    target_rank = 250
     target_xp = GetXPForRank(target_rank)
     game["SoftCurrency"] = 9999999
     game["PaidHardCurrency"] = 499999
     game["FreeHardCurrency"] = 500000
     game["PvpCurrency"] = 99999
     game["EvolutionShards"] = 9999
-    game["InventorySpace"] = 300
+    game["CraftCurrency"] = 9999
+    game["InventorySpace"] = 99999
     game["RankXP"] = target_xp
     game["PlayersLastSavedLevel"] = target_rank
     game["AdminLeaderLevel"] = target_rank
@@ -2079,11 +2087,163 @@ def AdminPlayerMaxResources(player):
 
     db_player.leader_level = target_rank
     db_player.level = target_rank
-    db_player.allyboxspace = 100
+    db_player.allyboxspace = 1000
+
+    # Trade tokens live outside the save, in their own balance table.
+    trade_target = 100000
+    trade_row = TradeCoinBalance.query.filter_by(player_id=player).first()
+    if trade_row is None:
+        db.session.add(
+            TradeCoinBalance(player_id=player, coins=trade_target, updated=int(time.time()))
+        )
+    elif safe_int(trade_row.coins, 0) < trade_target:
+        trade_row.coins = trade_target
+        trade_row.updated = int(time.time())
+
+    # --- Creatures (with the requested number of copies each) ---
+    inventory = game.get("Inventory")
+    if not isinstance(inventory, list):
+        inventory = []
+    tutorial_ids = GetTutorialOnlyCreatureIds()
+
+    next_uid = 1
+    creature_counts = {}
+    for item in inventory:
+        if not isinstance(item, dict):
+            continue
+        next_uid = max(next_uid, safe_int(item.get("UniqueID"), 0) + 1)
+        if item.get("_T") == "CR":
+            cid = item.get("ID")
+            creature_counts[cid] = creature_counts.get(cid, 0) + 1
+
+    with open(
+        os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Creatures.json"), "r"
+    ) as f:
+        all_creatures = json.load(f)
+
+    added_creatures = 0
+    for creature in all_creatures:
+        cid = creature["ID"]
+        # Tutorial-only creatures are not collectible; granting them makes the
+        # game client flag the save as tampered (Zxcvbnm = 1).
+        if cid in tutorial_ids:
+            continue
+        missing = creature_copies - creature_counts.get(cid, 0)
+        for _ in range(max(0, missing)):
+            new_creature = {
+                "_T": "CR",
+                "ID": cid,
+                "UniqueID": next_uid,
+                "Xp": 0,
+                "Favorite": 0,
+                "Passive": 1,
+                "PassiveFeeds": 0,
+                "StarRating": 1,
+            }
+            card_slots = int(creature.get("CardSlots", 1))
+            default_cards = [creature.get(f"ActionCard{i}", "") for i in range(1, 6)]
+            default_cards = [c for c in default_cards if c][:card_slots]
+            if default_cards:
+                new_creature["Cards"] = default_cards
+
+            inventory.append(new_creature)
+            next_uid += 1
+            creature_counts[cid] = creature_counts.get(cid, 0) + 1
+            added_creatures += 1
+
+    # --- Auguments (with the requested number of copies each) ---
+    with open(
+        os.path.join(ROOT_DIR, "data/persist/Blueprints/db_ActionCards.json"), "r"
+    ) as f:
+        all_cards = json.load(f)
+
+    card_collection = game.get("CardCollection")
+    if not isinstance(card_collection, list):
+        card_collection = []
+    collection_ids = {
+        c.get("ID") for c in card_collection if isinstance(c, dict)
+    }
+    augment_counts = {}
+    for item in inventory:
+        if isinstance(item, dict) and item.get("_T") == "CA":
+            cid = item.get("ID")
+            augment_counts[cid] = augment_counts.get(cid, 0) + 1
+
+    added_augments = 0
+    for card in all_cards:
+        cid = card["ID"]
+        if cid not in collection_ids:
+            card_collection.append({"ID": cid, "Stat": 1})
+            collection_ids.add(cid)
+        missing = augment_copies - augment_counts.get(cid, 0)
+        for _ in range(max(0, missing)):
+            inventory.append(
+                {
+                    "_T": "CA",
+                    "ID": cid,
+                    "UniqueID": next_uid,
+                    "Favorite": 0,
+                    "CreatureUID": -1,
+                    "CreatureSlot": 0,
+                }
+            )
+            next_uid += 1
+            augment_counts[cid] = augment_counts.get(cid, 0) + 1
+            added_augments += 1
+
+    # --- Heroes and their skins ---
+    with open(
+        os.path.join(ROOT_DIR, "data/persist/Blueprints/db_Leaders.json"), "r"
+    ) as f:
+        all_leaders = json.load(f)
+
+    leaders = game.get("Leaders")
+    if not isinstance(leaders, list):
+        leaders = []
+    leaders_by_id = {l.get("ID"): l for l in leaders if isinstance(l, dict)}
+
+    added_heroes = 0
+    for blueprint in all_leaders:
+        lid = blueprint["ID"]
+        if blueprint.get("SkinOf"):
+            continue
+        if lid not in leaders_by_id:
+            entry = {"ID": lid, "Skin": lid, "OwnedSkins": []}
+            leaders.append(entry)
+            leaders_by_id[lid] = entry
+            added_heroes += 1
+
+    added_skins = 0
+    for blueprint in all_leaders:
+        skin_of = blueprint.get("SkinOf")
+        if not skin_of:
+            continue
+        base_entry = leaders_by_id.get(skin_of)
+        if base_entry is None:
+            continue
+        owned = base_entry.get("OwnedSkins")
+        if not isinstance(owned, list):
+            owned = []
+            base_entry["OwnedSkins"] = owned
+        if blueprint["ID"] not in owned:
+            owned.append(blueprint["ID"])
+            added_skins += 1
+
+    game["Inventory"] = inventory
+    game["CardCollection"] = card_collection
+    game["Leaders"] = leaders
+
     db_player.game = EncryptGameData(game, player)
     db.session.commit()
 
-    Log("admin", current_user.username + " maxed all resources for player: " + player)
+    Log(
+        "admin",
+        current_user.username
+        + f" maxed resources for player: {player}"
+        + f" (level {target_rank}, +{added_creatures} creatures @x{creature_copies},"
+        + f" +{added_augments} Auguments @x{augment_copies},"
+        + f" +{added_heroes} heroes, +{added_skins} skins, trade coins {trade_target})",
+    )
     return redirect("/admin/players/" + player)
 
 
