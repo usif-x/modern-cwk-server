@@ -3,7 +3,6 @@
 from ._common import *
 from app.models import MonthlyStorePurchase, Player
 from app.services.monthly_store import (
-    CONFIG_NAME,
     DEFAULT_BUY_LIMITS,
     STORE_TYPES,
     CurrentBuyLimits,
@@ -56,7 +55,6 @@ def _store_context(error=""):
         "purchases": purchases,
         "player_names": names,
         "month_key": MonthKey(),
-        "config_name": CONFIG_NAME,
         "default_limits": DEFAULT_BUY_LIMITS,
     }
 

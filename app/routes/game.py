@@ -104,8 +104,10 @@ def MonthlyStore():
 
 
 def _request_payload():
-    """Form body, JSON body or query-encoded body - whichever the app used."""
+    """Form body, query args, JSON body or query-encoded body - whichever the app used."""
     data = request.form.to_dict()
+    if not data:
+        data = request.args.to_dict()
     if data:
         return data
     payload = request.get_json(silent=True)

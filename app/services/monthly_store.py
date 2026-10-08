@@ -5,21 +5,23 @@ are up this month plus how many of them the player already bought, and
 ``POST /persist/static/monthly_store/buy`` records one more purchase and
 charges the save (the save is the wallet).
 
-Which offers are featured lives in ``data/persist/monthly_store.json`` so an
-admin can curate it (seeded with a random rotation the first time it is read);
-the counters live in the database so a client save upload cannot reset them.
-Both reset: the lists when the admin changes them, the counters every month.
+Which offers are featured lives in one ``MonthlyStoreConfig`` row so an admin
+can curate it (seeded with a random rotation the first time it is read); the
+counters live in ``MonthlyStorePurchase`` so a client save upload cannot reset
+them. The counters reset every month, the lists only when the admin changes
+them.
 """
 
 import random
 import time
 
 from ._common import *
-from app.models import MonthlyStorePurchase
+from app.models import MonthlyStoreConfig, MonthlyStorePurchase
 from app.services.game_data import FormatBlueprintName, GetActionCardNameMap, Log
 
-CONFIG_NAME = "monthly_store.json"
-CONFIG_PATH = os.path.join(ROOT_DIR, "data/persist", CONFIG_NAME)
+CONFIG_ROW = 1
+# Optional hand-written override, read once when no config row exists yet.
+CONFIG_PATH = os.path.join(ROOT_DIR, "data/persist", "monthly_store.json")
 
 # store_type -> label, blueprint, how many monthly slots the app renders, the
 # config keys the offer lists live under and the price currency. "gems" and
@@ -46,13 +48,6 @@ STORE_TYPES = {
 }
 
 DEFAULT_BUY_LIMITS = {"action": 3, "evo": 1}
-CONFIG_KEYS = (
-    "action_cards",
-    "action_card_special",
-    "evo_materials",
-    "evo_special",
-    "buy_limits",
-)
 
 _rows_cache = {}
 _ROWS_TTL = 300
@@ -199,26 +194,71 @@ def _normalize_config(cfg):
     return clean
 
 
-def LoadStoreConfig():
-    """The stored offer lists, seeded (and written) the first time."""
-    cfg = None
+def _read_config_file():
+    """A hand-written ``data/persist/monthly_store.json``, if one exists."""
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            cfg = json.load(f)
+            data = json.load(f)
     except FileNotFoundError:
-        cfg = None
+        return None
     except ValueError as e:
-        Log("admin", f"Monthly store: broken {CONFIG_NAME} ({e}) - reseeding")
-        cfg = None
+        Log("admin", f"Monthly store: broken monthly_store.json ({e})")
+        return None
+    return data if isinstance(data, dict) else None
 
+
+def _write_config(cfg):
+    """Upsert the single config row (the admin's curation)."""
+    row = MonthlyStoreConfig.query.filter_by(id=CONFIG_ROW).first()
+    payload = json.dumps(cfg, ensure_ascii=False, sort_keys=True)
+    if row is None:
+        row = MonthlyStoreConfig(id=CONFIG_ROW, data=payload)
+        db.session.add(row)
+    else:
+        row.data = payload
+    db.session.commit()
+    return cfg
+
+
+def LoadStoreConfig():
+    """The stored offer lists, seeded (and stored) the first time."""
+    row = MonthlyStoreConfig.query.filter_by(id=CONFIG_ROW).first()
+    if row is not None:
+        try:
+            data = json.loads(row.data or "{}")
+        except ValueError as e:
+            Log("admin", f"Monthly store: broken config row ({e}) - reseeding")
+            data = None
+        if isinstance(data, dict):
+            return _normalize_config(data)
+
+    # First run: take a hand-written override if there is one, else pick a
+    # fresh rotation and store it so the admin page shows what was chosen.
+    cfg = _read_config_file()
     if not isinstance(cfg, dict):
         cfg = _seed_config()
-        try:
-            SaveStoreConfig(cfg)
-        except Exception as e:
-            Log("admin", f"Monthly store: cannot seed {CONFIG_NAME}: {e}")
-        return cfg
-    return _normalize_config(cfg)
+    clean = _normalize_config(cfg)
+    try:
+        _write_config(clean)
+    except Exception as e:
+        Log("admin", f"Monthly store: cannot store the initial config: {e}")
+        db.session.rollback()
+    return clean
+
+
+def SaveStoreConfig(cfg):
+    """Validate and write the offer lists. Raises ``ValueError`` on bad input."""
+    clean, errors = ValidateStoreConfig(cfg, strict=True)
+    if errors:
+        raise ValueError(errors[0])
+    return _write_config(clean)
+
+
+def ReseedStoreConfig():
+    """A new random rotation (admin "reroll"). Keeps the buy limits."""
+    cfg = _seed_config()
+    cfg["buy_limits"] = CurrentBuyLimits()
+    return SaveStoreConfig(cfg)
 
 
 def ValidateStoreConfig(raw, strict=True):
@@ -274,22 +314,6 @@ def ValidateStoreConfig(raw, strict=True):
     clean["buy_limits"] = limits
 
     return clean, errors
-
-
-def SaveStoreConfig(cfg):
-    """Validate and write the offer lists. Raises ``ValueError`` on bad input."""
-    clean, errors = ValidateStoreConfig(cfg, strict=True)
-    if errors:
-        raise ValueError(errors[0])
-    os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(clean, f, ensure_ascii=False, indent=2, sort_keys=True)
-    return clean
-
-
-def ReseedStoreConfig():
-    """A new random rotation (admin "reroll"). Returns the fresh config."""
-    return SaveStoreConfig(_seed_config())
 
 
 def CurrentBuyLimits(cfg=None):

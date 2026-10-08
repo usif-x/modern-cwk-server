@@ -22,14 +22,22 @@ cwk-server/
 ├── app/
 │   ├── __init__.py                 # Flask app factory, db, globals, scheduler
 │   ├── config.py                   # .env loader (Telegram token/id, backup interval)
-│   ├── models.py                   # All DB models
-│   ├── utils.py                    # All helpers (encrypt/decrypt, backups, Telegram, logging, etc.)
+│   ├── models/__init__.py          # All DB models
+│   ├── utils/__init__.py           # Shared helpers (encrypt/decrypt, backups, Telegram, bans, logs)
+│   ├── services/                   # Focused helpers (one module per feature)
+│   │   ├── game_data.py            # Blueprints, save codecs, ranks, gift catalog
+│   │   ├── monthly_store.py        # Monthly Store offers, limits and buy counters
+│   │   ├── live.py                 # Admin-editable live status payload
+│   │   ├── trade_market.py         # Player-to-player trading
+│   │   └── backup.py / database.py / player.py / admin.py
 │   └── routes/
 │       ├── __init__.py             # Blueprint registration
 │       ├── game.py                 # Game API routes (client-facing)
-│       ├── admin.py                # Admin panel routes
+│       ├── admin/                  # Admin panel (auth, players, catalog, market, store, tools)
 │       ├── multiplayer.py          # Multiplayer routes
 │       ├── friends.py              # Friend system routes
+│       ├── trade.py                # Trade market routes
+│       ├── google.py               # Google account linking
 │       └── analytics.py            # Analytics + leaderboard routes
 ├── flaskkey                        # Flask secret key (fallback; set SECRET_KEY on Heroku)
 ├── requirements.txt                # Python dependencies
@@ -43,7 +51,7 @@ cwk-server/
 │   ├── Blueprints/                 # Game data JSON files (creatures, cards, etc.)
 │   └── logs/                       # Daily log files (YYYY-MM-DD.txt)
 ├── static/admin/                   # Bootstrap CSS/JS assets (legacy)
-├── templates/                      # 22 Jinja2 admin templates
+├── templates/                      # 25 Jinja2 admin templates
 │   ├── admin_base.html             # Base layout (Tailwind + shadcn/ui sidebar & theme toggle)
 │   ├── admin_login.html            # Login page (username/password + passkey)
 │   ├── admin_profile.html          # Secret profile (email, password, passkey)
@@ -64,6 +72,10 @@ cwk-server/
 │   ├── admin_maintenance.html      # Maintenance toggle
 │   ├── admin_logs.html             # Player logs
 │   ├── admin_upsight.html          # Analytics logs
+│   ├── admin_market.html           # Trade market control panel
+│   ├── admin_pvp_banlist.html      # PVP creature & leader ban list manager
+│   ├── admin_admins.html           # Admin accounts
+│   ├── admin_monthly_store.html    # Monthly Store offers, limits & buy counters
 │   └── admin_misc.html             # Misc tools
 └── backup/                         # Auto-backup zip files (every 4 hours)
 ```
@@ -172,6 +184,19 @@ cwk-server/
 | `created_at` | Integer         | Unix timestamp                                                           |
 | `claimed_at` | Integer, NULL   | Unix timestamp when claimed; NULL = unclaimed                            |
 
+### MonthlyStoreConfig / MonthlyStorePurchase
+
+| Table                  | Field        | Type        | Description                                                       |
+| ---------------------- | ------------ | ----------- | ----------------------------------------------------------------- |
+| `monthly_store_config` | `id`         | Integer, PK | Always row `1`                                                    |
+| `monthly_store_config` | `data`       | Text        | JSON offer lists: `action_cards`, `action_card_special`, `evo_materials`, `evo_special`, `buy_limits` |
+| `monthly_store_config` | `updated_at` | Integer     | Unix timestamp                                                    |
+| `monthly_store_purchase` | `player_id` | String(80)  | Player UUID                                                       |
+| `monthly_store_purchase` | `store_type`| String(32)  | `action` or `evo`                                                 |
+| `monthly_store_purchase` | `offer_id`  | String(255) | Blueprint offer ID                                                |
+| `monthly_store_purchase` | `month_key` | String(7)   | `YYYY-MM` - counters reset with the month                         |
+| `monthly_store_purchase` | `buy_count` | Integer     | Purchases this month (unique per player/type/offer/month)         |
+
 ## Game Data Format
 
 Player game data is stored in the `Player.game` column as:
@@ -252,6 +277,8 @@ The in-game post office is the save's `Mails` array. An entry looks like:
 | GET      | `/persist/static/monthly_store`     | Monthly store configuration         |
 | GET      | `/persist/static/live`              | Live status (maintenance/notices, admin-editable `live.json`) |
 | GET/POST | `/persist/static/pvp_banlist`       | PVP ban list & active bans          |
+| GET      | `/persist/static/monthly_store`     | Monthly Store offers + per-player buy counters (`?player_id=`) |
+| POST     | `/persist/static/monthly_store/buy` | Buy one monthly offer (enforces the limit, charges the save)   |
 | GET/PUT  | `/persist/game`                     | Game save (uses `Player-Id` header) |
 | GET/PUT  | `/persist/<uuid>/game`              | Game save by UUID                   |
 | GET      | `/persist/messages_received_ids`    | Message IDs                         |
@@ -375,6 +402,10 @@ The in-game post office is the save's `Mails` array. An entry looks like:
 | GET      | `/admin/misc`                                    | Misc tools                                                                       |
 | POST     | `/admin/misc/loadout_count`                      | Set global `StartingLoadoutCount` blueprint value (default team lines)           |
 | POST     | `/admin/misc/creatures_on_team`                  | Set global `CreaturesOnTeam` blueprint value (slots per team)                    |
+| GET      | `/admin/monthly_store`                           | Monthly Store curation (offer lists, buy limits, purchase counters)              |
+| POST     | `/admin/monthly_store/save`                      | Save the offer lists + per-month buy limits                                      |
+| POST     | `/admin/monthly_store/reroll`                    | Randomise the rotation (keeps the buy limits)                                    |
+| POST     | `/admin/monthly_store/reset_counts`              | Clear monthly buy counters (optional player / store filter)                      |
 | GET      | `/admin/redeemcodes`                             | Redeem codes list                                                                |
 | POST     | `/admin/redeemcodes/add`                         | Add/update redeem code                                                           |
 | POST     | `/admin/redeemcodes/delete/<code>`               | Delete redeem code                                                               |
@@ -437,6 +468,10 @@ The in-game post office is the save's `Mails` array. An entry looks like:
 | `RunScheduledBackup()`                                 | `app/utils.py` | Run a backup when the configured interval elapsed                          |
 | `GetLiveStatus()`                                      | `app/utils.py` | Live status payload with a fresh `now` timestamp                           |
 | `LoadLiveStatus()` / `SaveLiveStatus(d)`               | `app/utils.py` | Read/write `data/persist/live.json` (maintenance, notices, flags, texts)   |
+| `MonthlyStoreResponse(player_id)`                      | `app/services/monthly_store.py` | `GET /persist/static/monthly_store` payload: offer lists, buy counts, limits |
+| `LoadStoreConfig()` / `SaveStoreConfig(d)`             | `app/services/monthly_store.py` | Curated offer lists in the `monthly_store_config` row (random seed on first read) |
+| `OfferPrice(store_type, offer_id)`                     | `app/services/monthly_store.py` | Blueprint price + currency (`gems` / `PvpCurrency`) of a monthly offer      |
+| `IncrementBuyCount(player, type, offer)`               | `app/services/monthly_store.py` | Count one purchase against the monthly limit (resets with `YYYY-MM`)        |
 
 ## Configuration & Assets
 

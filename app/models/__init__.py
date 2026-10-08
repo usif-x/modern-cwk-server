@@ -211,11 +211,29 @@ class AdminGift(db.Model):
     claimed_at = db.Column(db.Integer, nullable=True)
 
 
+class MonthlyStoreConfig(db.Model):
+    """The single row holding the curated Monthly Store offer lists.
+
+    Kept in the database (not a file) so an admin's curation survives a dyno
+    restart; ``data`` is the JSON payload the GET endpoint serves.
+    """
+
+    __tablename__ = "monthly_store_config"
+    id = db.Column(db.Integer, primary_key=True)
+    data = db.Column(db.Text, nullable=False, default="{}")
+    updated_at = db.Column(
+        db.Integer,
+        nullable=False,
+        default=lambda: int(_time.time()),
+        onupdate=lambda: int(_time.time()),
+    )
+
+
 class MonthlyStorePurchase(db.Model):
     """How often a player bought a Monthly Store offer this month.
 
-    Offer lists live in ``data/persist/monthly_store.json`` (admin curated);
-    the counters live here so a client save upload cannot reset them.
+    Offer lists live in ``MonthlyStoreConfig``; the counters live here so a
+    client save upload cannot reset them.
     """
 
     __tablename__ = "monthly_store_purchase"
