@@ -968,6 +968,66 @@ def LoadNewsMail():
     return []
 
 
+# db_NewsMail GiftType -> save currency a server-side claim credits. Item mails
+# (XPMaterials / Creature) are not listed: the app applies those itself.
+NEWS_MAIL_CURRENCIES = {
+    "SoftCurrency": "SoftCurrency",
+    "HardCurrency": "HardCurrency",
+    "PvPCurrency": "PvpCurrency",
+}
+
+_NEWS_MAIL_BOOK = {"rows": None, "at": 0.0}
+NEWS_MAIL_BOOK_TTL = 60
+
+
+def _NewsMailDate(text):
+    """Parse a blueprint showDate/endDate ("%d/%m/%Y"); None when absent."""
+    if not text:
+        return None
+    try:
+        return int(
+            datetime.strptime(str(text).strip(), "%d/%m/%Y")
+            .replace(tzinfo=timezone.utc)
+            .timestamp()
+        )
+    except (TypeError, ValueError):
+        return None
+
+
+def NewsMailBook():
+    """db_NewsMail.json as {ID: reward + window + repeat info} for evt "mail".
+
+    Cached for NEWS_MAIL_BOOK_TTL seconds, the way production caches its claims
+    book. ``reward`` carries only the currencies the server credits; item mails
+    leave it empty because the app writes those to its own save.
+    """
+    now = _time.time()
+    book = _NEWS_MAIL_BOOK
+    if book["rows"] is None or now - book["at"] > NEWS_MAIL_BOOK_TTL:
+        rows = {}
+        for row in LoadNewsMail():
+            mid = str(row.get("ID") or "").strip()
+            if not mid:
+                continue
+            reward = {}
+            bucket = NEWS_MAIL_CURRENCIES.get(str(row.get("GiftType") or "").strip())
+            if bucket:
+                reward[bucket] = max(0, safe_int(row.get("Quantity"), 0))
+            rows[mid] = {
+                "reward": reward,
+                "show": _NewsMailDate(row.get("showDate")),
+                "end": _NewsMailDate(row.get("endDate")),
+                "repeats": str(row.get("Repeats") or "").strip() or None,
+                "player": str(row.get("PlayerID") or "").strip() or None,
+                "gift_type": str(row.get("GiftType") or "").strip(),
+                "gift_id": str(row.get("GiftID") or "").strip(),
+                "quantity": max(0, safe_int(row.get("Quantity"), 0)),
+                "title": str(row.get("Name") or ""),
+            }
+        book["rows"], book["at"] = rows, now
+    return book["rows"]
+
+
 def _NextAdminMailId(mails):
     # Timestamp-based so IDs are never reused after a delivered entry is pruned
     # (the client dedupes mails by ID, so a reused ID would hide a new gift).

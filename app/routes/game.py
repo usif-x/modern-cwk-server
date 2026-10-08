@@ -5,7 +5,7 @@ from flask import Blueprint, abort, jsonify, make_response, redirect, render_tem
 from flask_login import current_user
 
 from app import maintenance, app, db
-from app.models import Player, RouletteState, UpsightLogs, AdminGift
+from app.models import Player, RouletteState, UpsightLogs, AdminGift, MailClaim
 from app.services.trade_market import ApplyTradeDeltasToGame
 from app.services.monthly_store import (
     STORE_TYPES,
@@ -22,6 +22,7 @@ from app.utils import (
     GetPvpBanlist, ReadPersistText, GetLiveStatus, StripLegacyAdminMails,
     PruneDeliveredNewsMail, RollRoulettePrize, ApplyRoulettePrize, PurchasePrice,
     BuildPvpBanlistResponse, ReadMiscParam, SaveReport, REPORT_MAX_BYTES,
+    NewsMailBook,
 )
 game_bp = Blueprint('game_bp', __name__)
 
@@ -408,6 +409,11 @@ def UserAction2():
         if evt.lower() == "admin gift":
             return _ClaimAdminGift(db_user, pid, clientData, handle)
 
+        # News mail (the daily 25 wishbones, welcome mail, ...): the server
+        # credits the reward to the save and records the claim once per player.
+        if evt.lower() == "mail":
+            return _ClaimNewsMail(db_user, pid, clientData, handle)
+
         # The client sends its current balances (pd/fr/cu) plus the deltas it is
         # applying (dp/df/dc) and expects the authoritative results back in
         # level1/level2/level3. Return all three so the client never keeps a
@@ -621,6 +627,108 @@ def _ClaimAdminGift(db_user, pid, clientData, handle):
         "seq": int(time.time()),
     }
     return jsonify({"success": True, "data": json.dumps({"fields": fields})})
+
+
+# A db_NewsMail claim (production evt "mail"): save currency -> the client
+# delta fields it reports next to it.
+MAIL_CLAIM_DELTAS = (
+    ("SoftCurrency", ("ds",)),
+    ("HardCurrency", ("df", "dp")),
+    ("PvpCurrency", ("dv",)),
+    ("EvolutionShards", ("de",)),
+    ("CraftCurrency", ("dc",)),
+)
+
+
+def _ClaimNewsMail(db_user, pid, clientData, handle):
+    """Claim one db_NewsMail entry (production 6.1.2+ ``evt="mail"``, ctx = its ID).
+
+    The reward is credited to the save - here the save is the wallet - and the
+    claim is recorded once per player, per matching day for a repeatable mail,
+    so a save upload can never reset it. Item mails (XP materials, creatures)
+    pay nothing server-side: the app writes those into its own save.
+    """
+    now = int(time.time())
+    ctx = str(clientData.get("ctx", "") or "").strip()
+
+    game = DecryptGameData(db_user.game) if db_user.game else {}
+    if not isinstance(game, dict):
+        game = {}
+
+    def reply(reason, granted=None):
+        g = granted or {}
+        fields = {
+            **_BalanceFields(game, handle),
+            "gs": g.get("SoftCurrency", 0),
+            "gf": g.get("HardCurrency", 0),
+            "gv": g.get("PvpCurrency", 0),
+            "ge": g.get("EvolutionShards", 0),
+            "gc": g.get("CraftCurrency", 0),
+            "reason": reason,
+            "seq": now,
+        }
+        return jsonify({"success": True, "data": json.dumps({"fields": fields})})
+
+    mail = NewsMailBook().get(ctx)
+    if mail is None or (mail["player"] and mail["player"] != str(pid)):
+        return reply("UNKNOWN_MAIL")
+
+    if (mail["show"] and now < mail["show"]) or (mail["end"] and now > mail["end"] + 86400):
+        return reply("MAIL_NOT_ACTIVE")
+
+    repeats = mail["repeats"]
+    if repeats:
+        # The app shows a weekday mail on the player's own weekday (UTC-12 .. UTC+14),
+        # so the claim is keyed by whichever of those dates still falls on it.
+        hit = [
+            t
+            for t in (now - 12 * 3600, now, now + 14 * 3600)
+            if time.strftime("%A", time.gmtime(t)) == repeats
+        ]
+        if not hit:
+            return reply("MAIL_NOT_TODAY")
+        once_key = "mail|%s|%s" % (ctx, time.strftime("%Y-%m-%d", time.gmtime(hit[0])))
+    else:
+        once_key = "mail|" + ctx
+
+    if MailClaim.query.filter_by(username=pid, once_key=once_key).first() is not None:
+        return reply("ALREADY_CLAIMED")
+
+    asked = {
+        bucket: max(0, sum(safe_int(clientData.get(key, 0)) for key in keys))
+        for bucket, keys in MAIL_CLAIM_DELTAS
+    }
+    granted = {}
+    for bucket in asked:
+        cap = max(0, safe_int(mail["reward"].get(bucket, 0)))
+        # Paid what the app asked for, capped at what the mail pays (production);
+        # an app reporting no delta relies on the server, so it is paid in full.
+        granted[bucket] = min(asked[bucket], cap) if sum(asked.values()) else cap
+        if granted[bucket] and bucket != "HardCurrency":
+            game[bucket] = safe_int(game.get(bucket, 0)) + granted[bucket]
+
+    if granted["HardCurrency"]:
+        game["FreeHardCurrency"] = safe_int(game.get("FreeHardCurrency", 0)) + granted["HardCurrency"]
+        game["HardCurrency"] = safe_int(game.get("FreeHardCurrency", 0)) + safe_int(game.get("PaidHardCurrency", 0))
+
+    # The mailbox is rebuilt from the blueprint plus the save: mark any stored
+    # entry delivered so a later download cannot offer it as unclaimed again.
+    for entry in game.get("Mails") or []:
+        if isinstance(entry, dict) and str(entry.get("ID")) == ctx:
+            entry["Opened"] = 1
+            entry["Rewarded"] = 1
+
+    db.session.add(MailClaim(username=pid, once_key=once_key, created_at=now))
+    db_user.game = EncryptGameData(game, pid)
+    db.session.commit()
+
+    PlayerLog(
+        IPFromRequest(request),
+        pid,
+        f'[mail] claimed {ctx}: {granted["SoftCurrency"]} coins, {granted["HardCurrency"]} gems, '
+        f'{granted["PvpCurrency"]} wishbones ({mail["gift_type"]} mail)',
+    )
+    return reply("OK", granted)
 
 
 def _OwnsLeader(game, key, is_skin):

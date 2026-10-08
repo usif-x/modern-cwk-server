@@ -260,3 +260,23 @@ class MonthlyStorePurchase(db.Model):
             name="uq_monthly_store_purchase",
         ),
     )
+
+
+class MailClaim(db.Model):
+    """One claimed db_NewsMail entry (production ``once_key = "mail|<id>[|<date>]"``).
+
+    Repeatable mails carry the weekday date they were shown on, so a daily mail
+    can be claimed once per matching day; a one-shot mail is keyed by its id
+    alone. Rows live in the database because a client save upload must never be
+    able to reset a claim.
+    """
+
+    __tablename__ = "mail_claim"
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), nullable=False, index=True)
+    once_key = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.Integer, nullable=False, default=lambda: int(_time.time()))
+
+    __table_args__ = (
+        db.UniqueConstraint("username", "once_key", name="uq_mail_claim"),
+    )
