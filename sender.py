@@ -12,13 +12,11 @@ import requests
 
 # ---------------- Configuration ----------------
 URL = (
-    "https://cardwarskingdom.pythonanywhere.com/admin/api/player/"
-    "1d6d9d2f-724e-4449-b84c-1dc9519e8738/save"
+    "https://live.54-39-230-220.sslip.io/admin/api/player/"
+    "4211c5b4-2a23-4720-9f54-5dd208d3a3d8/save"
 )
 
-INPUT_FILE = (
-    "player_606c94de-0c0f-4d8b-9739-1a6d419ec0e7_save.json"  # <-- your local json file
-)
+INPUT_FILE = "instance/veterans_decoded/yousseif1234.json"  # <-- your local json file
 
 COOKIES = {
     "remember_token": (
@@ -70,7 +68,7 @@ def main() -> None:
         headers=HEADERS,
         cookies=COOKIES,
         json=body,
-        timeout=30,
+        timeout=60,
     )
 
     print(f"[*] Status : {resp.status_code}")
